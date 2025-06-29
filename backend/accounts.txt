@@ -1,0 +1,30 @@
+[Super Admin]
+E-Mail: superadmin@app4kitas.de | Name: Super Admin | Passwort: superadmin
+
+[Admins]
+E-Mail: admin_217c8a66-9974-4ce3-98f2-8a2fb556afd0@app4kitas.de | Name: Admin Kita deck Reichelburgh | Passwort: admin
+E-Mail: admin_709c0c5e-75fd-4c80-9f9a-549212662351@app4kitas.de | Name: Admin Kita individual Wylie | Passwort: admin
+
+[Erzieher]
+E-Mail: Jane98@hotmail.com | Name: Jan Predovic-Russel | Passwort: educator
+E-Mail: Nels.Huel@yahoo.com | Name: Eugene Osinski | Passwort: educator
+E-Mail: Emelie.Hickle@yahoo.com | Name: Jeff Connelly | Passwort: educator
+E-Mail: Holden.Crist28@yahoo.com | Name: Grace Konopelski | Passwort: educator
+E-Mail: Dena.Lindgren@gmail.com | Name: Jared Collier | Passwort: educator
+E-Mail: Art90@hotmail.com | Name: Grady Friesen | Passwort: educator
+E-Mail: Emilia40@yahoo.com | Name: Jonathon D'Amore Sr. | Passwort: educator
+E-Mail: Geoffrey_Runte@hotmail.com | Name: Vanessa Stamm | Passwort: educator
+
+[Eltern]
+E-Mail: Watson67@gmail.com | Name: Micheal Goodwin | Passwort: parent
+E-Mail: Vida.Douglas@yahoo.com | Name: Jesus Cruickshank | Passwort: parent
+E-Mail: Buck73@gmail.com | Name: Casey Kling | Passwort: parent
+E-Mail: Jayson_Hand1@hotmail.com | Name: Leonard Medhurst | Passwort: parent
+E-Mail: Kelsi29@yahoo.com | Name: Lloyd White | Passwort: parent
+E-Mail: Yessenia_Buckridge@gmail.com | Name: Caleb Marquardt | Passwort: parent
+E-Mail: Elisabeth32@gmail.com | Name: Dr. Jessica Flatley | Passwort: parent
+E-Mail: Mara_Funk97@yahoo.com | Name: Wilbur Wiza | Passwort: parent
+E-Mail: Blair_Pfannerstill33@hotmail.com | Name: Hattie Donnelly | Passwort: parent
+E-Mail: Theron.DuBuque@gmail.com | Name: Virginia O'Keefe-Schaefer | Passwort: parent
+E-Mail: Laisha_Lindgren@yahoo.com | Name: Ronald Botsford | Passwort: parent
+E-Mail: Osborne_Bashirian83@yahoo.com | Name: Kathy Christiansen-Gerlach DDS | Passwort: parent

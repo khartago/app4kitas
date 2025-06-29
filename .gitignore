@@ -1,0 +1,125 @@
+# Node.js
+node_modules/
+backend/node_modules/
+dashboard/node_modules/
+
+# Dependency directories
+app/.dart_tool/
+app/.packages
+app/build/
+app/ios/Flutter/Flutter.framework/
+app/ios/Flutter/Flutter.podspec
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/ephemeral/
+app/ios/Pods/
+app/ios/Runner.xcworkspace/
+app/ios/Runner.xcodeproj/project.xcworkspace/
+app/ios/Runner.xcodeproj/xcuserdata/
+app/ios/Runner.xcworkspace/xcuserdata/
+app/ios/Podfile.lock
+app/ios/Podfile
+app/ios/Flutter/App.framework/
+app/ios/Flutter/engine/
+app/ios/Flutter/app.flx
+app/ios/Flutter/app.zip
+app/ios/Flutter/flutter_assets/
+app/ios/Flutter/flutter_export_environment.sh
+app/ios/Flutter/Flutter.podspec
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/ephemeral/
+app/ios/Pods/
+app/ios/Runner.xcworkspace/
+app/ios/Runner.xcodeproj/project.xcworkspace/
+app/ios/Runner.xcodeproj/xcuserdata/
+app/ios/Runner.xcworkspace/xcuserdata/
+app/ios/Podfile.lock
+app/ios/Podfile
+app/ios/Flutter/App.framework/
+app/ios/Flutter/engine/
+app/ios/Flutter/app.flx
+app/ios/Flutter/app.zip
+app/ios/Flutter/flutter_assets/
+app/ios/Flutter/flutter_export_environment.sh
+
+# Flutter
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.dart_tool/
+app/.idea/
+app/.vscode/
+app/build/
+app/ios/Flutter/Flutter.framework/
+app/ios/Flutter/Flutter.podspec
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/ephemeral/
+app/ios/Pods/
+app/ios/Runner.xcworkspace/
+app/ios/Runner.xcodeproj/project.xcworkspace/
+app/ios/Runner.xcodeproj/xcuserdata/
+app/ios/Runner.xcworkspace/xcuserdata/
+app/ios/Podfile.lock
+app/ios/Podfile
+app/ios/Flutter/App.framework/
+app/ios/Flutter/engine/
+app/ios/Flutter/app.flx
+app/ios/Flutter/app.zip
+app/ios/Flutter/flutter_assets/
+app/ios/Flutter/flutter_export_environment.sh
+
+# macOS
+app/macos/Flutter/ephemeral/
+app/macos/Flutter/GeneratedPluginRegistrant.swift
+app/macos/Flutter/Flutter-Debug.xcconfig
+app/macos/Flutter/Flutter-Release.xcconfig
+app/macos/Flutter/Generated.xcconfig
+app/macos/Flutter/ephemeral/
+app/macos/Pods/
+app/macos/Runner.xcworkspace/
+app/macos/Runner.xcodeproj/project.xcworkspace/
+app/macos/Runner.xcproj/xcuserdata/
+app/macos/Runner.xcworkspace/xcuserdata/
+app/macos/Podfile.lock
+app/macos/Podfile
+
+# Windows
+app/windows/runner/Debug/
+app/windows/runner/Release/
+app/windows/runner/x64/
+app/windows/runner/x86/
+app/windows/runner/Win32/
+app/windows/runner/GeneratedPluginRegistrant.*
+
+# Linux
+app/linux/flutter/ephemeral/
+app/linux/flutter/generated_plugin_registrant.*
+
+# Web
+app/build/
+app/web/.dart_tool/
+
+# IDEs
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test outputs
+app/test/
+
+# Misc
+.cursor/
+backend/uploads/
+
+# Environment
+.env
+backend/.env
+dashboard/.env
+app/.env 

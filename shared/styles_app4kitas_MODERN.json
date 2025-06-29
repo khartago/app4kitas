@@ -1,0 +1,126 @@
+{
+  "colors": {
+    "primary": "#4CAF50",
+    "primaryDark": "#388E3C",
+    "accent": "#FFC107",
+    "background": "#F5F5F5",
+    "surface": "#FFFFFF",
+    "error": "#F44336",
+    "textPrimary": "#212121",
+    "textSecondary": "#757575",
+    "border": "#E0E0E0",
+    "disabled": "#BDBDBD",
+    "darkMode": {
+      "background": "#121212",
+      "surface": "#1E1E1E",
+      "textPrimary": "#E0E0E0",
+      "textSecondary": "#BDBDBD"
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter",
+    "headline1": {
+      "fontSize": 32,
+      "fontWeight": "bold"
+    },
+    "headline2": {
+      "fontSize": 24,
+      "fontWeight": "bold"
+    },
+    "subtitle1": {
+      "fontSize": 18,
+      "fontWeight": "600"
+    },
+    "body1": {
+      "fontSize": 16,
+      "fontWeight": "normal"
+    },
+    "body2": {
+      "fontSize": 14,
+      "fontWeight": "normal"
+    },
+    "caption": {
+      "fontSize": 12,
+      "fontWeight": "normal"
+    }
+  },
+  "components": {
+    "button": {
+      "padding": "12px 24px",
+      "borderRadius": "12px",
+      "elevation": 2
+    },
+    "card": {
+      "padding": "16px",
+      "borderRadius": "16px",
+      "elevation": 1
+    },
+    "input": {
+      "padding": "12px",
+      "borderRadius": "10px",
+      "borderColor": "#E0E0E0",
+      "focusedBorderColor": "#4CAF50",
+      "errorBorderColor": "#F44336"
+    },
+    "appBar": {
+      "height": 56,
+      "backgroundColor": "#4CAF50",
+      "textColor": "#FFFFFF"
+    },
+    "avatar": {
+      "size": 48,
+      "borderRadius": "50%"
+    },
+    "snackbar": {
+      "backgroundColor": "#323232",
+      "textColor": "#FFFFFF",
+      "duration": 3000
+    },
+    "dialog": {
+      "borderRadius": "16px",
+      "backgroundColor": "#FFFFFF",
+      "textColor": "#212121"
+    },
+    "tooltip": {
+      "backgroundColor": "#333",
+      "textColor": "#FFF",
+      "fontSize": 12,
+      "borderRadius": "6px",
+      "padding": "6px 10px"
+    }
+  },
+  "animations": {
+    "defaultDuration": 300,
+    "transitionCurves": {
+      "easeIn": "cubic-bezier(0.4, 0, 1, 1)",
+      "easeOut": "cubic-bezier(0.0, 0, 0.2, 1)",
+      "easeInOut": "cubic-bezier(0.4, 0, 0.2, 1)"
+    },
+    "types": {
+      "fade": {
+        "duration": 300,
+        "curve": "easeInOut"
+      },
+      "slideLeft": {
+        "duration": 350,
+        "curve": "easeOut"
+      },
+      "slideUp": {
+        "duration": 350,
+        "curve": "easeOut"
+      },
+      "scale": {
+        "duration": 300,
+        "curve": "easeIn"
+      },
+      "bounce": {
+        "duration": 500,
+        "curve": "easeOut"
+      },
+      "zoom": {
+        "duration": 300,
+        "curve": "easeOut"
+      }
+    }
+  }
+}

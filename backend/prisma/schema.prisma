@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDUCATOR
+  PARENT
+}
+
+enum CheckType {
+  IN
+  OUT
+}
+
+enum CheckMethod {
+  QR
+  MANUAL
+}
+
+enum FileType {
+  IMAGE
+  PDF
+}
+
+// Institution (Kita) model
+model Institution {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  admins    User[]   @relation("InstitutionAdmins")
+  groups    Group[]
+  children  Child[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id            String            @id @default(uuid())
+  email         String            @unique
+  password      String
+  name          String
+  role          Role
+  avatarUrl     String?
+  children      Child[]           @relation("ParentChildren")
+  groups        Group[]           @relation("EducatorGroups")
+  messages      Message[]         @relation("UserMessages")
+  notifications NotificationLog[]
+  checkIns      CheckInLog[]      @relation("UserCheckIns")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  deviceTokens  DeviceToken[]
+  // Institution admin relation
+  institution   Institution?      @relation("InstitutionAdmins", fields: [institutionId], references: [id])
+  institutionId String?
+}
+
+model Child {
+  id        String       @id @default(uuid())
+  name      String
+  birthdate DateTime
+  photoUrl  String?
+  parents   User[]       @relation("ParentChildren")
+  group     Group?       @relation(fields: [groupId], references: [id])
+  groupId   String?
+  checkIns  CheckInLog[]
+  messages  Message[]    @relation("ChildMessages")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  qrCodeSecret String    @unique
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
+}
+
+model Group {
+  id        String    @id @default(uuid())
+  name      String
+  // Institution relation
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
+  children  Child[]
+  educators User[]    @relation("EducatorGroups")
+  messages  Message[] @relation("GroupMessages")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CheckInLog {
+  id        String      @id @default(uuid())
+  child     Child       @relation(fields: [childId], references: [id])
+  childId   String
+  actor     User        @relation("UserCheckIns", fields: [actorId], references: [id])
+  actorId   String
+  type      CheckType
+  timestamp DateTime    @default(now())
+  method    CheckMethod
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  sender    User      @relation("UserMessages", fields: [senderId], references: [id])
+  senderId  String
+  child     Child?    @relation("ChildMessages", fields: [childId], references: [id])
+  childId   String?
+  group     Group?    @relation("GroupMessages", fields: [groupId], references: [id])
+  groupId   String?
+  content   String
+  fileUrl   String?
+  fileType  FileType?
+  createdAt DateTime  @default(now())
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  token     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model FailedLogin {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
