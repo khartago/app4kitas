@@ -1,88 +1,98 @@
-# 🧾 App4KITAs
+# 🏫 App4KITAs - DSGVO-konforme Kita-Management-Plattform
 
-## 📦 Project Overview
+## 📋 Projektübersicht
 
-**App4KITAs** is a GDPR-compliant childcare platform for Kitas (preschools), offering:
+**App4KITAs** ist eine moderne, selbstgehostete Plattform zur Verwaltung von Kindertagesstätten (KITAs) und Horten. Die Lösung bietet eine vollständige digitale Infrastruktur für Anwesenheitskontrolle, Kommunikation, Berichtswesen und Verwaltung - alles DSGVO-konform und in Europa gehostet.
 
-* A **mobile app** for parents and educators (Flutter)
-* A **web dashboard** for Super Admins, Admins, and Educators (React)
-* A **Node.js + Prisma backend** with PostgreSQL and full API coverage
+### 🎯 Zielgruppe
+- **Super Admins**: Plattform-Administratoren mit Zugriff auf alle Institutionen
+- **Admins**: Einrichtungsleiter mit Verwaltungsrechten für ihre Kita
+- **Educators**: Erzieher mit täglichen Arbeitswerkzeugen
+- **Parents**: Eltern mit Zugriff auf Informationen ihrer Kinder (geplant)
 
----
+## 🏗️ Systemarchitektur
 
-## 🆕 Neue Funktionen: Erweiterte Feiertagsverwaltung
+### 📱 Multi-Platform-Ansatz
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │  Web Dashboard  │    │    Backend      │
+│   (Flutter)     │    │   (React)       │    │  (Node.js)      │
+│                 │    │                 │    │                 │
+│ • Eltern        │    │ • Super Admin   │    │ • REST API      │
+│ • Erzieher      │    │ • Admin         │    │ • PostgreSQL    │
+│ • Offline-Modus │    │ • Educator      │    │ • JWT Auth      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-### 🎄 **Holiday Management System**
-- **Regelmäßige Schließtage:** Wochentage (z.B. Samstag, Sonntag) als wiederkehrende Schließtage festlegen
-- **Einzelne Feiertage:** Einzelne Tage (z.B. Weihnachten, Ostern) hinzufügen
-- **Datumsbereiche:** Ferienzeiten mit Start- und Enddatum (z.B. Weihnachtsferien: 24.12 - 06.01)
-- **Wiederholungsoptionen:** "Nur dieses Jahr" oder "Jedes Jahr" für wiederkehrende Feiertage
-- **Professionelle UI:** Modernes Design mit klarer visueller Hierarchie und deutscher Lokalisierung
+### 🛠️ Technologie-Stack
 
-### 🎨 **Verbesserte Benutzeroberfläche**
-- **Tab-Navigation** zwischen allgemeinen Einstellungen und Feiertagsverwaltung
-- **Informationsboxen** mit hilfreichen Tipps und Erklärungen
-- **Farbkodierte Bereiche** für bessere Organisation
-- **Responsive Design** mit professionellem Layout
-- **Verbesserte Platzhaltertexte** mit konkreten Beispielen
+| Komponente | Technologie | Beschreibung |
+|------------|-------------|--------------|
+| **Backend** | Node.js + Express + Prisma | RESTful API mit ORM |
+| **Datenbank** | PostgreSQL | Relationale Datenbank |
+| **Web Dashboard** | React + TypeScript + Styled Components | Moderne Web-Anwendung |
+| **Mobile App** | Flutter | Cross-Platform Mobile App |
+| **Authentifizierung** | JWT + HttpOnly Cookies | Sichere Session-Verwaltung |
+| **Datei-Uploads** | Multer | Sichere Datei-Verwaltung |
+| **Hosting** | OVH VPS | Europäisches Hosting |
 
-### 🔧 **Technische Features**
-- **Datenbank:** Erweiterte Prisma-Schema mit `fromDate`, `toDate`, `recurrence` Feldern
-- **API:** Vollständige Unterstützung für Datumsbereiche und Wiederholungen
-- **Frontend:** TypeScript-Interfaces für Typsicherheit
-- **Validierung:** Überlappungsprüfung und Datumsvalidierung
+## 👥 Rollen & Berechtigungen
 
-### 📋 **Verwendungsbeispiele**
-- **Weihnachtsferien:** 24.12 - 06.01, Jährlich wiederkehrend
-- **Sommerferien:** 15.07 - 15.08, Nur dieses Jahr
-- **Einzelner Feiertag:** 25.12, Jährlich wiederkehrend
-- **Fortbildungstag:** 15.03, Nur dieses Jahr
+### 👑 Super Admin
+**Zugriff**: Plattform-weit
+- **Institutionen verwalten**: Neue KITAs anlegen, bearbeiten, löschen
+- **Benutzerverwaltung**: Admins, Erzieher und Eltern verwalten
+- **System-Statistiken**: Plattform-weite Analysen und Berichte
+- **Export-Funktionen**: CSV/PDF-Export für alle Daten
+- **Aktivitätsprotokoll**: Überwachung aller Systemaktivitäten
 
----
+### 👨‍💼 Admin (Einrichtungsleiter)
+**Zugriff**: Institution-spezifisch
+- **Kinderverwaltung**: Anlegen, bearbeiten, Fotos, Export
+- **Gruppenverwaltung**: Gruppen erstellen, Erzieher zuweisen
+- **Personalverwaltung**: Erzieher verwalten und zuweisen
+- **Check-in/out**: QR-Code-Generierung und -Verwaltung
+- **Berichte**: Tages- und Monatsberichte mit Export
+- **Benachrichtigungen**: Nachrichten an Gruppen/Erzieher
+- **Institutionseinstellungen**: Öffnungszeiten, Feiertage, Adressen
 
-## 🧱 Tech Stack
+### 👩‍🏫 Educator (Erzieher)
+**Zugriff**: Gruppen-spezifisch
+- **Dashboard**: Tagesübersicht und Schnellzugriffe
+- **Kinder**: Verwaltung der zugewiesenen Kinder
+- **Check-in/out**: QR-Scan und manuelle Check-ins
+- **Notizen**: Kind-spezifische Notizen mit Dateianhängen
+- **Chat**: Gruppen- und Direktnachrichten
+- **Persönliche Aufgaben**: Eigene To-Do-Liste
 
-| Layer    | Tech                                             |
-| -------- | ------------------------------------------------ |
-| Frontend | React (styled-components, role-based dashboards) |
-| Mobile   | Flutter (planned)                                |
-| Backend  | Node.js + Express + Prisma ORM                   |
-| Database | PostgreSQL                                       |
-| Auth     | JWT                                              |
-| Hosting  | OVH VPS                                          |
-| Styling  | `styles_app4kitas_MODERN.json` design system     |
-| Uploads  | Multer (`/uploads`)                              |
+## 🚀 Schnellstart
 
----
+### Voraussetzungen
+- Node.js 16+ 
+- PostgreSQL 12+
+- Git
 
-## 🚀 Getting Started
-
-### 1. Clone the repo
-
+### 1. Repository klonen
 ```bash
 git clone https://github.com/your-org/app4kitas.git
 cd app4kitas
 ```
 
----
-
-### 2. Setup the backend
-
+### 2. Backend einrichten
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env with your DB credentials
+# .env bearbeiten mit Datenbank-Credentials
 ```
 
-Example `.env`:
-
-```
+**Beispiel .env:**
+```env
 DATABASE_URL=postgresql://postgres:password@localhost:5432/app4kitas
 JWT_SECRET=supersecurejwtkey
+PORT=4000
 ```
 
-Install dependencies:
-
+**Dependencies installieren und Datenbank einrichten:**
 ```bash
 npm install
 npx prisma generate
@@ -91,155 +101,216 @@ mkdir uploads
 npm run dev
 ```
 
----
-
-### 3. Run the dashboard
-
+### 3. Web Dashboard starten
 ```bash
 cd ../dashboard
 npm install
 npm start
 ```
 
+Das Dashboard läuft dann auf `http://localhost:3000`
+
+## 📊 Hauptfunktionen
+
+### 🔐 Authentifizierung & Sicherheit
+- **JWT-basierte Authentifizierung** mit HttpOnly Cookies
+- **Rollenbasierte Zugriffskontrolle** (RBAC)
+- **Sichere Datei-Uploads** mit Validierung
+- **Rate Limiting** und CORS-Schutz
+- **DSGVO-konforme Datenverarbeitung**
+
+### 📱 Mobile App (Flutter)
+- **Einheitlicher Code** für Eltern und Erzieher
+- **Offline-Funktionalität** mit automatischer Synchronisation
+- **QR-Code-Scanning** für Check-ins
+- **Push-Benachrichtigungen** für wichtige Ereignisse
+- **Dark Mode** und mehrsprachige Unterstützung
+
+### 💻 Web Dashboard (React)
+- **Responsive Design** für Desktop und Tablet
+- **Rollenbasierte Navigation** und Zugriffskontrolle
+- **Moderne UI/UX** mit Styled Components
+- **Export-Funktionen** (CSV/PDF) für alle Berichte
+- **Echtzeit-Updates** und Live-Daten
+
+### 📁 Datei-Management
+- **Profilbilder**: Upload über `/api/profile/avatar`
+- **Kinderfotos**: Upload über `/api/children/:id/photo`
+- **Nachrichtenanhänge**: Upload über `/api/message`
+- **Notizenanhänge**: Upload über `/api/notes`
+- **Unterstützte Formate**: Bilder, PDFs, Dokumente, Archive
+
+### 📈 Berichte & Export
+- **Tagesberichte**: Anwesenheit, Verspätungen, Statistiken
+- **Monatsberichte**: Detaillierte Analysen und Trends
+- **Export-Funktionen**: CSV und PDF für alle Berichte
+- **Filter und Suche**: Nach Datum, Gruppe, Kind
+
+### 💬 Kommunikation
+- **Gruppen-Chat**: Erzieher-zu-Erzieher Kommunikation
+- **Direktnachrichten**: Private Nachrichten zwischen Nutzern
+- **Dateianhänge**: Bilder, Dokumente, PDFs
+- **Nachrichtenreaktionen**: Emoji-Reaktionen auf Nachrichten
+- **Benachrichtigungen**: Push-Notifications für wichtige Ereignisse
+
+## 🗃️ Datenbank-Schema
+
+### Hauptentitäten
+- **User**: Benutzer mit Rollen (SUPER_ADMIN, ADMIN, EDUCATOR, PARENT)
+- **Institution**: KITAs mit Einstellungen und Öffnungszeiten
+- **Child**: Kinder mit Eltern-Zuordnung und Gruppen
+- **Group**: Gruppen mit Erzieher-Zuordnung
+- **CheckInLog**: Anwesenheitsprotokoll mit QR-Code-Tracking
+- **Message**: Nachrichten mit Dateianhängen und Reaktionen
+- **Note**: Kind-spezifische Notizen mit Dateianhängen
+
+### Erweiterte Features
+- **ChatChannel**: Gruppen-Chats und Direktnachrichten
+- **NotificationLog**: Push-Benachrichtigungen und Verlauf
+- **ActivityLog**: System-Aktivitätsprotokoll
+- **PersonalTask**: Persönliche Aufgaben für Nutzer
+- **ClosedDay**: Feiertage und Schließtage-Verwaltung
+
+## 🔧 Entwicklung
+
+### Backend-Entwicklung
+```bash
+cd backend
+npm run dev          # Entwicklungsserver
+npm test            # Tests ausführen
+npx prisma studio   # Datenbank-Explorer
+```
+
+### Frontend-Entwicklung
+```bash
+cd dashboard
+npm start           # Entwicklungsserver
+npm run build      # Production Build
+npm test           # Tests ausführen
+```
+
+### Datenbank-Migrationen
+```bash
+cd backend
+npx prisma migrate dev --name migration_name
+npx prisma generate
+npx prisma db seed  # Testdaten laden
+```
+
+## 🧪 Testing
+
+### Manuelle QA-Checkliste
+
+#### ✅ Super Admin
+- [ ] Login mit Super Admin Credentials
+- [ ] Institutionen verwalten (anlegen, bearbeiten, löschen)
+- [ ] Benutzerverwaltung (Admins, Erzieher, Eltern)
+- [ ] System-Statistiken und Berichte
+- [ ] Export-Funktionen (CSV/PDF)
+
+#### ✅ Admin (Einrichtungsleiter)
+- [ ] Login als Admin
+- [ ] Kinderverwaltung (CRUD, Fotos, Export)
+- [ ] Gruppenverwaltung (CRUD, Erzieher zuweisen)
+- [ ] Personalverwaltung (CRUD, Export)
+- [ ] Institutionseinstellungen (Öffnungszeiten, Feiertage)
+- [ ] Berichte und Statistiken
+- [ ] Benachrichtigungen senden
+
+#### ✅ Educator (Erzieher)
+- [ ] Login als Erzieher
+- [ ] Dashboard mit Tagesübersicht
+- [ ] Kinder verwalten (zugewiesene Gruppen)
+- [ ] Check-in/out (QR-Scan, manuell)
+- [ ] Notizen erstellen und bearbeiten
+- [ ] Chat-Funktionen nutzen
+- [ ] Persönliche Aufgaben verwalten
+
+## 🚀 Deployment
+
+### Backend (Node.js)
+```bash
+# Production Build
+npm run build
+pm2 start ecosystem.config.js
+
+# Oder mit Docker
+docker build -t app4kitas-backend .
+docker run -p 4000:4000 app4kitas-backend
+```
+
+### Frontend (React)
+```bash
+# Production Build
+npm run build
+serve -s build -l 3000
+
+# Oder mit Nginx
+nginx -s reload
+```
+
+### Datenbank (PostgreSQL)
+- **Backup-Strategie**: Automatische Snapshots
+- **Monitoring**: Grafana + Prometheus
+- **Sicherheit**: TLS-Verschlüsselung, Firewall
+
+## 📚 Dokumentation
+
+### Detaillierte Dokumentation
+- **[Dashboard README](./dashboard/README.md)**: Umfassende Web-Dashboard-Dokumentation
+- **[Educator Pages README](./dashboard/src/pages/educator/README.md)**: Erzieher-spezifische Features
+- **[API-Dokumentation](./shared/api_routes_reference.md)**: Vollständige API-Referenz
+- **[Design System](./shared/styles_app4kitas_MODERN.json)**: UI/UX Design-Tokens
+
+### Technische Dokumentation
+- **[Projekt-Kontext](./shared/App4KITAs_context_FINAL_v2.8.md)**: Detaillierte technische Spezifikationen
+- **Prisma Schema**: Datenbank-Modelle und Beziehungen
+- **Komponenten-Dokumentation**: React-Komponenten und Hooks
+
+## 🔒 Sicherheit & Compliance
+
+### DSGVO-Compliance
+- **Datenminimierung**: Nur notwendige Daten werden gespeichert
+- **Recht auf Löschung**: Vollständige Datenlöschung möglich
+- **Datenportabilität**: Export aller persönlichen Daten
+- **Transparenz**: Klare Datenschutzerklärung und -prozesse
+
+### Technische Sicherheit
+- **Verschlüsselung**: TLS für alle Verbindungen
+- **Authentifizierung**: Sichere JWT-Token mit HttpOnly Cookies
+- **Autorisierung**: Rollenbasierte Zugriffskontrolle
+- **Input-Validierung**: Schutz vor XSS und Injection-Angriffen
+
+## 🤝 Beitragen
+
+### Entwicklungsworkflow
+1. **Issue erstellen** für neue Features oder Bugs
+2. **Feature-Branch** von main erstellen
+3. **Änderungen implementieren** mit Tests
+4. **Pull Request** mit Beschreibung erstellen
+5. **Code Review** und Merge
+
+### Coding Standards
+- **TypeScript**: Strikte Typisierung für alle Frontend-Komponenten
+- **ESLint**: Code-Qualität und Konsistenz
+- **Prettier**: Automatische Code-Formatierung
+- **Tests**: Unit- und Integration-Tests für kritische Funktionen
+
+## 📞 Support & Kontakt
+
+### Hilfe bekommen
+- **Dokumentation**: Umfassende README-Dateien und API-Docs
+- **Issues**: GitHub Issues für Bugs und Feature-Requests
+- **Discussions**: GitHub Discussions für Fragen und Ideen
+
+### Kontakt
+- **E-Mail**: [kontakt@app4kitas.eu](mailto:kontakt@app4kitas.eu)
+- **GitHub**: [https://github.com/your-org/app4kitas](https://github.com/your-org/app4kitas)
+
+## 📄 Lizenz
+
+Dieses Projekt ist Teil der App4KITAs-Plattform. Siehe die Hauptprojekt-Lizenz für Details.
+
 ---
 
-## 🔐 Authentication
-
-* All API requests use JWT-based auth
-* Login: `POST /api/login` → returns `token`
-* Frontend stores token and adds `Authorization: Bearer <token>` in requests
-
----
-
-## 📁 File Uploads
-
-* Profile photo: `POST /api/profile/avatar` → form-data: `avatar`
-* Child photo: `PUT /api/children/:id/photo` → form-data: `photo`
-* Message attachments: `POST /api/message` → form-data: `file` (optional)
-
----
-
-## 🧪 Testing Guide (Manual QA)
-
-### ✅ Super Admin
-
-* [ ] Login with Super Admin credentials
-* [ ] Navigate to "Admins" page
-* [ ] Add new admin via modal
-* [ ] Test pagination and search
-* [ ] Profile dropdown → update profile & avatar
-* [ ] Notification bell shows and marks notifications
-
-### ✅ Admin
-
-* [ ] Login as admin
-* [ ] Test "Children" page: add, view, upload photo
-* [ ] Test "Groups" page: create, assign educators
-* [ ] Test profile edit and notification bell
-* [ ] **NEW:** Test Settings page with holiday management
-  * [ ] Add regular weekly closures (weekends)
-  * [ ] Add single-day holidays (Christmas)
-  * [ ] Add date range holidays (summer vacation)
-  * [ ] Test recurrence options (once vs. yearly)
-
-### ✅ Educator
-
-* [ ] Login as educator
-* [ ] Check "Check-in" page: check IN/OUT children, history appears
-* [ ] Test "Messages" page: send message + upload file
-* [ ] Profile update and notification working
-
----
-
-## 🧩 Routes Summary
-
-→ Use [📚 API-Routenübersicht](#) in your repo or `App4KITAs_context_FINAL_v2.8.md` for full route table.
-
----
-
-## 🛡️ Security Checklist (To Finalize)
-
-* [ ] Add Helmet for headers
-* [ ] Add CORS policy for production
-* [ ] Enable HTTPS on server / proxy
-* [ ] Add rate-limiting middleware
-* [ ] Protect uploads from unauthorized access
-
----
-
-## 🗃️ Deployment Tips
-
-* Use `pm2` or Docker for backend
-* Use `serve` or NGINX for React dashboard
-* Host PostgreSQL securely with backups
-* Add Sentry/logging for error monitoring
-
-# App4KITAs Dashboard
-
-## Projektüberblick
-App4KITAs ist eine moderne, DSGVO-konforme Plattform für Kindertagesstätten (KITAs) zur Verwaltung von Anwesenheit, Gruppen, Personal, Kommunikation und Berichten. Das Dashboard richtet sich an Einrichtungsleiter (Admins), Erzieher und Super Admins.
-
-## Tech Stack
-- **Frontend:** React, TypeScript, Styled Components
-- **Backend:** Node.js (Express), PostgreSQL, Prisma ORM
-- **Design:** Design Tokens, modernes UI, Maskottchen, Dark Mode
-- **Auth:** E-Mail + Passwort, JWT/HttpOnly-Cookie
-
-## Hauptfunktionen für Admins
-- **Kinderverwaltung:** Anlegen, Bearbeiten, Löschen, Foto-Upload, Suche, Export (CSV/PDF)
-- **Gruppenverwaltung:** Anlegen, Bearbeiten, Löschen, Erzieher zuweisen, Suche, Export (CSV/PDF)
-- **Personalverwaltung:** Anlegen, Bearbeiten, Löschen, Suche, Export (CSV/PDF)
-- **Institutionseinstellungen:** Name, Adresse, Öffnungszeiten, **erweiterte Feiertagsverwaltung**
-- **Statistiken:** Check-in/out, Monatsberichte, visuelle Diagramme, Filter, Export
-- **Benachrichtigungen:** Nachrichten an Erzieher oder Gruppen, Empfängerauswahl, Verlauf
-- **Berichte:** Tages- und Monatsberichte, Filter, Export (CSV)
-- **Dashboard:** Übersicht, Schnellzugriffe, Aktivitäten, offene Aufgaben
-- **UX:** Modale Dialoge, Maskottchen für leere Zustände, Fehler- und Ladeanzeigen, responsive
-
-## 🆕 Neue Feiertagsverwaltung
-- **Regelmäßige Schließtage:** Wochentage als wiederkehrende Schließtage festlegen
-- **Einzelne Feiertage:** Einzelne Tage mit Wiederholungsoptionen
-- **Datumsbereiche:** Ferienzeiten mit Start- und Enddatum
-- **Professionelle UI:** Modernes Design mit deutscher Lokalisierung
-- **Validierung:** Überlappungsprüfung und Datumsvalidierung
-
-## Setup & Installation
-1. **Repository klonen:**
-   ```
-   git clone <repo-url>
-   cd kita-app/dashboard
-   ```
-2. **Abhängigkeiten installieren:**
-   ```
-   npm install
-   ```
-3. **Umgebungsvariablen:**
-   - `.env` Datei anlegen (siehe Beispiel `.env.example`)
-   - Backend-URL und Auth-Settings setzen
-4. **Starten:**
-   ```
-   npm start
-   ```
-   Das Dashboard läuft standardmäßig auf [http://localhost:3000](http://localhost:3000)
-
-## Nutzung
-- **Login:** Mit E-Mail und Passwort anmelden (Rolle: Admin, Erzieher, Super Admin)
-- **Navigation:** Sidebar mit rollenbasierten Links (Dashboard, Gruppen, Kinder, Personal, Statistiken, Einstellungen, Berichte, Benachrichtigungen)
-  - **Workflows:**
-    - Kinder/Personal/Gruppen anlegen, bearbeiten, löschen über Modale
-    - **Institutionseinstellungen verwalten** (Name, Adresse, Öffnungszeiten, **erweiterte Feiertagsverwaltung**)
-    - CSV/PDF-Export per Button
-    - Berichte filtern und exportieren
-    - Nachrichten an Gruppen/Erzieher senden
-    - Statistiken und Aktivitäten einsehen
-
-## Entwicklung & Beiträge
-- **Code Style:** TypeScript, Styled Components, Design Tokens
-- **Tests:** Jest, Cypress (siehe Doku)
-- **Beiträge:** Pull Requests willkommen! Bitte vorher Issue anlegen.
-
-## Kontakt & Support
-- Fragen, Feedback oder Support: [kontakt@app4kitas.eu](mailto:kontakt@app4kitas.eu)
-
----
-© 2025 App4KITAs – DSGVO-konform, Open Source, Made in Europe
+**App4KITAs** - DSGVO-konforme, moderne Kita-Management-Plattform aus Europa 🇪🇺
