@@ -777,7 +777,7 @@ const Checkin: React.FC = () => {
         priority: 'normal'
       });
       
-      console.log(`Notification sent for ${childName} ${action}`);
+      // Notification sent successfully
     } catch (error) {
       console.warn('Failed to send notification:', error);
       // Don't show error to user as notification is not critical

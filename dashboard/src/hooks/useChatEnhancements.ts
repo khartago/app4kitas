@@ -163,12 +163,12 @@ export const useTypingIndicator = (channelId: string) => {
 
   const startTyping = useCallback(() => {
     // In a real app, this would send a typing event to the server
-    console.log('User started typing in channel:', channelId);
+          // User started typing
   }, [channelId]);
 
   const stopTyping = useCallback(() => {
     // In a real app, this would send a stop typing event to the server
-    console.log('User stopped typing in channel:', channelId);
+          // User stopped typing
   }, [channelId]);
 
   const handleTyping = useCallback(() => {

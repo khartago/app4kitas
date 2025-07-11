@@ -130,6 +130,10 @@ dashboard/build/
 backend/dist/
 *.tsbuildinfo
 
+# Test files
+backend/src/testRoutes.js
+backend/accounts.txt
+
 # Database
 *.db
 *.sqlite

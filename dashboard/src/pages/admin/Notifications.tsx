@@ -804,7 +804,7 @@ const Notifications: React.FC = () => {
       setTotalPages(response.pagination?.pages || 0);
       setCurrentPage(page);
     } catch (err) {
-      console.log('Error loading notifications:', err);
+      // Error loading notifications
       setNotifications([]);
       setTotalNotifications(0);
       setTotalPages(0);
@@ -819,7 +819,7 @@ const Notifications: React.FC = () => {
       const response = await fetchRecipients();
       setRecipients(response);
     } catch (err) {
-      console.log('Error loading recipients:', err);
+      // Error loading recipients
       setRecipients({ parents: [], educators: [], children: [], groups: [] });
     } finally {
       setLoadingRecipients(false);
@@ -833,7 +833,7 @@ const Notifications: React.FC = () => {
       const response = await fetchNotificationStats(benutzer.id);
       setStats(response);
     } catch (err) {
-      console.log('Error loading stats:', err);
+      // Error loading stats
     }
   };
 

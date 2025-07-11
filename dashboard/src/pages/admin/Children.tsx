@@ -71,7 +71,7 @@ const Children: React.FC = () => {
     setError(null);
       try {
       const childrenData = await fetchChildren();
-      console.log('Loaded children:', childrenData.children);
+      // Children loaded successfully
       setData(childrenData.children || childrenData || []);
       
       // Also load groups for the dropdown
