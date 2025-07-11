@@ -102,3 +102,26 @@ export async function validateToken(): Promise<any> {
     return handleApiError(error, 'Token ungültig');
   }
 } 
+
+/**
+ * Profil aktualisieren
+ */
+export async function updateProfile(profileData: { name?: string; email?: string; phone?: string }): Promise<any> {
+  try {
+    const res = await axios.put(`${API_URL}/profile`, profileData, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Aktualisieren des Profils');
+  }
+}
+
+/**
+ * Passwort ändern
+ */
+export async function changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<void> {
+  try {
+    await axios.put(`${API_URL}/profile/password`, passwordData, { withCredentials: true });
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Ändern des Passworts');
+  }
+} 

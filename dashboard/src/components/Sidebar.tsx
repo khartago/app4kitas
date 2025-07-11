@@ -345,29 +345,29 @@ const LogoutButton = styled.button`
 
 const navItemsByRole = {
   SUPER_ADMIN: [
-    { label: 'Dashboard', path: '/superadmin/dashboard' },
-    { label: 'Institutionen', path: '/superadmin/institutionen' },
-    { label: 'Erzieher', path: '/superadmin/erzieher' },
-    { label: 'Eltern', path: '/superadmin/eltern' },
-    { label: 'Statistiken', path: '/superadmin/statistiken' },
-    { label: 'Berichte', path: '/superadmin/berichte' },
+    { label: 'Dashboard', path: '/dashboard/superadmin/dashboard' },
+    { label: 'Institutionen', path: '/dashboard/superadmin/institutionen' },
+    { label: 'Erzieher', path: '/dashboard/superadmin/erzieher' },
+    { label: 'Eltern', path: '/dashboard/superadmin/eltern' },
+    { label: 'Statistiken', path: '/dashboard/superadmin/statistiken' },
+    { label: 'Berichte', path: '/dashboard/superadmin/berichte' },
   ],
   ADMIN: [
-    { label: 'Dashboard', path: '/admin/dashboard' },
-    { label: 'Gruppen', path: '/admin/gruppen' },
-    { label: 'Kinder', path: '/admin/kinder' },
-    { label: 'Personal', path: '/admin/personal' },
-    { label: 'Statistiken', path: '/admin/statistiken' },
-    { label: 'Benachrichtigungen', path: '/admin/benachrichtigungen' },
-    { label: 'Einstellungen', path: '/admin/einstellungen' },
-    { label: 'Berichte', path: '/admin/berichte' },
+    { label: 'Dashboard', path: '/dashboard/admin/dashboard' },
+    { label: 'Gruppen', path: '/dashboard/admin/gruppen' },
+    { label: 'Kinder', path: '/dashboard/admin/kinder' },
+    { label: 'Personal', path: '/dashboard/admin/personal' },
+    { label: 'Statistiken', path: '/dashboard/admin/statistiken' },
+    { label: 'Benachrichtigungen', path: '/dashboard/admin/benachrichtigungen' },
+    { label: 'Einstellungen', path: '/dashboard/admin/einstellungen' },
+    { label: 'Berichte', path: '/dashboard/admin/berichte' },
   ],
   EDUCATOR: [
-    { label: 'Dashboard', path: '/educator/dashboard' },
-    { label: 'Checkin', path: '/educator/checkin' },
-    { label: 'Meine Kinder', path: '/educator/kinder' },
-    { label: 'Chat', path: '/educator/chat' },
-    { label: 'Notizen', path: '/educator/notizen' },
+    { label: 'Dashboard', path: '/dashboard/educator/dashboard' },
+    { label: 'Checkin', path: '/dashboard/educator/checkin' },
+    { label: 'Kinder', path: '/dashboard/educator/kinder' },
+    { label: 'Chat', path: '/dashboard/educator/chat' },
+    { label: 'Notizen', path: '/dashboard/educator/notizen' },
   ],
 };
 
@@ -403,14 +403,21 @@ const Sidebar: React.FC = () => {
       </LogoArea>
       <LogoDivider />
       <NavList>
-        {navItems.map((item: { label: string; path: string }) => (
-          <NavItem key={item.path} $active={location.pathname === item.path}>
-            <SidebarLink to={item.path} $active={location.pathname === item.path} title={item.label}>
+        {navItems.map((item: { label: string; path: string }) => {
+          const isActive = location.pathname === item.path || 
+                          (item.path !== '/dashboard/superadmin/dashboard' && 
+                           item.path !== '/dashboard/admin/dashboard' && 
+                           item.path !== '/dashboard/educator/dashboard' &&
+                           location.pathname.startsWith(item.path));
+          return (
+            <NavItem key={item.path} $active={isActive}>
+              <SidebarLink to={item.path} $active={isActive} title={item.label}>
               {icons[item.label as keyof typeof icons]}
               <span>{item.label}</span>
             </SidebarLink>
           </NavItem>
-        ))}
+          );
+        })}
       </NavList>
       <BearSpacer>
         <MascotBear size={120} height={80} mood="help" variant="vertical" noWaving />

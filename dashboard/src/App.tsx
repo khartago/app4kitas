@@ -8,6 +8,8 @@ import AdminRoutes from './routes/AdminRoutes';
 import SuperAdminRoutes from './routes/SuperAdminRoutes';
 import Header from './components/Header';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
+import Credits from './pages/Credits';
 import { UserContextProvider, useUser } from './components/UserContext';
 import { createGlobalStyle } from 'styled-components';
 
@@ -54,26 +56,26 @@ const Main = styled.main`
 `;
 
 const routeTitles: Record<string, string> = {
-  '/superadmin/dashboard': 'Super Admin Dashboard',
-  '/superadmin/berichte': 'Berichte & Auswertungen',
-  '/superadmin/statistiken': 'Plattformweite Statistiken',
-  '/superadmin/eltern': 'Eltern-Übersicht',
-  '/superadmin/erzieher': 'Erzieher-Übersicht',
-  '/superadmin/institutionen': 'Institutionen-Übersicht (Admins)',
-  '/admin/dashboard': 'Admin Dashboard',
-  '/admin/statistiken': 'Check-in/out Statistiken',
-  '/admin/kinder': 'Kinderverwaltung',
-  '/admin/gruppen': 'Gruppenverwaltung',
-  '/admin/personal': 'Personalverwaltung',
-  '/admin/benachrichtigungen': 'Benachrichtigungen',
-  '/admin/monatsbericht': 'Monatsbericht',
-  '/admin/tagesbericht': 'Tagesbericht',
-  '/admin/berichte': 'Berichte',
-  '/educator/dashboard': 'Mein Tag',
-  '/educator/notizen': 'Tagesnotizen',
-      '/educator/chat': 'Chat',
-  '/educator/kinder': 'Kinder',
-  '/educator/meine-gruppe': 'Meine Gruppe',
+  '/dashboard/superadmin/dashboard': 'Super Admin Dashboard',
+  '/dashboard/superadmin/berichte': 'Berichte & Auswertungen',
+  '/dashboard/superadmin/statistiken': 'Plattformweite Statistiken',
+  '/dashboard/superadmin/eltern': 'Eltern-Übersicht',
+  '/dashboard/superadmin/erzieher': 'Erzieher-Übersicht',
+  '/dashboard/superadmin/institutionen': 'Institutionen-Übersicht (Admins)',
+  '/dashboard/admin/dashboard': 'Admin Dashboard',
+  '/dashboard/admin/statistiken': 'Check-in/out Statistiken',
+  '/dashboard/admin/kinder': 'Kinderverwaltung',
+  '/dashboard/admin/gruppen': 'Gruppenverwaltung',
+  '/dashboard/admin/personal': 'Personalverwaltung',
+  '/dashboard/admin/benachrichtigungen': 'Benachrichtigungen',
+  '/dashboard/admin/monatsbericht': 'Monatsbericht',
+  '/dashboard/admin/tagesbericht': 'Tagesbericht',
+  '/dashboard/admin/berichte': 'Berichte',
+  '/dashboard/educator/dashboard': 'Mein Tag',
+  '/dashboard/educator/notizen': 'Tagesnotizen',
+  '/dashboard/educator/chat': 'Chat',
+  '/dashboard/educator/kinder': 'Kinder',
+  '/dashboard/educator/meine-gruppe': 'Meine Gruppe',
 };
 
 function getTitle(pathname: string, role: string) {
@@ -90,16 +92,16 @@ const AppRoutes: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Redirect root paths to appropriate dashboard - must be before any conditional returns
+  // Redirect dashboard paths to appropriate dashboard - must be before any conditional returns
   React.useEffect(() => {
-    if (!loading && benutzer && benutzer.role && location.pathname === '/') {
+    if (!loading && benutzer && benutzer.role && location.pathname === '/dashboard') {
       const role = benutzer.role.toUpperCase();
       if (role === 'SUPER_ADMIN') {
-        navigate('/superadmin/dashboard', { replace: true });
+        navigate('/dashboard/superadmin/dashboard', { replace: true });
       } else if (role === 'ADMIN') {
-        navigate('/admin/dashboard', { replace: true });
+        navigate('/dashboard/admin/dashboard', { replace: true });
       } else if (role === 'EDUCATOR') {
-        navigate('/educator/dashboard', { replace: true });
+        navigate('/dashboard/educator/dashboard', { replace: true });
       }
     }
   }, [location.pathname, benutzer, loading, navigate]);
@@ -121,7 +123,7 @@ const AppRoutes: React.FC = () => {
             {role === 'ADMIN' && <Route path="/admin/*" element={<AdminRoutes />} />}
             {role === 'EDUCATOR' && <Route path="/educator/*" element={<EducatorRoutes />} />}
             {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Main>
       </MainContentWrapper>
@@ -142,8 +144,10 @@ const App: React.FC = () => {
       <Router>
         <UserContextProvider>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/*" element={<AppRoutes />} />
+            <Route path="/credits" element={<Credits />} />
+            <Route path="/dashboard/*" element={<AppRoutes />} />
           </Routes>
         </UserContextProvider>
       </Router>

@@ -217,7 +217,7 @@ const BulkActionsRow = styled.div`
   
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 8px;
+  gap: 8px;
     margin-top: 12px;
   }
   
@@ -1153,25 +1153,25 @@ const Checkin: React.FC = () => {
                       checked={selectedChildren.includes(child.id)}
                       onChange={() => handleSelectChild(child.id)}
                     />
-                    <ChildInfo>
+                      <ChildInfo>
                       <Avatar>
-                        {child.photoUrl ? (
-                          <img 
-                            src={child.photoUrl.startsWith('/uploads') ? BACKEND_URL + child.photoUrl : child.photoUrl} 
-                            alt={child.name} 
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              borderRadius: '50%', 
-                              objectFit: 'cover' 
-                            }}
-                          />
-                        ) : (
-                          getInitials(child.name)
-                        )}
+                          {child.photoUrl ? (
+                            <img 
+                              src={child.photoUrl.startsWith('/uploads') ? BACKEND_URL + child.photoUrl : child.photoUrl} 
+                              alt={child.name} 
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                borderRadius: '50%', 
+                                objectFit: 'cover' 
+                              }}
+                            />
+                          ) : (
+                            getInitials(child.name)
+                          )}
                       </Avatar>
-                      <ChildDetails>
-                        <ChildName>{child.name}</ChildName>
+                        <ChildDetails>
+                          <ChildName>{child.name}</ChildName>
                         {child.age && (
                           <ChildAge>
                             {typeof child.age === 'number' 
@@ -1180,11 +1180,11 @@ const Checkin: React.FC = () => {
                             }
                           </ChildAge>
                         )}
-                      </ChildDetails>
-                    </ChildInfo>
-                    <StatusBadge $checkedIn={child.checkedIn}>
-                      {child.checkedIn ? 'Eingecheckt' : 'Nicht eingecheckt'}
-                    </StatusBadge>
+                        </ChildDetails>
+                      </ChildInfo>
+                      <StatusBadge $checkedIn={child.checkedIn}>
+                        {child.checkedIn ? 'Eingecheckt' : 'Nicht eingecheckt'}
+                      </StatusBadge>
                   </CardHeader>
 
                   <TimeSection>

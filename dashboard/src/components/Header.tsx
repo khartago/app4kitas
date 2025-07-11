@@ -322,37 +322,37 @@ const Header: React.FC<HeaderProps> = ({ title, showSearch, searchValue, onSearc
       <HeaderContent>
         <LeftSection>
           <Title title={title}>{title}</Title>
-          {showSearch && (
-            <SearchWrapper>
-              <SearchBar
-                type="text"
-                placeholder="Suchen..."
-                value={searchValue}
-                onChange={onSearchChange}
-                aria-label="Suchen"
-              />
-              <SearchIcon>
+        {showSearch && (
+          <SearchWrapper>
+            <SearchBar
+              type="text"
+              placeholder="Suchen..."
+              value={searchValue}
+              onChange={onSearchChange}
+              aria-label="Suchen"
+            />
+            <SearchIcon>
                 <SearchIconSVG />
-              </SearchIcon>
-            </SearchWrapper>
-          )}
+            </SearchIcon>
+          </SearchWrapper>
+        )}
         </LeftSection>
         
-        <RightSection>
+      <RightSection>
           <DarkModeButton 
             onClick={toggle} 
             aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'}
           >
-            {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </DarkModeButton>
+          {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </DarkModeButton>
           
           <NotificationButton aria-label="Benachrichtigungen">
             <BellIcon />
             <NotificationBadge />
           </NotificationButton>
           
-          <ProfileDropdown onLogout={handleLogout} />
-        </RightSection>
+        <ProfileDropdown onLogout={handleLogout} />
+      </RightSection>
       </HeaderContent>
     </FixedHeader>
   );

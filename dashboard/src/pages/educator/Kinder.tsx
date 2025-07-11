@@ -86,9 +86,9 @@ const StatCard = styled(Card)`
 
 const StatNumber = styled.div`
   font-size: 28px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.primary};
-  margin-bottom: 8px;
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.primary};
+    margin-bottom: 8px;
   
   @media (max-width: 768px) {
     font-size: 24px;
@@ -100,8 +100,8 @@ const StatNumber = styled.div`
 `;
 
 const StatLabel = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+    font-size: 14px;
+    color: ${({ theme }) => theme.colors.textSecondary};
   font-weight: 500;
   
   @media (max-width: 768px) {
@@ -383,12 +383,12 @@ const ChildInfo = styled.div`
   flex: 1;
   min-width: 0;
 `;
-
+  
 const ChildName = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textPrimary};
+    font-weight: 600;
+    color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 16px;
-  margin-bottom: 4px;
+    margin-bottom: 4px;
   
   @media (max-width: 768px) {
     font-size: 15px;
@@ -401,7 +401,7 @@ const ChildName = styled.div`
 
 const ChildAge = styled.div`
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
   
   @media (max-width: 768px) {
     font-size: 12px;
@@ -413,9 +413,9 @@ const ChildAge = styled.div`
 `;
 
 const ChildGroup = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: 500;
+    font-size: 12px;
+    color: ${({ theme }) => theme.colors.primary};
+    font-weight: 500;
   
   @media (max-width: 480px) {
     font-size: 11px;
@@ -451,17 +451,17 @@ const DetailRow = styled.div`
 
 const DetailLabel = styled.span`
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
   font-weight: 500;
   
   @media (max-width: 480px) {
     font-size: 12px;
   }
 `;
-
+  
 const DetailValue = styled.span`
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.textPrimary};
   font-weight: 600;
   
   @media (max-width: 480px) {
@@ -508,7 +508,7 @@ const ParentInfo = styled.div`
 
 const ParentName = styled.span`
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.textPrimary};
   font-weight: 600;
   
   @media (max-width: 480px) {
@@ -529,16 +529,16 @@ const ParentContact = styled.div`
 
 const ParentEmail = styled.span`
   font-size: 11px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
   
   @media (max-width: 480px) {
     font-size: 10px;
   }
 `;
-
+  
 const ParentPhone = styled.span`
   font-size: 11px;
-  color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
   
   @media (max-width: 480px) {
     font-size: 10px;
@@ -650,9 +650,9 @@ const EmptyState = styled.div`
 `;
 
 const EmptyIcon = styled.div`
-  font-size: 48px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: 16px;
+    font-size: 48px;
+    color: ${({ theme }) => theme.colors.textSecondary};
+    margin-bottom: 16px;
   
   @media (max-width: 768px) {
     font-size: 40px;
@@ -666,10 +666,10 @@ const EmptyIcon = styled.div`
 `;
 
 const EmptyTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.colors.textPrimary};
+    margin-bottom: 8px;
   
   @media (max-width: 768px) {
     font-size: 16px;
@@ -682,7 +682,7 @@ const EmptyTitle = styled.h3`
 
 const EmptyDescription = styled.p`
   font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -820,7 +820,7 @@ const Kinder: React.FC = () => {
           const ageB = calculateAge(b.birthdate);
           // Handle both number and string return types
           if (typeof ageA === 'number' && typeof ageB === 'number') {
-            comparison = ageA - ageB;
+          comparison = ageA - ageB;
           } else if (typeof ageA === 'string' && typeof ageB === 'string') {
             comparison = ageA.localeCompare(ageB);
           } else if (typeof ageA === 'number') {
@@ -893,24 +893,24 @@ const Kinder: React.FC = () => {
       <PageContainer>
         {/* Statistics */}
         <StatsSection>
-          <StatsGrid>
-            <StatCard>
+        <StatsGrid>
+          <StatCard>
               <StatNumber>{totalChildren}</StatNumber>
               <StatLabel>Kinder</StatLabel>
-            </StatCard>
-            <StatCard>
+          </StatCard>
+          <StatCard>
               <StatNumber>{ageGroups.age3to6}</StatNumber>
               <StatLabel>3-6 Jahre</StatLabel>
-            </StatCard>
-            <StatCard>
+          </StatCard>
+          <StatCard>
               <StatNumber>{averageAge}</StatNumber>
               <StatLabel>Ø Alter</StatLabel>
-            </StatCard>
-            <StatCard>
+          </StatCard>
+          <StatCard>
               <StatNumber>{totalGroups}</StatNumber>
               <StatLabel>Gruppen</StatLabel>
-            </StatCard>
-          </StatsGrid>
+          </StatCard>
+        </StatsGrid>
         </StatsSection>
 
         {/* Control Section */}
@@ -937,39 +937,39 @@ const Kinder: React.FC = () => {
               <option value="age-asc">Alter aufsteigend</option>
               <option value="age-desc">Alter absteigend</option>
             </FilterSelect>
-            
-            {/* Group Selector */}
-            {groups.length > 1 && (
-              <GroupSelector>
-                <GroupSelect onClick={() => setGroupDropdownOpen(!groupDropdownOpen)}>
-                  <span>{getSelectedGroupName()}</span>
-                  <FaChevronDown style={{ fontSize: '12px' }} />
-                </GroupSelect>
-                <GroupDropdown $isOpen={groupDropdownOpen}>
+          
+          {/* Group Selector */}
+          {groups.length > 1 && (
+            <GroupSelector>
+              <GroupSelect onClick={() => setGroupDropdownOpen(!groupDropdownOpen)}>
+                <span>{getSelectedGroupName()}</span>
+                <FaChevronDown style={{ fontSize: '12px' }} />
+              </GroupSelect>
+              <GroupDropdown $isOpen={groupDropdownOpen}>
+                <GroupOption 
+                  $isSelected={selectedGroupId === 'all'}
+                  onClick={() => {
+                    setSelectedGroupId('all');
+                    setGroupDropdownOpen(false);
+                  }}
+                >
+                  Alle Gruppen ({totalChildren})
+                </GroupOption>
+                {groups.map(group => (
                   <GroupOption 
-                    $isSelected={selectedGroupId === 'all'}
+                    key={group.id}
+                    $isSelected={selectedGroupId === group.id}
                     onClick={() => {
-                      setSelectedGroupId('all');
+                      setSelectedGroupId(group.id);
                       setGroupDropdownOpen(false);
                     }}
                   >
-                    Alle Gruppen ({totalChildren})
+                    {group.name} ({group.children?.length || 0})
                   </GroupOption>
-                  {groups.map(group => (
-                    <GroupOption 
-                      key={group.id}
-                      $isSelected={selectedGroupId === group.id}
-                      onClick={() => {
-                        setSelectedGroupId(group.id);
-                        setGroupDropdownOpen(false);
-                      }}
-                    >
-                      {group.name} ({group.children?.length || 0})
-                    </GroupOption>
-                  ))}
-                </GroupDropdown>
-              </GroupSelector>
-            )}
+                ))}
+              </GroupDropdown>
+            </GroupSelector>
+          )}
           </FilterRow>
         </ControlSection>
 
@@ -1028,12 +1028,12 @@ const Kinder: React.FC = () => {
                               <FaEnvelope style={{ color: theme.colors.textSecondary, fontSize: '11px' }} />
                               <ParentEmail>{parent.email}</ParentEmail>
                             </ParentContact>
-                            {parent.phone && (
+                          {parent.phone && (
                               <ParentContact>
                                 <FaPhone style={{ color: theme.colors.primary, fontSize: '11px' }} />
                                 <ParentPhone>{formatPhone(parent.phone)}</ParentPhone>
                               </ParentContact>
-                            )}
+                          )}
                           </ParentInfo>
                         </ParentItem>
                       ))}

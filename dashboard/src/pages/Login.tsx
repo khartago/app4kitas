@@ -289,13 +289,13 @@ const Login: React.FC = () => {
       // User is already connected, redirect based on role
       const role = (benutzer.role || '').toUpperCase();
       if (role === 'SUPER_ADMIN') {
-        navigate('/superadmin/dashboard', { replace: true });
+        navigate('/dashboard/superadmin/dashboard', { replace: true });
       } else if (role === 'ADMIN') {
-        navigate('/admin', { replace: true });
+        navigate('/dashboard/admin/dashboard', { replace: true });
       } else if (role === 'EDUCATOR') {
-        navigate('/educator', { replace: true });
+        navigate('/dashboard/educator/dashboard', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     }
   }, [benutzer, userLoading, navigate]);
@@ -322,13 +322,13 @@ const Login: React.FC = () => {
       setBenutzer(data.user);
       const role = (data.user?.role || (decodeJWT(data.token)?.role))?.toUpperCase();
       if (role === 'SUPER_ADMIN') {
-        navigate('/superadmin/dashboard', { replace: true });
+        navigate('/dashboard/superadmin/dashboard', { replace: true });
       } else if (role === 'ADMIN') {
-        navigate('/admin', { replace: true });
+        navigate('/dashboard/admin/dashboard', { replace: true });
       } else if (role === 'EDUCATOR') {
-        navigate('/educator', { replace: true });
+        navigate('/dashboard/educator/dashboard', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     } catch {
       setError('Login fehlgeschlagen. Bitte überprüfe deine Zugangsdaten.');

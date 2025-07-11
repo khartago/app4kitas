@@ -536,12 +536,12 @@ const Notizen: React.FC = () => {
                 <FormField>
                   <Label>Anhang (optional)</Label>
                   <FileUploadContainer>
-                    <FileInput
-                      type="file"
-                      onChange={handleFileSelect}
+                  <FileInput
+                    type="file"
+                    onChange={handleFileSelect}
                       accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                       id="file-upload"
-                    />
+                  />
                     <FileUploadLabel htmlFor="file-upload">
                       <FileUploadIcon>
                         <FaFileAlt />
