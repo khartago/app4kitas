@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../../components/UserContext';
-import { AnimatedMascotsLoader, ErrorMsg, DataTableColumn, CrudPage } from '../../components/ui/AdminDashboardUI';
+import { ErrorMsg, DataTableColumn, CrudPage } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import ModernModal from '../../components/ui/ModernModal';
 import { FormField, Label, Input, ErrorText, ModalButton } from '../../components/ui/ModernModal';
 import { fetchGroups, addGroup, editGroup, deleteGroup, fetchEducators } from '../../services/adminApi';
+import { FaLayerGroup } from 'react-icons/fa';
 
 // Types
 interface Group {
@@ -375,7 +377,7 @@ const Groups: React.FC = () => {
     <CrudPage
       title="Gruppenverwaltung"
       entityName="Gruppe"
-      // Backend filtering by institutionId is enforced for security; no frontend filtering needed here
+      icon={FaLayerGroup}
       data={data}
       columns={columns}
       loading={loading}

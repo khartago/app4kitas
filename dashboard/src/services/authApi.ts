@@ -4,6 +4,35 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000/api';
 
+// Helper function for making authenticated API requests
+export const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    // Handle 204 No Content (e.g., successful DELETE)
+    if (response.status === 204) return;
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Netzwerkfehler');
+  }
+};
+
 // Helper function to handle errors with German messages
 const handleApiError = (error: any, defaultMessage: string): never => {
   let errorMessage = defaultMessage;
@@ -40,10 +69,14 @@ const handleApiError = (error: any, defaultMessage: string): never => {
  */
 export async function login(email: string, password: string): Promise<{ token: string; user: any }> {
   try {
-    const res = await axios.post(`${API_URL}/login`, { email, password }, { withCredentials: true });
+    const res = await axios.post(
+      `${API_URL}/login`,
+      { email, password },
+      { withCredentials: true }
+    );
     return res.data;
   } catch (error) {
-    return handleApiError(error, 'Anmeldung fehlgeschlagen');
+    return handleApiError(error, 'Fehler beim Login');
   }
 }
 

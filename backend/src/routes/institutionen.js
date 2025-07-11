@@ -6,6 +6,7 @@ const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const prisma = new PrismaClient();
 const { requireRole } = require('../middlewares/auth');
 const { generatePDFExport, createInfoLines } = require('../utils/pdfHelper');
+const { logActivity } = require('../controllers/activityController');
 
 // Alle Institutionen auflisten
 router.get('/institutionen', requireRole('SUPER_ADMIN'), async (req, res) => {
@@ -93,6 +94,27 @@ router.post('/institutionen', requireRole('SUPER_ADMIN'), async (req, res) => {
     const institution = await prisma.institution.create({
       data: { name, address },
     });
+    // Create institution chat channel
+    await prisma.chatChannel.create({
+      data: {
+        name: `${name} Chat`,
+        type: 'INSTITUTION_CHAT',
+        institutionId: institution.id,
+        participants: {
+          connect: [] // No users yet, will be added as users join
+        }
+      }
+    });
+    // Log activity
+    await logActivity(
+      req.user.id,
+      'INSTITUTION_CREATED',
+      'Institution',
+      institution.id,
+      `Created institution: ${name}`,
+      institution.id,
+      null
+    );
     res.status(201).json(institution);
   } catch (err) {
     res.status(500).json({ error: 'Fehler beim Erstellen der Institution.' });
@@ -108,6 +130,18 @@ router.put('/institutionen/:id', requireRole('SUPER_ADMIN'), async (req, res) =>
       where: { id },
       data: { name, address },
     });
+    
+    // Log activity
+    await logActivity(
+      req.user.id,
+      'INSTITUTION_UPDATED',
+      'Institution',
+      updated.id,
+      `Updated institution: ${updated.name}`,
+      updated.id,
+      null
+    );
+    
     res.json(updated);
   } catch (err) {
     res.status(404).json({ error: 'Institution nicht gefunden.' });
@@ -118,7 +152,24 @@ router.put('/institutionen/:id', requireRole('SUPER_ADMIN'), async (req, res) =>
 router.delete('/institutionen/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
   const { id } = req.params;
   try {
+    // Get institution name before deletion for logging
+    const institution = await prisma.institution.findUnique({ where: { id } });
+    if (!institution) {
+      return res.status(404).json({ error: 'Institution nicht gefunden.' });
+    }
+    // Delete all chat channels for this institution
+    await prisma.chatChannel.deleteMany({ where: { institutionId: id } });
     await prisma.institution.delete({ where: { id } });
+    // Log activity
+    await logActivity(
+      req.user.id,
+      'INSTITUTION_DELETED',
+      'Institution',
+      id,
+      `Deleted institution: ${institution.name}`,
+      institution.id,
+      null
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(404).json({ error: 'Institution nicht gefunden.' });

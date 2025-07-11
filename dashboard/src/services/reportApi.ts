@@ -206,4 +206,77 @@ export async function fetchPlatformStats(): Promise<any> {
   } catch (error) {
     return handleApiError(error, 'Fehler beim Laden der Statistiken');
   }
-} 
+}
+
+export const reportApi = {
+  getLatePickups: (institutionId: string, params: any) => {
+    const { from, to, ...otherParams } = params;
+    return axios.get(`${API_URL}/reports/late-pickups`, { 
+      params: { 
+        startDate: from, 
+        endDate: to, 
+        ...otherParams, 
+        institutionId 
+      }, 
+      withCredentials: true 
+    });
+  },
+  exportLatePickups: (params: any, format: 'csv' | 'pdf') => {
+    const { from, to, ...otherParams } = params;
+    const exportParams = { 
+      startDate: from, 
+      endDate: to, 
+      ...otherParams, 
+      format 
+    };
+    window.open(`${API_URL}/reports/late-pickups?${new URLSearchParams(exportParams)}`);
+  },
+
+  getAbsencePatterns: (institutionId: string, params: any) => {
+    const { from, to, ...otherParams } = params;
+    return axios.get(`${API_URL}/reports/absence-patterns`, { 
+      params: { 
+        startDate: from, 
+        endDate: to, 
+        ...otherParams, 
+        institutionId 
+      }, 
+      withCredentials: true 
+    });
+  },
+  exportAbsencePatterns: (params: any, format: 'csv' | 'pdf') => {
+    const { from, to, ...otherParams } = params;
+    const exportParams = { 
+      startDate: from, 
+      endDate: to, 
+      ...otherParams, 
+      format 
+    };
+    window.open(`${API_URL}/reports/absence-patterns?${new URLSearchParams(exportParams)}`);
+  },
+
+  getGroupAttendance: (params: any) =>
+    axios.get(`${API_URL}/reports/group-attendance`, { params, withCredentials: true }),
+  exportGroupAttendance: (params: any, format: 'csv' | 'pdf') =>
+    window.open(`${API_URL}/reports/group-attendance?${new URLSearchParams({ ...params, format })}`),
+
+  getCheckinTrends: (params: any) =>
+    axios.get(`${API_URL}/reports/checkin-trends`, { params, withCredentials: true }),
+  exportCheckinTrends: (params: any, format: 'csv' | 'pdf') =>
+    window.open(`${API_URL}/reports/checkin-trends?${new URLSearchParams({ ...params, format })}`),
+
+  getCheckinMethods: (params: any) =>
+    axios.get(`${API_URL}/reports/checkin-methods`, { params, withCredentials: true }),
+  exportCheckinMethods: (params: any, format: 'csv' | 'pdf') =>
+    window.open(`${API_URL}/reports/checkin-methods?${new URLSearchParams({ ...params, format })}`),
+
+  getCustomAttendance: (params: any) =>
+    axios.get(`${API_URL}/reports/custom-attendance`, { params, withCredentials: true }),
+  exportCustomAttendance: (params: any, format: 'csv' | 'pdf') =>
+    window.open(`${API_URL}/reports/custom-attendance?${new URLSearchParams({ ...params, format })}`),
+
+  getActiveEducators: (params: any) =>
+    axios.get(`${API_URL}/reports/active-educators`, { params, withCredentials: true }),
+  exportActiveEducators: (params: any, format: 'csv' | 'pdf') =>
+    window.open(`${API_URL}/reports/active-educators?${new URLSearchParams({ ...params, format })}`),
+}; 

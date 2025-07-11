@@ -1,7 +1,7 @@
 {
   "colors": {
-    "primary": "#4CAF50",
-    "primaryDark": "#388E3C",
+    "primary": "#43B97F",
+    "primaryDark": "#37996B",
     "accent": "#FFC107",
     "background": "#F5F5F5",
     "surface": "#FFFFFF",
@@ -59,12 +59,12 @@
       "padding": "12px",
       "borderRadius": "10px",
       "borderColor": "#E0E0E0",
-      "focusedBorderColor": "#4CAF50",
+      "focusedBorderColor": "#43B97F",
       "errorBorderColor": "#F44336"
     },
     "appBar": {
       "height": 56,
-      "backgroundColor": "#4CAF50",
+      "backgroundColor": "#43B97F",
       "textColor": "#FFFFFF"
     },
     "avatar": {

@@ -12,6 +12,7 @@ const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
  * @param {Array} options.info - Array of info lines to display (optional)
  * @param {Array} options.headerColor - RGB array for header color (default: blue)
  * @param {string} options.filename - Filename for the PDF
+ * @param {Function} options.transformData - Function to transform data before display (optional)
  * @returns {Buffer} PDF buffer
  */
 async function generatePDFExport({
@@ -23,7 +24,8 @@ async function generatePDFExport({
   subtitle,
   info = [],
   headerColor = [0.20, 0.55, 0.74], // Default blue
-  filename
+  filename,
+  transformData
 }) {
   const pdfDoc = await PDFDocument.create();
   const { width, height } = { width: 595.28, height: 841.89 }; // A4 size
@@ -86,11 +88,20 @@ async function generatePDFExport({
       x = margin;
       const globalIndex = startIndex + idx;
       const rowColor = globalIndex % 2 === 0 ? rgb(1, 1, 1) : rgb(0.97, 0.98, 0.98);
-      // Background
-      page.drawRectangle({ x, y: y - 5, width: colWidths.reduce((a, b) => a + b, 0), height: 20, color: rowColor });
       // Data
+      const processedItem = transformData ? transformData(item) : item;
+      // Calculate row height based on the maximum number of lines in any cell
+      const maxLines = Math.max(...columns.map(col => {
+        const value = processedItem[col];
+        const text = value?.toString() || '';
+        return wrapText(text, font, 9, Math.max(...colWidths) - 10).length;
+      }));
+      const rowHeight = Math.max(20, maxLines * 10);
+      
+      // Background
+      page.drawRectangle({ x, y: y - 5, width: colWidths.reduce((a, b) => a + b, 0), height: rowHeight, color: rowColor });
       const rowData = columns.map(col => {
-        const value = item[col];
+        const value = processedItem[col];
         if (value instanceof Date) {
           return value.toLocaleDateString('de-DE');
         }
@@ -107,7 +118,8 @@ async function generatePDFExport({
         });
         x += colWidths[i];
       });
-      y -= 20;
+      
+      y -= rowHeight;
     });
 
     // Footer (dynamic pagination)
@@ -134,12 +146,16 @@ function createInfoLines(...infoArray) {
 // Replace the table cell drawing logic to wrap long text in cells
 // Use a helper function to split text into lines that fit the column width
 function wrapText(text, font, fontSize, maxWidth) {
-  const words = text.split(' ');
+  if (!text) return [''];
+  
+  const words = text.toString().split(' ');
   let lines = [];
   let currentLine = '';
+  
   for (let word of words) {
     const testLine = currentLine ? currentLine + ' ' + word : word;
     const width = font.widthOfTextAtSize(testLine, fontSize);
+    
     if (width > maxWidth && currentLine) {
       lines.push(currentLine);
       currentLine = word;
@@ -147,7 +163,14 @@ function wrapText(text, font, fontSize, maxWidth) {
       currentLine = testLine;
     }
   }
+  
   if (currentLine) lines.push(currentLine);
+  
+  // If no lines were created, return the original text truncated
+  if (lines.length === 0) {
+    return [text.toString().substring(0, Math.floor(maxWidth / (fontSize * 0.6)))];
+  }
+  
   return lines;
 }
 

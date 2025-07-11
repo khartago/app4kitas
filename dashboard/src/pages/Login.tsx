@@ -5,6 +5,7 @@ import MascotBear from '../components/ui/MascotBear';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../components/UserContext';
 import { login } from '../services/authApi';
+import { useDarkMode } from '../styles/theme';
 
 const GlobalNoScroll = createGlobalStyle`
   html, body, #root {
@@ -24,7 +25,9 @@ const GlobalNoScroll = createGlobalStyle`
 const Background = styled.div`
   min-height: 100vh;
   width: 100vw;
-  background: linear-gradient(120deg, #f5f5f5 60%, #fffbe7 100%);
+  background: ${({ theme }) => theme.mode === 'dark'
+    ? 'linear-gradient(120deg, ' + theme.colors.background + ' 60%, #23272F 100%)'
+    : 'linear-gradient(120deg, ' + theme.colors.background + ' 60%, #fffbe7 100%)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,6 +57,11 @@ const Card = styled.div`
     width: auto;
     border-radius: 16px;
   }
+  @media (max-width: 375px) {
+    padding: 6px 2vw 10px 2vw;
+    min-width: 0;
+    border-radius: 10px;
+  }
 `;
 
 const MascotInCard = styled.div`
@@ -61,6 +69,11 @@ const MascotInCard = styled.div`
   top: 8px;
   right: 10px;
   z-index: 3;
+  @media (max-width: 375px) {
+    top: 2px;
+    right: 2px;
+    svg { width: 60px !important; height: 60px !important; }
+  }
 `;
 
 const MascotMobile = styled.div`
@@ -78,11 +91,15 @@ const Welcome = styled.div`
   font-family: ${({ theme }) => theme.typography.fontFamily};
   font-size: 2rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: 10px;
   text-align: center;
   @media (max-width: 600px) {
     font-size: 1.3rem;
+  }
+  @media (max-width: 375px) {
+    font-size: 1.05rem;
+    margin-bottom: 6px;
   }
 `;
 
@@ -96,6 +113,10 @@ const Subheadline = styled.div`
     font-size: 0.95rem;
     margin-bottom: 18px;
   }
+  @media (max-width: 375px) {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
 `;
 
 const Headline = styled.h2`
@@ -107,6 +128,10 @@ const Headline = styled.h2`
   `}
   margin-bottom: 32px;
   text-align: center;
+  @media (max-width: 375px) {
+    font-size: 1.1rem !important;
+    margin-bottom: 16px;
+  }
 `;
 
 const Input = styled.input`
@@ -123,34 +148,47 @@ const Input = styled.input`
     border-color: ${({ theme }) => theme.components.input.focusedBorderColor};
     box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}22;
   }
+  @media (max-width: 375px) {
+    font-size: 13px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
 `;
 
 const Button = styled.button`
   width: 100%;
   padding: ${({ theme }) => theme.components.button.padding};
   border-radius: ${({ theme }) => theme.components.button.borderRadius};
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
+  background: ${({ theme }) => theme.components.button.background};
+  color: ${({ theme }) => theme.colors.surface};
   font-weight: bold;
   border: none;
   cursor: pointer;
   margin-top: 8px;
   font-size: 17px;
   letter-spacing: 0.01em;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-  box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+  box-shadow: ${({ theme }) => theme.components.button.boxShadow};
+  transition: background 0.18s, box-shadow 0.18s, color 0.18s, transform 0.12s;
   &:hover:not(:disabled), &:focus-visible:not(:disabled) {
-    background: ${({ theme }) => theme.colors.primaryDark};
-    box-shadow: 0 4px 16px rgba(44,62,80,0.10);
+    background: ${({ theme }) => theme.components.button.hoverBackground};
+    color: ${({ theme }) => theme.colors.surface};
+    box-shadow: 0 8px 32px ${({ theme }) => theme.colors.primary}29;
     transform: translateY(-1px) scale(1.01);
   }
   &:active:not(:disabled) {
-    background: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.components.button.activeBackground};
     transform: scale(0.98);
   }
   &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+    background: ${({ theme }) => theme.components.button.disabledBackground};
+    color: ${({ theme }) => theme.components.button.disabledColor};
+    opacity: ${({ theme }) => theme.components.button.disabledOpacity};
+    cursor: ${({ theme }) => theme.components.button.disabledCursor};
+  }
+  @media (max-width: 375px) {
+    font-size: 14px;
+    padding: 10px 0;
+    margin-top: 6px;
   }
 `;
 
@@ -159,7 +197,7 @@ const ErrorMsg = styled.div`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.error};
-  background: #fff6f6;
+  background: ${({ theme }) => theme.mode === 'dark' ? '#2C2F36' : '#fff6f6'};
   border-radius: 12px;
   font-size: ${({ theme }) => theme.typography.body2.fontSize}px;
   font-family: ${({ theme }) => theme.typography.fontFamily};
@@ -194,6 +232,39 @@ const MascotBearResponsiveStyle = createGlobalStyle`
   ${mascotBearCss}
 `;
 
+const DarkModeButton = styled.button`
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.18s;
+  z-index: 10;
+  &:hover, &:focus {
+    background: ${({ theme }) => theme.colors.accent}22;
+    outline: none;
+  }
+  @media (max-width: 375px) {
+    top: 6px;
+    left: 6px;
+    padding: 2px;
+    svg { width: 20px !important; height: 20px !important; }
+  }
+`;
+
+const MoonIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M18 14.5A8 8 0 0 1 7.5 4c0-.2 0-.4.02-.6A8 8 0 1 0 18 14.5z" fill="#FFC107" stroke="#FFC107" strokeWidth="2"/></svg>
+);
+const SunIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="5" fill="#FFC107" stroke="#FFC107" strokeWidth="2"/><path d="M11 1v2M11 19v2M21 11h-2M3 11H1M17.07 17.07l-1.41-1.41M6.34 6.34L4.93 4.93M17.07 4.93l-1.41 1.41M6.34 17.07l-1.41-1.41" stroke="#FFC107" strokeWidth="2" strokeLinecap="round"/></svg>
+);
+
 function decodeJWT(token: string) {
   try {
     const payload = token.split('.')[1];
@@ -210,7 +281,24 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [mobileMascotSize, setMobileMascotSize] = useState(130);
   const navigate = useNavigate();
-  const { setBenutzer } = useUser();
+  const { benutzer, setBenutzer, loading: userLoading } = useUser();
+  const { mode, toggle } = useDarkMode();
+
+  useEffect(() => {
+    if (!userLoading && benutzer) {
+      // User is already connected, redirect based on role
+      const role = (benutzer.role || '').toUpperCase();
+      if (role === 'SUPER_ADMIN') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else if (role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else if (role === 'EDUCATOR') {
+        navigate('/educator', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [benutzer, userLoading, navigate]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -231,7 +319,6 @@ const Login: React.FC = () => {
     setError(null);
     try {
       const data = await login(email, password);
-      localStorage.setItem('jwt', data.token);
       setBenutzer(data.user);
       const role = (data.user?.role || (decodeJWT(data.token)?.role))?.toUpperCase();
       if (role === 'SUPER_ADMIN') {
@@ -250,16 +337,21 @@ const Login: React.FC = () => {
     }
   };
 
+  if (!userLoading && benutzer) return null;
+
   return (
     <>
       <GlobalNoScroll />
       <MascotBearResponsiveStyle />
       <Background>
         <Card>
+          <DarkModeButton onClick={toggle} aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'}>
+            {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </DarkModeButton>
           <MascotInCard>
             <span className="mascot-bear-wrapper">
               <MascotBear
-                size={110}
+                size={window.innerWidth <= 375 ? 60 : window.innerWidth <= 600 ? 90 : 110}
                 className="mascot-bear"
                 mood="happy"
                 waving

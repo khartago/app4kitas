@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../components/UserContext';
+import { useDarkMode } from '../styles/theme';
 import AppLogo from './ui/AppLogo';
 import MascotBear from './ui/MascotBear';
 import IconWrapper from './ui/IconWrapper';
@@ -11,8 +12,12 @@ import {
   FaUserFriends, 
   FaUsers, 
   FaEnvelope, 
-  FaStickyNote 
+  FaStickyNote,
+  FaSignInAlt,
+  FaChild,
+  FaComments
 } from 'react-icons/fa';
+import { logout as logoutApi } from '../services/authApi';
 
 // SVG icon map for sidebar
 const icons = {
@@ -34,6 +39,9 @@ const icons = {
   Benachrichtigungen: (
     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2"/></svg>
   ),
+  Einstellungen: (
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="2"/></svg>
+  ),
   Monatsbericht: (
     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="2"/><path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" strokeWidth="2"/></svg>
   ),
@@ -41,14 +49,16 @@ const icons = {
     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="2"/><path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" strokeWidth="2"/></svg>
   ),
   Berichte: (
-    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="2"/><path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" strokeWidth="2"/></svg>
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="13" width="4" height="8" rx="2" fill="currentColor"/><rect x="10" y="9" width="4" height="12" rx="2" fill="currentColor" opacity=".5"/><rect x="17" y="5" width="4" height="16" rx="2" fill="currentColor"/></svg>
   ),
   Institutionen: <IconWrapper icon={FaUniversity} size={22} />,
   Erzieher: <IconWrapper icon={FaChalkboardTeacher} size={22} />,
   Eltern: <IconWrapper icon={FaUserFriends} size={22} />,
-  'Meine Gruppe': <IconWrapper icon={FaUsers} size={22} />,
+  'Meine Kinder': <IconWrapper icon={FaChild} size={22} />,
   Nachrichten: <IconWrapper icon={FaEnvelope} size={22} />,
+  Chat: <IconWrapper icon={FaComments} size={22} />,
   Notizen: <IconWrapper icon={FaStickyNote} size={22} />,
+  Checkin: <IconWrapper icon={FaSignInAlt} size={22} />,
 };
 
 const SidebarContainer = styled.nav`
@@ -135,14 +145,14 @@ const LogoDivider = styled.div`
 `;
 const NavList = styled.ul`
   list-style: none;
-  padding: 4px 0;
+  padding: 8px 0;
   margin: 0;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  min-height: 250px;
-  max-height: calc(100vh - 350px);
+  min-height: 200px;
+  max-height: calc(100vh - 280px);
   
   /* Custom scrollbar styling */
   &::-webkit-scrollbar {
@@ -262,25 +272,30 @@ const LogoutIconButton = styled.button`
   }
 `;
 const BearSpacer = styled.div`
-  flex: 1 1 100px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
-  max-height: 140px;
-  margin-top: 60px;
-  margin-left: -25px;
+  height: 120px;
+  margin: 0;
+  position: relative;
   @media (max-width: 700px) {
     display: none;
+  }
+  
+  /* Center the bear properly */
+  > div {
+    transform: translateX(-12px);
   }
 `;
 const UserSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 0 16px 0;
+  padding: 16px 0;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
+  flex-shrink: 0;
 `;
 const UserName = styled.div`
   font-family: ${({ theme }) => theme.typography.fontFamily};
@@ -344,26 +359,36 @@ const navItemsByRole = {
     { label: 'Personal', path: '/admin/personal' },
     { label: 'Statistiken', path: '/admin/statistiken' },
     { label: 'Benachrichtigungen', path: '/admin/benachrichtigungen' },
-    { label: 'Monatsbericht', path: '/admin/monatsbericht' },
-    { label: 'Tagesbericht', path: '/admin/tagesbericht' },
+    { label: 'Einstellungen', path: '/admin/einstellungen' },
     { label: 'Berichte', path: '/admin/berichte' },
   ],
   EDUCATOR: [
     { label: 'Dashboard', path: '/educator/dashboard' },
-    { label: 'Meine Gruppe', path: '/educator/meine-gruppe' },
-    { label: 'Kinder', path: '/educator/kinder' },
-    { label: 'Nachrichten', path: '/educator/nachrichten' },
+    { label: 'Checkin', path: '/educator/checkin' },
+    { label: 'Meine Kinder', path: '/educator/kinder' },
+    { label: 'Chat', path: '/educator/chat' },
     { label: 'Notizen', path: '/educator/notizen' },
   ],
 };
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  const { benutzer, loading } = useUser();
+  const { benutzer, loading, logout } = useUser();
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('jwt');
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    try {
+      // Call backend logout endpoint using the service
+      await logoutApi();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Use the logout method from UserContext
+      logout();
+      
+      // Redirect to login page
+      navigate('/login');
+    }
   };
 
   if (loading || !benutzer || !benutzer.role) return null;

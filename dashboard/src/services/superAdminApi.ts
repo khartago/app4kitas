@@ -175,30 +175,6 @@ export async function deleteEducator(id: string): Promise<any> {
 }
 
 /**
- * Eltern anlegen
- */
-export async function addParent(data: { name: string; email: string; password: string }): Promise<any> {
-  try {
-    const res = await axios.post(`${API_URL}/users`, { ...data, role: 'PARENT' }, { withCredentials: true });
-    return res.data;
-  } catch (error) {
-    return handleApiError(error, 'Fehler beim Anlegen des Elternteils');
-  }
-}
-
-/**
- * Eltern bearbeiten
- */
-export async function editParent(id: string, data: { name?: string; email?: string; password?: string }): Promise<any> {
-  try {
-    const res = await axios.put(`${API_URL}/users/${id}`, data, { withCredentials: true });
-    return res.data;
-  } catch (error) {
-    return handleApiError(error, 'Fehler beim Bearbeiten des Elternteils');
-  }
-}
-
-/**
  * Eltern löschen
  */
 export async function deleteParent(id: string): Promise<any> {
@@ -207,6 +183,30 @@ export async function deleteParent(id: string): Promise<any> {
     return res.data;
   } catch (error) {
     return handleApiError(error, 'Fehler beim Löschen des Elternteils');
+  }
+}
+
+/**
+ * Neuen Elternteil hinzufügen (nur Super Admin)
+ */
+export async function addParent(data: { name: string; email: string; password: string; phone?: string }): Promise<any> {
+  try {
+    const res = await axios.post(`${API_URL}/users`, { ...data, role: 'PARENT' }, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Hinzufügen des Elternteils');
+  }
+}
+
+/**
+ * Elternteil bearbeiten (nur Super Admin)
+ */
+export async function editParent(id: string, data: { name?: string; email?: string; password?: string; phone?: string }): Promise<any> {
+  try {
+    const res = await axios.put(`${API_URL}/users/${id}`, data, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Bearbeiten des Elternteils');
   }
 }
 
@@ -291,6 +291,15 @@ export async function deleteAdmin(id: string): Promise<any> {
     return res.data;
   } catch (error) {
     return handleApiError(error, 'Fehler beim Löschen des Admins');
+  }
+}
+
+export async function fetchPlatformStats() {
+  try {
+    const res = await axios.get(`${API_URL}/stats`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der Plattformstatistiken');
   }
 }
 

@@ -7,8 +7,8 @@ const Children = lazy(() => import('../pages/admin/Children'));
 const Personal = lazy(() => import('../pages/admin/Personal'));
 const Statistiken = lazy(() => import('../pages/admin/Statistiken'));
 const Notifications = lazy(() => import('../pages/admin/Notifications'));
-const Monatsbericht = lazy(() => import('../pages/admin/Monatsbericht'));
-const Tagesbericht = lazy(() => import('../pages/admin/Tagesbericht'));
+const Settings = lazy(() => import('../pages/admin/Settings'));
+const Reports = lazy(() => import('../pages/admin/Reports'));
 
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<div>Lädt...</div>}>
@@ -20,9 +20,8 @@ const AdminRoutes: React.FC = () => (
       <Route path="personal" element={<Personal />} />
       <Route path="statistiken" element={<Statistiken />} />
       <Route path="benachrichtigungen" element={<Notifications />} />
-      <Route path="monatsbericht" element={<Monatsbericht />} />
-      <Route path="tagesbericht" element={<Tagesbericht />} />
-      <Route path="berichte" element={<Monatsbericht />} />
+      <Route path="einstellungen" element={<Settings />} />
+      <Route path="berichte" element={<Reports />} />
       <Route path="*" element={<Dashboard />} />
     </Routes>
   </Suspense>

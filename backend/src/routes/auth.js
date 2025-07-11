@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const { register, login, logout } = require('../controllers/authController');
 const { authMiddleware } = require('../middlewares/auth');
 const { signToken, verifyToken } = require('../utils/jwt');
 const prisma = require('../models/prismaClient');
 
 router.post('/register', authMiddleware, register); // Nur SUPER_ADMIN
 router.post('/login', login);
+router.post('/logout', logout);
 
 router.post('/refresh-token', async (req, res) => {
   const authHeader = req.headers['authorization'];

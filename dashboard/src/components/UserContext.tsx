@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import MascotBear from './ui/MascotBear';
 import { fetchProfile } from '../services/profileApi';
 
@@ -16,6 +17,7 @@ interface UserContextType {
   setBenutzer: (user: User | null) => void;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -23,29 +25,49 @@ const UserContext = createContext<UserContextType>({
   setBenutzer: () => {},
   loading: true,
   refreshProfile: async () => {},
+  logout: () => {},
 });
 
 export const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [benutzer, setBenutzer] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const location = useLocation();
 
   const refreshProfile = async () => {
+    // Don't fetch profile if we're on the login page
+    if (location.pathname === '/login') {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const profile = await fetchProfile();
       setBenutzer(profile);
-    } catch {
+    } catch (error: any) {
       setBenutzer(null);
+      // If we get a 401 or similar, the session is invalid
+      if (error?.response?.status === 401) {
+        setSessionExpired(true);
+      }
     }
   };
 
+  const logout = () => {
+    setBenutzer(null);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    setLoading(true);
-    refreshProfile().finally(() => setLoading(false));
-  }, []);
+    // Only fetch profile if no user is set and not on login page
+    if (!benutzer && loading) {
+      setLoading(true);
+      refreshProfile().finally(() => setLoading(false));
+    }
+  }, [benutzer, loading, location.pathname]);
 
   return (
-    <UserContext.Provider value={{ benutzer, setBenutzer, loading, refreshProfile }}>
+    <UserContext.Provider value={{ benutzer, setBenutzer, loading, refreshProfile, logout }}>
       {children}
       {sessionExpired && (
         <div style={{

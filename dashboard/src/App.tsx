@@ -71,7 +71,7 @@ const routeTitles: Record<string, string> = {
   '/admin/berichte': 'Berichte',
   '/educator/dashboard': 'Mein Tag',
   '/educator/notizen': 'Tagesnotizen',
-  '/educator/nachrichten': 'Nachrichten an Eltern',
+      '/educator/chat': 'Chat',
   '/educator/kinder': 'Kinder',
   '/educator/meine-gruppe': 'Meine Gruppe',
 };
@@ -150,15 +150,5 @@ const App: React.FC = () => {
     </ThemeProvider>
   );
 };
-
-// Add this above styled-components usage
-declare module 'styled-components' {
-  export interface DefaultTheme {
-    colors: typeof import('./styles/theme').theme.light.colors;
-    typography: typeof import('./styles/theme').theme.light.typography;
-    components: typeof import('./styles/theme').theme.light.components;
-    mode: 'light' | 'dark';
-  }
-}
 
 export default App; 

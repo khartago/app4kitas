@@ -58,6 +58,14 @@ app.use('/uploads', (req, res, next) => {
 app.use('/uploads', cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Serve uploads also at /api/uploads
+app.use('/api/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+app.use('/api/uploads', cors(corsOptions));
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -72,6 +80,10 @@ app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/stats'));
 app.use('/api', require('./routes/reports'));
 app.use('/api', require('./routes/institutionen'));
+app.use('/api/institution-settings', require('./routes/institutionSettings'));
+app.use('/api/personalTasks', require('./routes/personalTasks'));
+app.use('/api/activity', require('./routes/activity'));
+app.use('/api', require('./routes/notes'));
 
 app.use((err, req, res, next) => {
   if (err.message && err.message.includes('CORS')) {

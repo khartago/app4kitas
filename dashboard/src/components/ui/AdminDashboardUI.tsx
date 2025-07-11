@@ -1,80 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
+import styled, { keyframes, css, createGlobalStyle, useTheme } from 'styled-components';
 import MascotBear from './MascotBear';
 import Papa from 'papaparse';
-import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaFileCsv, FaFilePdf, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaFileCsv, FaFilePdf, FaExclamationTriangle, FaUser, FaUserShield, FaBuilding, FaUsers, FaUserFriends } from 'react-icons/fa';
 import SearchIcon from './SearchIcon';
 import Header from '../../components/Header';
 import { exportEntityPDF, exportEntityCSV } from '../../services/reportApi';
 import type { DefaultTheme } from 'styled-components';
+import IconWrapper from './IconWrapper';
+import { AnimatedMascotsLoader as LoadingSpinner, SimpleMascotLoader, CompactMascotLoader, ErrorMascot, EmptyMascot } from './LoadingSpinner';
 
-// Animated mascots loader
-
-const float1 = keyframes`
-  0% { transform: translate(0, 0) scale(1); }
-  30% { transform: translate(-40px, -20px) scale(1.08); }
-  60% { transform: translate(30px, 30px) scale(0.96); }
-  100% { transform: translate(0, 0) scale(1); }
-`;
-const float2 = keyframes`
-  0% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.1); }
-  55% { transform: translate(-30px, 20px) scale(0.93); }
-  100% { transform: translate(0, 0) scale(1); }
-`;
-const float3 = keyframes`
-  0% { transform: translate(0, 0) scale(1); }
-  20% { transform: translate(-25px, 25px) scale(1.07); }
-  50% { transform: translate(25px, -25px) scale(0.95); }
-  100% { transform: translate(0, 0) scale(1); }
-`;
-
-const MascotsArea = styled.div`
-  position: relative;
-  width: 100%;
-  min-height: 320px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 48px 0 32px 0;
-`;
-const MascotFloating = styled.div<{ $anim: number }>`
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  ${({ $anim }) => $anim === 1 && css`animation: ${float1} 3.2s ease-in-out infinite;`}
-  ${({ $anim }) => $anim === 2 && css`animation: ${float2} 3.7s ease-in-out infinite;`}
-  ${({ $anim }) => $anim === 3 && css`animation: ${float3} 4.1s ease-in-out infinite;`}
-`;
-const LoaderText = styled.div`
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-family: ${({ theme }) => theme.typography.fontFamily};
-  font-size: 22px;
-  font-weight: 600;
-  text-align: center;
-  z-index: 2;
-  pointer-events: none;
-`;
-
-export const AnimatedMascotsLoader: React.FC<{ text?: string }> = ({ text = 'Lädt...' }) => (
-  <MascotsArea>
-    <MascotFloating $anim={1} style={{ zIndex: 1, left: '30%', top: '45%' }}>
-      <MascotBear size={70} mood="happy" />
-    </MascotFloating>
-    <MascotFloating $anim={2} style={{ zIndex: 1, left: '60%', top: '55%' }}>
-      <MascotBear size={60} mood="help" />
-    </MascotFloating>
-    <MascotFloating $anim={3} style={{ zIndex: 1, left: '45%', top: '35%' }}>
-      <MascotBear size={80} mood="neutral" />
-    </MascotFloating>
-    <LoaderText>{text}</LoaderText>
-  </MascotsArea>
-);
+// Loading components are now imported from LoadingSpinner.tsx
 
 export const ErrorMsg = styled.div`
   display: flex;
@@ -101,12 +37,9 @@ export const BrandedErrorMsg: React.FC<{ children: React.ReactNode }> = ({ child
   </ErrorMsg>
 );
 
-export const EmptyState: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
-    <MascotBear size={48} mood="help" />
-    <div style={{ marginTop: 12, color: '#757575', fontFamily: 'Inter, sans-serif', fontSize: 16 }}>{text}</div>
-  </div>
-);
+// Re-export the centralized components for backward compatibility
+export const AnimatedMascotsLoader = LoadingSpinner;
+export { SimpleMascotLoader, CompactMascotLoader, ErrorMascot, EmptyMascot };
 
 export const Headline = styled.h2`
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -124,7 +57,7 @@ export const StatGrid = styled.div`
 `;
 
 export const Card = styled.div`
-  background: ${({ theme }) => theme.components.card.background};
+  background: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.components.card.borderRadius};
   box-shadow: ${({ theme }) => theme.components.card.boxShadow};
   border: ${({ theme }) => theme.components.card.border};
@@ -134,7 +67,7 @@ export const Card = styled.div`
   transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
   &:hover, &:focus {
     box-shadow: 0 8px 24px rgba(76,175,80,0.16), 0 2px 12px rgba(0,0,0,0.18);
-    background: ${({ theme }) => theme.mode === 'dark' ? '#23272F' : '#F7FFF7'};
+    background: ${({ theme }) => theme.mode === 'dark' ? theme.colors.surface : theme.colors.surface};
     transform: translateY(-2px) scale(1.01);
     outline: none;
   }
@@ -1069,6 +1002,7 @@ const AddButton = styled.button`
 export interface CrudPageProps<T> {
   title: string;
   entityName: string;
+  icon: React.ComponentType<any>; // Required personalized icon for the table
   data: T[];
   columns: DataTableColumn<T>[];
   loading: boolean;
@@ -1088,9 +1022,14 @@ export interface CrudPageProps<T> {
   children?: React.ReactNode; // For additional content like modals
 }
 
+/**
+ * CrudPage: Centralized CRUD Page Component
+ * @param icon - Required personalized icon for the table (e.g., FaUser, FaBuilding, FaUserShield, etc.)
+ */
 export const CrudPage: React.FC<CrudPageProps<any>> = ({
   title,
   entityName,
+  icon,
   data,
   columns,
   loading,
@@ -1109,6 +1048,7 @@ export const CrudPage: React.FC<CrudPageProps<any>> = ({
   searchPlaceholder = "Suchen...",
   children
 }) => {
+  const theme = useTheme();
   return (
     <main style={{ 
       maxWidth: '100%', 
@@ -1116,12 +1056,25 @@ export const CrudPage: React.FC<CrudPageProps<any>> = ({
       padding: '0', 
       display: 'flex', 
       flexDirection: 'column', 
-      alignItems: 'stretch'
+      alignItems: 'stretch',
+      background: undefined
     }}>
       <Header title={title} />
       <TableCard>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 18 }}>
-          <span style={{ fontSize: '1.25em', fontWeight: 700, color: '#4CAF50', marginBottom: 8 }}>{entityName}</span>
+          <span style={{
+            fontSize: theme.typography.headline2.fontSize,
+            fontWeight: theme.typography.headline2.fontWeight,
+            color: theme.colors.primary,
+            marginBottom: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            fontFamily: theme.typography.fontFamily
+          }}>
+            <IconWrapper icon={icon} size={22} color={theme.colors.primary} />
+            {entityName}
+          </span>
           <MobileSearchStack>
             <ModernSearchBarWrapper style={{ flex: 1, width: '100%' }}>
               <ModernSearchBar
@@ -1324,4 +1277,4 @@ const checkForDuplicates = <T extends Record<string, any>>(
   return { isDuplicate: false };
 };
 
-export { checkForDuplicates };
+export { ActionButton, DeleteButton, SaveButton, CancelButton, ExportButton, checkForDuplicates };

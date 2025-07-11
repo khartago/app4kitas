@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
-  AnimatedMascotsLoader,
   BrandedErrorMsg,
-  EmptyState,
+  EmptyMascot,
   Headline,
   Card,
 } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import { getAdminStats, fetchCheckinStats, fetchGroups } from '../../services/adminApi';
-import { fetchMonthlyReport, exportMonthlyReport, exportMonthlyReportPDF } from '../../services/reportApi';
+
 import Header from '../../components/Header';
 import { useUser } from '../../components/UserContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -214,62 +214,7 @@ const controlFont = `
   font-weight: 600;
   line-height: 1.2;
 `;
-const ExportRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 18px;
-  width: 100%;
-`;
-const FilterRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-`;
-const ButtonRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin-top: 4px;
-`;
-const StyledExportButton = styled(ExportButton)`
-  height: 44px;
-  padding: 0 18px;
-  font-size: 1rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  flex: 1 1 0;
-`;
-const StyledSelect = styled.select`
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1.5px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  font-size: 1rem;
-  box-sizing: border-box;
-  appearance: none;
-  flex: 1 1 0;
-`;
-const StyledMonthInput = styled.input`
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1.5px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  font-size: 1rem;
-  box-sizing: border-box;
-  appearance: none;
-  flex: 1 1 0;
-`;
+
 const ActivityIcon = styled.span`
   margin-right: 10px;
   display: inline-flex;
@@ -291,15 +236,11 @@ const Statistiken: React.FC = () => {
   const [stats, setStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [report, setReport] = useState<any[]>([]);
-  const [reportLoading, setReportLoading] = useState(false);
-  const [reportError, setReportError] = useState<string | null>(null);
+
   const [checkinChartData, setCheckinChartData] = useState<any[]>([]);
   const [checkinLoading, setCheckinLoading] = useState(true);
   const [checkinError, setCheckinError] = useState<string | null>(null);
-  const [groups, setGroups] = useState<any[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
+
 
   useEffect(() => {
     if (!benutzer?.institutionId) return;
@@ -310,14 +251,7 @@ const Statistiken: React.FC = () => {
       .finally(() => setLoading(false));
   }, [benutzer]);
 
-  useEffect(() => {
-    if (!benutzer?.institutionId) return;
-    setReportLoading(true);
-    fetchMonthlyReport(month, selectedGroup || undefined, benutzer.institutionId)
-      .then(data => setReport(data.report))
-      .catch(() => setReportError('Fehler beim Laden des Monatsberichts.'))
-      .finally(() => setReportLoading(false));
-  }, [month, benutzer, selectedGroup]);
+
 
   useEffect(() => {
     setCheckinLoading(true);
@@ -333,10 +267,7 @@ const Statistiken: React.FC = () => {
       .finally(() => setCheckinLoading(false));
   }, [benutzer]);
 
-  useEffect(() => {
-    if (!benutzer?.institutionId) return;
-    fetchGroups().then(setGroups).catch(() => setGroups([]));
-  }, [benutzer]);
+
 
   if (!benutzer?.institutionId) {
     return <BrandedErrorMsg>Kein Institutionskontext gefunden.</BrandedErrorMsg>;
@@ -388,7 +319,7 @@ const Statistiken: React.FC = () => {
         ) : checkinError ? (
           <BrandedErrorMsg>{checkinError}</BrandedErrorMsg>
         ) : checkinChartData.length === 0 ? (
-          <EmptyState text="Keine Check-in-Daten für die letzten 7 Tage." />
+          <EmptyMascot text="Keine Check-in-Daten für die letzten 7 Tage." />
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={checkinChartData} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
@@ -416,7 +347,7 @@ const Statistiken: React.FC = () => {
             ))}
           </ActivitiesList>
         ) : (
-          <EmptyState text="Keine Aktivitäten gefunden." />
+          <EmptyMascot text="Keine Aktivitäten gefunden." />
         )}
         {stats?.openTasks?.length ? (
           <>
@@ -429,59 +360,7 @@ const Statistiken: React.FC = () => {
           </>
         ) : null}
       </CardSection>
-      <CardSection>
-        <CardHeader>
-          <SectionIcon><FaCalendarAlt color={theme.colors.primary} /></SectionIcon>
-          <SectionHeadlineWithIcon>Monatsbericht</SectionHeadlineWithIcon>
-        </CardHeader>
-        <ExportRow>
-          <FilterRow>
-            <StyledSelect value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}>
-              <option value="">Alle Gruppen</option>
-              {groups.map((g: any) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </StyledSelect>
-            <StyledMonthInput
-              type="month"
-              value={month}
-              onChange={e => setMonth(e.target.value)}
-            />
-          </FilterRow>
-          <ButtonRow>
-            <StyledExportButton onClick={() => exportMonthlyReport(month, selectedGroup || undefined, benutzer.institutionId)}>
-              Monatsbericht als CSV exportieren
-            </StyledExportButton>
-            <StyledExportButton onClick={() => exportMonthlyReportPDF(month, selectedGroup || undefined, benutzer.institutionId)}>
-              Monatsbericht als PDF exportieren
-            </StyledExportButton>
-          </ButtonRow>
-        </ExportRow>
-        {reportLoading ? (
-          <AnimatedMascotsLoader text="Lädt Monatsbericht..." />
-        ) : reportError ? (
-          <BrandedErrorMsg>{reportError}</BrandedErrorMsg>
-        ) : report.length === 0 ? (
-          <EmptyState text="Keine Berichtsdaten gefunden." />
-        ) : (
-          <Table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Anwesenheitstage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.map((row: any) => (
-                <tr key={row.childId}>
-                  <td>{row.name}</td>
-                  <td>{row.checkInDays}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </CardSection>
+
     </PageWrapper>
   );
 };

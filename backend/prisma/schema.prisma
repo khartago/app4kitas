@@ -37,7 +37,12 @@ model Institution {
   admins    User[]   @relation("InstitutionAdmins")
   groups    Group[]
   children  Child[]
+  channels  ChatChannel[]
   createdAt DateTime @default(now())
+  openingTime String?
+  closingTime String?
+  closedDays  ClosedDay[]
+  repeatedClosedDays Json?
 }
 
 model User {
@@ -45,19 +50,30 @@ model User {
   email         String            @unique
   password      String
   name          String
+  phone         String?           // Phone number for parents
   role          Role
   avatarUrl     String?
   children      Child[]           @relation("ParentChildren")
   groups        Group[]           @relation("EducatorGroups")
   messages      Message[]         @relation("UserMessages")
   notifications NotificationLog[]
+  sentNotifications NotificationLog[] @relation("NotificationSender")
   checkIns      CheckInLog[]      @relation("UserCheckIns")
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   deviceTokens  DeviceToken[]
+  activityLogs  ActivityLog[]
+  personalTasks PersonalTask[]
+  notes         Note[]
   // Institution admin relation
   institution   Institution?      @relation("InstitutionAdmins", fields: [institutionId], references: [id])
   institutionId String?
+  // Chat relations
+  channels     ChatChannel[]      @relation("ChannelParticipants")
+  directMessages1 DirectMessage[] @relation("DirectMessageUser1")
+  directMessages2 DirectMessage[] @relation("DirectMessageUser2")
+  reactions    MessageReaction[]  @relation("UserReactions")
+  chatReadStatus ChatReadStatus[] @relation("UserChatReadStatus")
 }
 
 model Child {
@@ -75,6 +91,7 @@ model Child {
   qrCodeSecret String    @unique
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
+  notes     Note[]
 }
 
 model Group {
@@ -86,6 +103,7 @@ model Group {
   children  Child[]
   educators User[]    @relation("EducatorGroups")
   messages  Message[] @relation("GroupMessages")
+  channel   ChatChannel? @relation("GroupChannel")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -113,6 +131,86 @@ model Message {
   fileUrl   String?
   fileType  FileType?
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt @default(now())
+  editedAt  DateTime?
+  isEdited  Boolean   @default(false)
+  // New fields for chat channels
+  channel   ChatChannel? @relation("ChannelMessages", fields: [channelId], references: [id])
+  channelId String?
+  directMessage DirectMessage? @relation("DirectMessageMessages", fields: [directMessageId], references: [id])
+  directMessageId String?
+  // Reply functionality
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replyToId String?
+  replies   Message[] @relation("MessageReplies")
+  // Reactions
+  reactions MessageReaction[]
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+  user      User     @relation("UserReactions", fields: [userId], references: [id])
+  userId    String
+  emoji     String   // The emoji character (👍, ❤️, 😄, etc.)
+  createdAt DateTime @default(now())
+  
+  @@unique([messageId, userId, emoji])
+}
+
+// New models for chat system
+model ChatChannel {
+  id        String   @id @default(uuid())
+  name      String
+  type      ChannelType
+  institution Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
+  group     Group?  @relation("GroupChannel", fields: [groupId], references: [id])
+  groupId   String? @unique
+  messages  Message[] @relation("ChannelMessages")
+  participants User[] @relation("ChannelParticipants")
+  readStatus ChatReadStatus[] @relation("ChannelReadStatus")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DirectMessage {
+  id        String   @id @default(uuid())
+  user1     User     @relation("DirectMessageUser1", fields: [user1Id], references: [id])
+  user1Id   String
+  user2     User     @relation("DirectMessageUser2", fields: [user2Id], references: [id])
+  user2Id   String
+  messages  Message[] @relation("DirectMessageMessages")
+  readStatus ChatReadStatus[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([user1Id, user2Id])
+}
+
+// Track when users last read messages in chats
+model ChatReadStatus {
+  id        String   @id @default(uuid())
+  user      User     @relation("UserChatReadStatus", fields: [userId], references: [id])
+  userId    String
+  // Either channelId or directMessageId will be set
+  channel   ChatChannel? @relation("ChannelReadStatus", fields: [channelId], references: [id])
+  channelId String?
+  directMessage DirectMessage? @relation(fields: [directMessageId], references: [id])
+  directMessageId String?
+  lastReadAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, channelId])
+  @@unique([userId, directMessageId])
+}
+
+enum ChannelType {
+  GROUP_CHAT
+  INSTITUTION_CHAT
+  DIRECT_MESSAGE
 }
 
 model NotificationLog {
@@ -121,8 +219,11 @@ model NotificationLog {
   userId    String
   title     String
   body      String
+  priority  String   @default("normal") // low, normal, high, urgent
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  sender    User?    @relation("NotificationSender", fields: [senderId], references: [id])
+  senderId  String?
 }
 
 model DeviceToken {
@@ -139,4 +240,52 @@ model FailedLogin {
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
+}
+
+model ClosedDay {
+  id             String       @id @default(uuid())
+  date           DateTime
+  reason         String?
+  institution    Institution  @relation(fields: [institutionId], references: [id])
+  institutionId  String
+}
+
+model ActivityLog {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  action         String
+  entity         String?
+  entityId       String?
+  details        String?
+  institutionId  String?
+  groupId        String?
+  createdAt      DateTime @default(now())
+}
+
+model PersonalTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  priority    String   @default("medium") // low, medium, high
+  completed   Boolean  @default(false)
+  dueDate     DateTime?
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Note {
+  id             String   @id @default(uuid())
+  content        String
+  child          Child    @relation(fields: [childId], references: [id])
+  childId        String
+  educator       User     @relation(fields: [educatorId], references: [id])
+  educatorId     String
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentType String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

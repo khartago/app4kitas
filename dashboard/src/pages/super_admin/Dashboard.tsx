@@ -1,125 +1,174 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../../components/UserContext';
 import { getSuperAdminStats } from '../../services/superAdminApi';
-import { Card, Headline, StatGrid, ErrorMsg, AnimatedMascotsLoader, Button } from '../../components/ui/AdminDashboardUI';
+import { Card, Headline, ErrorMsg, Button } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
+import ActivityLog from '../../components/ui/ActivityLog';
+import { PersonalNotebook } from '../../components/ui/PersonalNotebook';
 import Header from '../../components/Header';
 import MascotBear from '../../components/ui/MascotBear';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaBuilding, FaChartLine } from 'react-icons/fa';
-import styled from 'styled-components';
+import { FaUsers, FaBuilding, FaChartLine, FaChevronRight, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import styled, { useTheme } from 'styled-components';
 
-const QuickLinksGrid = ({ children }: { children: React.ReactNode }) => (
-  <div style={{
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: 24,
-    margin: '32px 0',
-  }}>{children}</div>
-);
-
-const IconCircle = ({ color, children }: { color: string, children: React.ReactNode }) => (
-  <div style={{
-    background: color,
-    borderRadius: '50%',
-    width: 48,
-    height: 48,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    boxShadow: '0 2px 8px rgba(44,62,80,0.10)'
-  }}>{children}</div>
-);
-
-// Add styled wrapper for welcome section
-const WelcomeSection = styled.div`
+const PageWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 16px 64px 16px;
+`;
+const TopSection = styled.div`
+  margin-bottom: 36px;
+`;
+const PageTitle = styled(Headline)`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.typography.headline2.fontSize};
+  font-weight: ${({ theme }) => theme.typography.headline2.fontWeight};
+  margin-bottom: 6px;
+`;
+const PageSubtitle = styled.div`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 1.15rem;
+  margin-bottom: 0;
+`;
+const MascotSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+  margin-top: 30px;
+`;
+const BearWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
   width: 100%;
+  min-width: 100px;
+  max-width: 140px;
+  margin: 0 auto 0 auto;
+  margin-bottom: -85px;
+  @media (max-width: 600px) {
+    max-width: 90px;
+    min-width: 70px;
+  }
 `;
-const WelcomeText = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 8px;
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 28px;
+  margin-bottom: 40px;
 `;
-const MascotWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-bottom: -100px;
-`;
-// Center content in stats cards
 const StatCard = styled(Card)`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  align-items: flex-start;
+  padding: 28px 18px 24px 18px;
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  box-shadow: ${({ theme }) => theme.components.card.boxShadow};
 `;
-// Center icon in IconCircle
-const CenteredIconCircle = styled(IconCircle)`
-  margin-bottom: 12px;
+const StatLabel = styled.div`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 1.08rem;
+  margin-bottom: 2px;
 `;
-// Button wrapper for 'Mehr zeigen'
-const ShowMoreWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 18px;
-`;
-// Center Schnellzugriffe card content
-const QuickLinkCard = styled(Card)`
-  display: flex !important;
-  flex-direction: column;
-  align-items: center !important;
-  justify-content: center;
-  text-align: center;
-`;
-// Modern, prominent 'Mehr zeigen' button
-const ShowMoreButton = styled(Button)`
-  background: ${({ theme }) => theme.colors.accent};
-  color: #212121;
-  font-size: 18px;
-  font-weight: 700;
-  padding: 14px 34px;
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(255,193,7,0.10);
+const StatNumberRow = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 auto;
+`;
+const StatNumber = styled.div`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 2.2rem;
+  font-weight: 800;
+`;
+const StatTrend = styled.span<{ $up?: boolean }>`
+  display: flex;
+  align-items: center;
+  color: ${({ $up, theme }) => $up ? theme.colors.primary : theme.colors.error};
+  font-size: 1.1rem;
+  font-weight: 600;
+`;
+const ActionsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  margin-bottom: 48px;
+`;
+const ActionButton = styled(Button)`
+  background: ${({ theme }) => theme.components.button.background};
+  color: ${({ theme }) => theme.colors.surface};
+  font-weight: 700;
+  font-size: 1.08rem;
+  border-radius: ${({ theme }) => theme.components.button.borderRadius};
+  box-shadow: ${({ theme }) => theme.components.button.boxShadow};
+  display: flex;
+  align-items: center;
+  gap: 10px;
   transition: background 0.18s, box-shadow 0.18s, transform 0.18s, opacity 0.18s;
   opacity: 0.97;
-  will-change: transform, opacity;
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    color: #fff;
+  &:hover, &:focus {
+    background: ${({ theme }) => theme.components.button.hoverBackground};
+    color: ${({ theme }) => theme.colors.surface};
     transform: scale(1.045);
     opacity: 1;
-    box-shadow: 0 8px 32px rgba(76,175,80,0.16);
+    box-shadow: 0 8px 32px ${({ theme }) => theme.colors.primary}29;
+  }
+  &:active {
+    background: ${({ theme }) => theme.components.button.activeBackground};
+    transform: scale(0.98);
+  }
+  &:disabled {
+    background: ${({ theme }) => theme.components.button.disabledBackground};
+    color: ${({ theme }) => theme.components.button.disabledColor};
+    opacity: ${({ theme }) => theme.components.button.disabledOpacity};
+    cursor: ${({ theme }) => theme.components.button.disabledCursor};
   }
 `;
 
+
 const Dashboard: React.FC = () => {
   const { benutzer } = useUser();
-  const [stats, setStats] = useState<{users: number, institutionen: number, activity: number} | null>(null);
+  const theme = useTheme();
+  const [stats, setStats] = useState<{
+    users: number, 
+    institutionen: number, 
+    activity: number,
+    trends: {
+      users: { up: boolean, value: number },
+      institutionen: { up: boolean, value: number },
+      activity: { up: boolean, value: number }
+    }
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Use real trends from API or fallback to defaults
+  const trends = stats?.trends || {
+    users: { up: false, value: 0 },
+    institutionen: { up: false, value: 0 },
+    activity: { up: false, value: 0 },
+  };
+
   useEffect(() => {
     if (benutzer?.role !== 'SUPER_ADMIN') return;
     setLoading(true);
-    getSuperAdminStats()
-      .then(setStats)
-      .catch(() => setError('Fehler beim Laden der Statistiken.'))
-      .finally(() => setLoading(false));
+    
+    const loadData = async () => {
+      try {
+        const statsData = await getSuperAdminStats();
+        setStats(statsData);
+      } catch (error) {
+        setError('Fehler beim Laden der Daten.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, [benutzer]);
+
+
 
   if (benutzer?.role !== 'SUPER_ADMIN') return <ErrorMsg>Zugriff verweigert</ErrorMsg>;
   if (loading) return <AnimatedMascotsLoader text="Lade Übersicht..." />;
@@ -128,66 +177,62 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <Header title="Super Admin Dashboard" />
-      <div style={{ marginTop: 32 }}>
-        {/* Welcome Section */}
-        <WelcomeSection>
-          <MascotWrapper>
+      <PageWrapper>
+        <MascotSection>
+          <BearWrapper>
             <MascotBear size={120} mood="happy" />
-          </MascotWrapper>
-          <WelcomeText>
-            <Headline style={{ textAlign: 'center', marginBottom: 8 }}>Willkommen, {benutzer?.name || 'Super Admin'}!</Headline>
-            <div style={{ color: '#757575', fontSize: 18, marginTop: 0, textAlign: 'center', maxWidth: 480 }}>
-              Hier findest du die wichtigsten Statistiken und Schnellzugriffe.
-            </div>
-          </WelcomeText>
-        </WelcomeSection>
-        {/* Quick Links (centered) */}
-        <Headline style={{ marginTop: 0, marginBottom: 16, textAlign: 'center' }}>Schnellzugriffe</Headline>
-        <QuickLinksGrid>
-          <QuickLinkCard>
-            <h3 style={{ margin: 0, marginBottom: 8, textAlign: 'center' }}>Nutzerverwaltung</h3>
-            <div style={{ color: '#757575', marginBottom: 12, textAlign: 'center' }}>Verwalte alle Nutzer der Plattform.</div>
-            <Button onClick={() => navigate('/superadmin/educators')}>Zu Nutzer</Button>
-          </QuickLinkCard>
-          <QuickLinkCard>
-            <h3 style={{ margin: 0, marginBottom: 8, textAlign: 'center' }}>Institutionen</h3>
-            <div style={{ color: '#757575', marginBottom: 12, textAlign: 'center' }}>Institutionen verwalten.</div>
-            <Button onClick={() => navigate('/superadmin/institutionen')}>Zu Institutionen</Button>
-          </QuickLinkCard>
-          <QuickLinkCard>
-            <h3 style={{ margin: 0, marginBottom: 8, textAlign: 'center' }}>Berichte & Auswertungen</h3>
-            <div style={{ color: '#757575', marginBottom: 12, textAlign: 'center' }}>Plattformweite Berichte und Exporte.</div>
-            <Button onClick={() => navigate('/superadmin/reports')}>Zu Berichten</Button>
-          </QuickLinkCard>
-        </QuickLinksGrid>
-        {/* Stats Cards */}
-      <StatGrid>
+          </BearWrapper>
+          <Headline as="div" style={{ fontSize: 18, margin: 0, color: theme.colors.primaryDark, textAlign: 'center' }}>
+            Willkommen, {benutzer?.name}!<br />
+            Hier findest du alle wichtigen Kennzahlen und Aktionen der App4KITAs Plattform auf einen Blick.
+          </Headline>
+        </MascotSection>
+        
+        {/* Personal Notebook */}
+        <PersonalNotebook />
+        
+        <StatsGrid>
           <StatCard>
-            <CenteredIconCircle color="#4CAF50"><FaUsers color="#fff" size={24} /></CenteredIconCircle>
-            <h2 style={{ margin: 0 }}>Nutzer</h2>
-            <p style={{ fontSize: 28, fontWeight: 700, margin: '8px 0' }}>{stats?.users ?? 0}</p>
+            <StatLabel>Nutzer</StatLabel>
+            <StatNumberRow>
+              <StatNumber>{stats?.users ?? 0}</StatNumber>
+              <StatTrend $up={trends.users.up}>
+                {trends.users.up ? <FaArrowUp /> : <FaArrowDown />} {trends.users.value}%
+              </StatTrend>
+            </StatNumberRow>
           </StatCard>
           <StatCard>
-            <CenteredIconCircle color="#FFC107"><FaBuilding color="#fff" size={24} /></CenteredIconCircle>
-            <h2 style={{ margin: 0 }}>Institutionen</h2>
-            <p style={{ fontSize: 28, fontWeight: 700, margin: '8px 0' }}>{stats?.institutionen ?? 0}</p>
+            <StatLabel>Institutionen</StatLabel>
+            <StatNumberRow>
+              <StatNumber>{stats?.institutionen ?? 0}</StatNumber>
+              <StatTrend $up={trends.institutionen.up}>
+                {trends.institutionen.up ? <FaArrowUp /> : <FaArrowDown />} {trends.institutionen.value}%
+              </StatTrend>
+            </StatNumberRow>
           </StatCard>
           <StatCard>
-            <CenteredIconCircle color="#388E3C"><FaChartLine color="#fff" size={24} /></CenteredIconCircle>
-            <h2 style={{ margin: 0 }}>Aktivität</h2>
-            <p style={{ fontSize: 28, fontWeight: 700, margin: '8px 0' }}>{stats?.activity ?? 0}</p>
+            <StatLabel>Aktivität</StatLabel>
+            <StatNumberRow>
+              <StatNumber>{stats?.activity ?? 0}</StatNumber>
+              <StatTrend $up={trends.activity.up}>
+                {trends.activity.up ? <FaArrowUp /> : <FaArrowDown />} {trends.activity.value}%
+              </StatTrend>
+            </StatNumberRow>
           </StatCard>
-      </StatGrid>
-        {/* Mehr zeigen Button */}
-        <ShowMoreWrapper>
-          <ShowMoreButton onClick={() => navigate('/superadmin/stats')}>
-            Mehr zeigen
-            <svg width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 4 }}>
-              <path d="M7 11h8m0 0-3-3m3 3-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </ShowMoreButton>
-        </ShowMoreWrapper>
-    </div>
+        </StatsGrid>
+        <ActionsGrid>
+          <ActionButton onClick={() => navigate('/superadmin/erzieher')}>
+            <FaUsers /> Nutzerverwaltung <FaChevronRight />
+          </ActionButton>
+          <ActionButton onClick={() => navigate('/superadmin/institutionen')}>
+            <FaBuilding /> Institutionen <FaChevronRight />
+          </ActionButton>
+          <ActionButton onClick={() => navigate('/superadmin/berichte')}>
+            <FaChartLine /> Berichte & Exporte <FaChevronRight />
+          </ActionButton>
+        </ActionsGrid>
+        <ActivityLog title="Letzte Aktivitäten" limit={10} />
+      </PageWrapper>
     </>
   );
 };

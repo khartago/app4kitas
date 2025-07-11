@@ -8,10 +8,14 @@ import {
   fetchInstitutionen,
   fetchAllUsers,
 } from '../../services/superAdminApi';
-import { AnimatedMascotsLoader, ErrorMsg, DataTableColumn, CrudPage, checkForDuplicates } from '../../components/ui/AdminDashboardUI';
+import { ErrorMsg, DataTableColumn, CrudPage, checkForDuplicates } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import ModernModal from '../../components/ui/ModernModal';
 import { FormField, Label, Input, ErrorText, ModalButton } from '../../components/ui/ModernModal';
+import SearchableDropdown from '../../components/ui/SearchableDropdown';
 import { fetchGroups } from '../../services/adminApi';
+import { useTheme } from 'styled-components';
+import { FaChalkboardTeacher } from 'react-icons/fa';
 
 const Educators: React.FC = () => {
   const { benutzer } = useUser();
@@ -20,14 +24,15 @@ const Educators: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', institutionId: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', institutionId: '', groupId: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [groups, setGroups] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const theme = useTheme();
 
   const load = async () => {
     setLoading(true);
@@ -75,11 +80,10 @@ const Educators: React.FC = () => {
         email: form.email,
         password: form.password,
         institutionId: form.institutionId,
-        groupIds: selectedGroupIds.length > 0 ? selectedGroupIds : undefined
+        groupIds: form.groupId ? [form.groupId] : undefined
       });
       setModalOpen(false);
-      setForm({ name: '', email: '', password: '', institutionId: '' });
-      setSelectedGroupIds([]);
+      setForm({ name: '', email: '', password: '', institutionId: '', groupId: '' });
       await load();
       fetchAllUsers().then(users => setAllUsers(users || []));
     } catch (e: any) {
@@ -120,13 +124,28 @@ const Educators: React.FC = () => {
   const columns: DataTableColumn<any>[] = [
     { key: 'name', label: 'Name', editable: true, filterable: true, sortable: true },
     { key: 'email', label: 'E-Mail', editable: true, filterable: true, sortable: true },
-    { key: 'role', label: 'Rolle', editable: false, filterable: true, sortable: true },
+    {
+      key: 'password',
+      label: 'Passwort (neu setzen)',
+      editable: true,
+      render: (value, row, idx) => {
+        if (value) {
+          return (
+            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+              Wenn Sie das Passwort ändern möchten, geben Sie hier ein neues ein.
+            </div>
+          );
+        }
+        return null;
+      },
+    },
   ];
 
   return (
     <CrudPage
       title="Erzieher-Übersicht"
       entityName="Erzieher"
+      icon={FaChalkboardTeacher}
       data={educators}
       columns={columns}
       loading={loading}
@@ -155,30 +174,31 @@ const Educators: React.FC = () => {
           </FormField>
           <FormField>
             <Label htmlFor="educator-password">Passwort</Label>
-            <Input id="educator-password" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
+            <Input id="educator-password" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required autoComplete="new-password" />
+            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+              Das Passwort ist erforderlich für neue Erzieher. Wenn Sie das Passwort ändern möchten, geben Sie hier ein neues ein.
+            </div>
           </FormField>
           <FormField>
             <Label htmlFor="educator-institution">Institution *</Label>
-            <select 
-              id="educator-institution" 
+            <SearchableDropdown
+              options={institutions}
               value={form.institutionId} 
-              onChange={e => setForm(f => ({ ...f, institutionId: e.target.value }))} 
-              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid #E0E0E0' }}
+              onChange={(value) => setForm(f => ({ ...f, institutionId: value }))}
+              placeholder="Institution auswählen..."
+              searchPlaceholder="Institution suchen..."
               required
-            >
-              <option value="">Institution auswählen...</option>
-              {institutions.map((i: any) => (
-                <option key={i.id} value={i.id}>{i.name}</option>
-              ))}
-            </select>
+            />
           </FormField>
           <FormField>
-            <Label htmlFor="educator-groups">Gruppen</Label>
-            <select id="educator-groups" multiple value={selectedGroupIds} onChange={e => setSelectedGroupIds(Array.from(e.target.selectedOptions).map(o => o.value))} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid #E0E0E0' }}>
-              {groups.map((g: any) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
+            <Label htmlFor="educator-groups">Gruppe</Label>
+            <SearchableDropdown
+              options={groups}
+              value={form.groupId}
+              onChange={(value) => setForm(f => ({ ...f, groupId: value }))}
+              placeholder="Gruppe auswählen..."
+              searchPlaceholder="Gruppe suchen..."
+            />
           </FormField>
           <ModalButton type="submit">Hinzufügen</ModalButton>
         </form>

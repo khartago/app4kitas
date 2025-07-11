@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const fs = require('fs');
+const { logActivity } = require('./activityController');
 
 // GET /children/:id
 async function getChild(req, res) {
@@ -68,6 +69,18 @@ async function createChild(req, res) {
         institution: { connect: { id: institutionId } }
       },
     });
+    
+    // Log activity
+    await logActivity(
+      user.id,
+      'CHILD_CREATED',
+      'Child',
+      child.id,
+      `Created child: ${name}`,
+      institutionId,
+      groupId || null
+    );
+    
     res.status(201).json(child);
   } catch (err) {
     res.status(400).json({ error: 'Fehler beim Anlegen des Kindes' });
@@ -117,6 +130,17 @@ async function updateChild(req, res) {
       }
     });
     
+    // Log activity
+    await logActivity(
+      user.id,
+      'CHILD_UPDATED',
+      'Child',
+      child.id,
+      `Updated child: ${child.name}`,
+      user.institutionId || null,
+      child.groupId || null
+    );
+    
     res.json(child);
   } catch (err) {
     res.status(400).json({ error: 'Fehler beim Bearbeiten des Kindes' });
@@ -149,6 +173,17 @@ async function deleteChild(req, res) {
     await prisma.child.delete({
       where: { id }
     });
+    
+    // Log activity
+    await logActivity(
+      user.id,
+      'CHILD_DELETED',
+      'Child',
+      id,
+      `Deleted child: ${existingChild.name}`,
+      user.institutionId || null,
+      existingChild.groupId || null
+    );
     
     res.json({ message: 'Kind erfolgreich gelöscht' });
   } catch (err) {

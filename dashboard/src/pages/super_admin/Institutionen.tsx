@@ -12,21 +12,24 @@ import {
   assignAdmin,
   fetchAllUsers,
 } from '../../services/superAdminApi';
-import { AnimatedMascotsLoader, ErrorMsg, DataTable, DataTableColumn, TableCard, ModernSearchBar, ModernSearchBarWrapper, MobileSearchStack, checkForDuplicates } from '../../components/ui/AdminDashboardUI';
+import { ErrorMsg, DataTable, DataTableColumn, TableCard, ModernSearchBar, ModernSearchBarWrapper, MobileSearchStack, checkForDuplicates, CrudPage } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import Header from '../../components/Header';
 import SearchIcon from '../../components/ui/SearchIcon';
 import ModernModal from '../../components/ui/ModernModal';
 import { FormField, Label, Input, ErrorText, ModalButton } from '../../components/ui/ModernModal';
 import styled from 'styled-components';
+import { FaUserShield, FaBuilding } from 'react-icons/fa';
+import { useTheme } from 'styled-components';
 
 const AddButton = styled.button`
   background: ${({ theme }) => theme.colors.accent};
-  color: #212121;
+  color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 17px;
   font-weight: 700;
   padding: 12px 28px;
   border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(255,193,7,0.10);
+  box-shadow: 0 2px 10px ${({ theme }) => theme.colors.accent}1A;
   border: none;
   margin-left: 0;
   display: flex;
@@ -38,10 +41,10 @@ const AddButton = styled.button`
   will-change: transform, opacity;
   &:hover {
     background: ${({ theme }) => theme.colors.primary};
-    color: #fff;
+    color: ${({ theme }) => theme.colors.surface};
     transform: scale(1.045);
     opacity: 1;
-    box-shadow: 0 8px 32px rgba(76,175,80,0.16);
+    box-shadow: 0 8px 32px ${({ theme }) => theme.colors.primary}29;
   }
   @media (max-width: 700px) {
     width: 100%;
@@ -101,6 +104,7 @@ const ModalFormArea = styled.div`
 
 const Institutionen: React.FC = () => {
   const { benutzer } = useUser();
+  const theme = useTheme();
   // Admins
   const [admins, setAdmins] = useState<any[]>([]);
   const [adminsLoading, setAdminsLoading] = useState(true);
@@ -111,6 +115,8 @@ const Institutionen: React.FC = () => {
   const [adminFormError, setAdminFormError] = useState<string | null>(null);
   const [adminPage, setAdminPage] = useState(0);
   const [adminRowsPerPage, setAdminRowsPerPage] = useState(10);
+  const [editRowId, setEditRowId] = useState<string | number | null>(null);
+  const [editRow, setEditRow] = useState<any>({});
 
   // Institutionen
   const [institutionen, setInstitutionen] = useState<any[]>([]);
@@ -126,15 +132,31 @@ const Institutionen: React.FC = () => {
   // All users
   const [allUsers, setAllUsers] = useState<any[]>([]);
 
-  // Load Admins
-  const loadAdmins = async () => {
+  // Load Institutionen
+  const loadInstitutionen = async () => {
+    setInstLoading(true);
+    setInstError(null);
+    try {
+      const data = await fetchInstitutionen();
+      setInstitutionen(data);
+      return data;
+    } catch (e: any) {
+      setInstError(e.message || 'Fehler beim Laden der Institutionen.');
+      return [];
+    } finally {
+      setInstLoading(false);
+    }
+  };
+
+  // Load Admins (now always expects up-to-date institutionen)
+  const loadAdmins = async (instList?: any[]) => {
     setAdminsLoading(true);
     setAdminsError(null);
     try {
       const data = await fetchInstitutionenAdmins();
-      // Join with institutionen to get institution name
+      const insts = instList || institutionen;
       const adminsWithInst = data.map((admin: any) => {
-        const inst = institutionen.find((i: any) => i.id === admin.institutionId);
+        const inst = insts.find((i: any) => i.id === admin.institutionId);
         return { ...admin, institutionName: inst ? inst.name : '' };
       });
       setAdmins(adminsWithInst);
@@ -143,24 +165,15 @@ const Institutionen: React.FC = () => {
     }
     setAdminsLoading(false);
   };
-  // Load Institutionen
-  const loadInstitutionen = async () => {
-    setInstLoading(true);
-    setInstError(null);
-    try {
-      const data = await fetchInstitutionen();
-      setInstitutionen(data);
-    } catch (e: any) {
-      setInstError(e.message || 'Fehler beim Laden der Institutionen.');
-    }
-    setInstLoading(false);
-  };
 
+  // On mount: load institutionen first, then admins
   useEffect(() => {
     if (benutzer?.role !== 'SUPER_ADMIN') return;
-    loadAdmins();
-    loadInstitutionen();
-    fetchAllUsers().then(users => setAllUsers(users || []));
+    (async () => {
+      const insts = await loadInstitutionen();
+      await loadAdmins(insts);
+      fetchAllUsers().then(users => setAllUsers(users || []));
+    })();
     // eslint-disable-next-line
   }, [benutzer]);
 
@@ -189,8 +202,7 @@ const Institutionen: React.FC = () => {
     setAdminsLoading(true);
     setAdminFormError(null);
     try {
-      // Register admin with institutionId
-      const newAdmin = await registerAdmin({
+      await registerAdmin({
         name: adminForm.name,
         email: adminForm.email,
         password: adminForm.password,
@@ -199,7 +211,8 @@ const Institutionen: React.FC = () => {
       });
       setAdminModalOpen(false);
       setAdminForm({ name: '', email: '', password: '', institutionId: '' });
-      await loadAdmins();
+      const insts = await loadInstitutionen();
+      await loadAdmins(insts);
       fetchAllUsers().then(users => setAllUsers(users || []));
     } catch (e: any) {
       setAdminFormError(e.message || 'Fehler beim Hinzufügen.');
@@ -210,12 +223,13 @@ const Institutionen: React.FC = () => {
   const handleEditAdmin = async (row: any) => {
     setAdminsLoading(true);
     try {
-      await editAdmin(row.id, { 
-        name: row.name, 
-        email: row.email, 
-        password: row.password || undefined 
+      await editAdmin(row.id, {
+        name: row.name,
+        email: row.email,
+        password: row.password || undefined
       });
-      await loadAdmins();
+      const insts = await loadInstitutionen();
+      await loadAdmins(insts);
     } catch (e: any) {
       setAdminsError(e.message || 'Fehler beim Bearbeiten.');
     }
@@ -226,7 +240,8 @@ const Institutionen: React.FC = () => {
     setAdminsLoading(true);
     try {
       await deleteAdmin(row.id);
-      await loadAdmins();
+      const insts = await loadInstitutionen();
+      await loadAdmins(insts);
     } catch (e: any) {
       setAdminsError(e.message || 'Fehler beim Löschen.');
     }
@@ -284,15 +299,30 @@ const Institutionen: React.FC = () => {
   };
 
   if (benutzer?.role !== 'SUPER_ADMIN') return <ErrorMsg>Zugriff verweigert</ErrorMsg>;
+  if (adminsLoading && admins.length === 0 && instLoading && institutionen.length === 0) return <AnimatedMascotsLoader text="Lade Daten..." />;
 
-  // Admins columns
+  // Admins columns (always include password column)
   const adminColumns: DataTableColumn<any>[] = [
     { key: 'name', label: 'Name', editable: true, filterable: true, sortable: true },
     { key: 'email', label: 'E-Mail', editable: true, filterable: true, sortable: true },
     { key: 'institutionName', label: 'Institution', editable: false, filterable: true, sortable: true },
-    { key: 'password', label: 'Passwort (neu setzen)', editable: true },
-    { key: 'id', label: 'Admin-ID', editable: false, filterable: true, sortable: true },
+    {
+      key: 'password',
+      label: 'Passwort (neu setzen)',
+      editable: true,
+      render: (value, row, idx) => {
+        if (value) {
+          return (
+            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+              Wenn Sie das Passwort ändern möchten, geben Sie hier ein neues ein.
+            </div>
+          );
+        }
+        return null;
+      },
+    },
   ];
+
   // Institutionen columns
   const instColumns: DataTableColumn<any>[] = [
     { key: 'name', label: 'Name', editable: true, filterable: true, sortable: true },
@@ -300,51 +330,28 @@ const Institutionen: React.FC = () => {
   ];
 
   return (
-    <main style={{ 
-      maxWidth: '100%', 
-      width: '100%',
-      padding: '0', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'stretch'
-    }}>
-      <Header title="Institutionen & Admins Übersicht" />
-      {/* Admins Section */}
-      <TableCard>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 18 }}>
-          <span style={{ fontSize: '1.25em', fontWeight: 700, color: '#4CAF50', marginBottom: 8 }}>Admins</span>
-          <MobileSearchStack>
-            <ModernSearchBarWrapper style={{ flex: 1, width: '100%' }}>
-              <ModernSearchBar
-                type="text"
-                placeholder="Suchen..."
-                value={adminSearch}
-                onChange={e => setAdminSearch(e.target.value)}
-                aria-label="Suchen"
-              />
-              <SearchIconStyled />
-            </ModernSearchBarWrapper>
-            <AddButton onClick={() => setAdminModalOpen(true)}>
-              + Hinzufügen
-            </AddButton>
-          </MobileSearchStack>
-        </div>
-        <DataTable
+    <>
+      <CrudPage
+        title="Admins Übersicht"
+        entityName="Admin"
+        icon={FaUserShield}
           data={admins}
           columns={adminColumns}
+        loading={adminsLoading}
+        error={adminsError}
+        search={adminSearch}
+        onSearchChange={setAdminSearch}
+        onAdd={() => setAdminModalOpen(true)}
           onEdit={handleEditAdmin}
           onDelete={handleDeleteAdmin}
-          entityName="Admin"
-          search={adminSearch}
           page={adminPage}
           rowsPerPage={adminRowsPerPage}
           onPageChange={setAdminPage}
           onRowsPerPageChange={rows => { setAdminRowsPerPage(rows); setAdminPage(0); }}
           totalCount={admins.length}
-          loading={adminsLoading}
-          error={adminsError}
-        />
-      </TableCard>
+        addButtonText="+ Hinzufügen"
+        searchPlaceholder="Suchen..."
+      >
       <ModernModal open={adminModalOpen} onClose={() => { setAdminModalOpen(false); setAdminFormError(null); }} title="Admin hinzufügen">
         {adminFormError && <ErrorText>{adminFormError}</ErrorText>}
         <form onSubmit={e => { e.preventDefault(); handleAddAdmin(); }}>
@@ -372,42 +379,28 @@ const Institutionen: React.FC = () => {
           <ModalButton type="submit">Hinzufügen</ModalButton>
         </form>
       </ModernModal>
-      {/* Institutionen Section */}
-      <TableCard>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 18 }}>
-          <span style={{ fontSize: '1.25em', fontWeight: 700, color: '#4CAF50', marginBottom: 8 }}>Institutionen</span>
-          <MobileSearchStack>
-            <ModernSearchBarWrapper style={{ flex: 1, width: '100%' }}>
-              <ModernSearchBar
-                type="text"
-                placeholder="Suchen..."
-                value={instSearch}
-                onChange={e => setInstSearch(e.target.value)}
-                aria-label="Suchen"
-              />
-              <SearchIconStyled />
-            </ModernSearchBarWrapper>
-            <AddButton onClick={() => setInstModalOpen(true)}>
-              + Hinzufügen
-            </AddButton>
-          </MobileSearchStack>
-        </div>
-        <DataTable
+      </CrudPage>
+      <CrudPage
+        title="Institutionen Übersicht"
+        entityName="Institution"
+        icon={FaBuilding}
           data={institutionen}
           columns={instColumns}
+        loading={instLoading}
+        error={instError}
+        search={instSearch}
+        onSearchChange={setInstSearch}
+        onAdd={() => setInstModalOpen(true)}
           onEdit={handleEditInst}
           onDelete={handleDeleteInst}
-          entityName="Institution"
-          search={instSearch}
           page={instPage}
           rowsPerPage={instRowsPerPage}
           onPageChange={setInstPage}
           onRowsPerPageChange={rows => { setInstRowsPerPage(rows); setInstPage(0); }}
           totalCount={institutionen.length}
-          loading={instLoading}
-          error={instError}
-        />
-      </TableCard>
+        addButtonText="+ Hinzufügen"
+        searchPlaceholder="Suchen..."
+      >
       <ModernModal open={instModalOpen} onClose={() => { setInstModalOpen(false); setInstFormError(null); }} title="Institution hinzufügen">
         {instFormError && <ErrorText>{instFormError}</ErrorText>}
         <form onSubmit={e => { e.preventDefault(); handleAddInst(); }}>
@@ -422,7 +415,8 @@ const Institutionen: React.FC = () => {
           <ModalButton type="submit">Hinzufügen</ModalButton>
         </form>
       </ModernModal>
-    </main>
+      </CrudPage>
+    </>
   );
 };
 

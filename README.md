@@ -10,6 +10,36 @@
 
 ---
 
+## 🆕 Neue Funktionen: Erweiterte Feiertagsverwaltung
+
+### 🎄 **Holiday Management System**
+- **Regelmäßige Schließtage:** Wochentage (z.B. Samstag, Sonntag) als wiederkehrende Schließtage festlegen
+- **Einzelne Feiertage:** Einzelne Tage (z.B. Weihnachten, Ostern) hinzufügen
+- **Datumsbereiche:** Ferienzeiten mit Start- und Enddatum (z.B. Weihnachtsferien: 24.12 - 06.01)
+- **Wiederholungsoptionen:** "Nur dieses Jahr" oder "Jedes Jahr" für wiederkehrende Feiertage
+- **Professionelle UI:** Modernes Design mit klarer visueller Hierarchie und deutscher Lokalisierung
+
+### 🎨 **Verbesserte Benutzeroberfläche**
+- **Tab-Navigation** zwischen allgemeinen Einstellungen und Feiertagsverwaltung
+- **Informationsboxen** mit hilfreichen Tipps und Erklärungen
+- **Farbkodierte Bereiche** für bessere Organisation
+- **Responsive Design** mit professionellem Layout
+- **Verbesserte Platzhaltertexte** mit konkreten Beispielen
+
+### 🔧 **Technische Features**
+- **Datenbank:** Erweiterte Prisma-Schema mit `fromDate`, `toDate`, `recurrence` Feldern
+- **API:** Vollständige Unterstützung für Datumsbereiche und Wiederholungen
+- **Frontend:** TypeScript-Interfaces für Typsicherheit
+- **Validierung:** Überlappungsprüfung und Datumsvalidierung
+
+### 📋 **Verwendungsbeispiele**
+- **Weihnachtsferien:** 24.12 - 06.01, Jährlich wiederkehrend
+- **Sommerferien:** 15.07 - 15.08, Nur dieses Jahr
+- **Einzelner Feiertag:** 25.12, Jährlich wiederkehrend
+- **Fortbildungstag:** 15.03, Nur dieses Jahr
+
+---
+
 ## 🧱 Tech Stack
 
 | Layer    | Tech                                             |
@@ -106,6 +136,11 @@ npm start
 * [ ] Test "Children" page: add, view, upload photo
 * [ ] Test "Groups" page: create, assign educators
 * [ ] Test profile edit and notification bell
+* [ ] **NEW:** Test Settings page with holiday management
+  * [ ] Add regular weekly closures (weekends)
+  * [ ] Add single-day holidays (Christmas)
+  * [ ] Add date range holidays (summer vacation)
+  * [ ] Test recurrence options (once vs. yearly)
 
 ### ✅ Educator
 
@@ -154,11 +189,19 @@ App4KITAs ist eine moderne, DSGVO-konforme Plattform für Kindertagesstätten (K
 - **Kinderverwaltung:** Anlegen, Bearbeiten, Löschen, Foto-Upload, Suche, Export (CSV/PDF)
 - **Gruppenverwaltung:** Anlegen, Bearbeiten, Löschen, Erzieher zuweisen, Suche, Export (CSV/PDF)
 - **Personalverwaltung:** Anlegen, Bearbeiten, Löschen, Suche, Export (CSV/PDF)
+- **Institutionseinstellungen:** Name, Adresse, Öffnungszeiten, **erweiterte Feiertagsverwaltung**
 - **Statistiken:** Check-in/out, Monatsberichte, visuelle Diagramme, Filter, Export
 - **Benachrichtigungen:** Nachrichten an Erzieher oder Gruppen, Empfängerauswahl, Verlauf
 - **Berichte:** Tages- und Monatsberichte, Filter, Export (CSV)
 - **Dashboard:** Übersicht, Schnellzugriffe, Aktivitäten, offene Aufgaben
 - **UX:** Modale Dialoge, Maskottchen für leere Zustände, Fehler- und Ladeanzeigen, responsive
+
+## 🆕 Neue Feiertagsverwaltung
+- **Regelmäßige Schließtage:** Wochentage als wiederkehrende Schließtage festlegen
+- **Einzelne Feiertage:** Einzelne Tage mit Wiederholungsoptionen
+- **Datumsbereiche:** Ferienzeiten mit Start- und Enddatum
+- **Professionelle UI:** Modernes Design mit deutscher Lokalisierung
+- **Validierung:** Überlappungsprüfung und Datumsvalidierung
 
 ## Setup & Installation
 1. **Repository klonen:**
@@ -181,13 +224,14 @@ App4KITAs ist eine moderne, DSGVO-konforme Plattform für Kindertagesstätten (K
 
 ## Nutzung
 - **Login:** Mit E-Mail und Passwort anmelden (Rolle: Admin, Erzieher, Super Admin)
-- **Navigation:** Sidebar mit rollenbasierten Links (Dashboard, Gruppen, Kinder, Personal, Statistiken, Berichte, Benachrichtigungen)
-- **Workflows:**
-  - Kinder/Personal/Gruppen anlegen, bearbeiten, löschen über Modale
-  - CSV/PDF-Export per Button
-  - Berichte filtern und exportieren
-  - Nachrichten an Gruppen/Erzieher senden
-  - Statistiken und Aktivitäten einsehen
+- **Navigation:** Sidebar mit rollenbasierten Links (Dashboard, Gruppen, Kinder, Personal, Statistiken, Einstellungen, Berichte, Benachrichtigungen)
+  - **Workflows:**
+    - Kinder/Personal/Gruppen anlegen, bearbeiten, löschen über Modale
+    - **Institutionseinstellungen verwalten** (Name, Adresse, Öffnungszeiten, **erweiterte Feiertagsverwaltung**)
+    - CSV/PDF-Export per Button
+    - Berichte filtern und exportieren
+    - Nachrichten an Gruppen/Erzieher senden
+    - Statistiken und Aktivitäten einsehen
 
 ## Entwicklung & Beiträge
 - **Code Style:** TypeScript, Styled Components, Design Tokens

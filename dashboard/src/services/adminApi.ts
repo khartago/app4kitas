@@ -34,14 +34,14 @@ const handleApiError = (error: any, defaultMessage: string): never => {
 };
 
 // Holt Admin-Statistiken
-export const getAdminStats = async () => {
+export async function getAdminStats() {
   try {
     const res = await axios.get(`${API_URL}/stats`, { withCredentials: true });
     return res.data;
   } catch (error) {
-    return handleApiError(error, 'Fehler beim Laden der Statistiken');
+    handleApiError(error, 'Fehler beim Laden der Statistiken');
   }
-};
+}
 
 // Holt alle Gruppen
 export const fetchGroups = async () => {

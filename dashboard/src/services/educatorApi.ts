@@ -64,9 +64,19 @@ export const checkinKind = async (childId: string, type: 'IN' | 'OUT', method: '
 };
 
 // Holt die heutigen Kinder der Erziehergruppe
-export const fetchTodaysChildren = async (groupId: string) => {
+export const fetchTodaysChildren = async (educatorId: string) => {
   try {
-    const res = await axios.get(`${API_URL}/groups/${groupId}/children?date=heute`, { withCredentials: true });
+    // First get the educator's groups
+    const groupRes = await axios.get(`${API_URL}/educators/${educatorId}/groups`, { withCredentials: true });
+    const groups = groupRes.data;
+    
+    if (!groups || groups.length === 0) {
+      return [];
+    }
+    
+    // Get today's children for the first group (for backward compatibility)
+    const group = groups[0];
+    const res = await axios.get(`${API_URL}/groups/${group.id}/children/today`, { withCredentials: true });
     return res.data;
   } catch (error) {
     handleApiError(error, 'Fehler beim Laden der heutigen Kinder');
@@ -74,10 +84,20 @@ export const fetchTodaysChildren = async (groupId: string) => {
 };
 
 // Holt ausstehende Check-ins
-export const fetchPendingCheckins = async (groupId: string) => {
+export const fetchPendingCheckins = async (educatorId: string) => {
   try {
-    const res = await axios.get(`${API_URL}/groups/${groupId}/pending-checkins`, { withCredentials: true });
-    return res.data;
+    // First get the educator's groups
+    const groupRes = await axios.get(`${API_URL}/educators/${educatorId}/groups`, { withCredentials: true });
+    const groups = groupRes.data;
+    
+    if (!groups || groups.length === 0) {
+      return [];
+    }
+    
+    // For now, return children who haven't checked in today from the first group
+    const group = groups[0];
+    const children = group.children || [];
+    return children.filter((child: any) => !child.checkedIn);
   } catch (error) {
     handleApiError(error, 'Fehler beim Laden der ausstehenden Check-ins');
   }
@@ -87,17 +107,28 @@ export const fetchPendingCheckins = async (groupId: string) => {
 export const fetchAssignedChildren = async (educatorId: string) => {
   try {
     const res = await axios.get(`${API_URL}/educators/${educatorId}/children`, { withCredentials: true });
-    return res.data;
+    return res.data.children || [];
   } catch (error) {
     handleApiError(error, 'Fehler beim Laden der zugewiesenen Kinder');
   }
 };
 
-// Holt die eigene Gruppe
+// Holt die eigenen Gruppen (für Erzieher mit mehreren Gruppen)
+export const fetchMyGroups = async (educatorId: string) => {
+  try {
+    const res = await axios.get(`${API_URL}/educators/${educatorId}/groups`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der Gruppen');
+  }
+};
+
+// Holt die eigene Gruppe (für Kompatibilität - gibt erste Gruppe zurück)
 export const fetchMyGroup = async (educatorId: string) => {
   try {
-    const res = await axios.get(`${API_URL}/educators/${educatorId}/group`, { withCredentials: true });
-    return res.data;
+    const res = await axios.get(`${API_URL}/educators/${educatorId}/groups`, { withCredentials: true });
+    // Return first group for backward compatibility
+    return Array.isArray(res.data) && res.data.length > 0 ? res.data[0] : null;
   } catch (error) {
     handleApiError(error, 'Fehler beim Laden der Gruppe');
   }
@@ -167,8 +198,98 @@ export async function addNote(childId: string, content: string, file?: File | nu
     });
     return res.data;
   } catch (error) {
-    return handleApiError(error, 'Fehler beim Speichern der Notiz');
+    return handleApiError(error, 'Fehler beim Erstellen der Notiz');
   }
 }
 
-// Weitere Erzieher-APIs können hier ergänzt werden 
+/**
+ * Notiz aktualisieren
+ * @param {string} noteId
+ * @param {string} content
+ * @param {File | null} [file]
+ * @returns {Promise<any>}
+ */
+export async function updateNote(noteId: string, content: string, file?: File | null): Promise<any> {
+  try {
+    const formData = new FormData();
+    formData.append('content', content);
+    if (file) formData.append('file', file);
+    const res = await axios.put(`${API_URL}/notes/${noteId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      withCredentials: true,
+    });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Aktualisieren der Notiz');
+  }
+}
+
+/**
+ * Notiz löschen
+ * @param {string} noteId
+ * @returns {Promise<any>}
+ */
+export async function deleteNote(noteId: string): Promise<any> {
+  try {
+    const res = await axios.delete(`${API_URL}/notes/${noteId}`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Löschen der Notiz');
+  }
+}
+
+// Missing functions that are being imported
+export const fetchTodaysCheckins = async (educatorId: string) => {
+  try {
+    // First get the educator's group
+    const groupRes = await axios.get(`${API_URL}/educators/${educatorId}/groups`, { withCredentials: true });
+    const groups = groupRes.data;
+    
+    if (!groups || groups.length === 0) {
+      return [];
+    }
+    
+    // Use the first group for today's check-ins
+    const groupId = groups[0].id;
+    const res = await axios.get(`${API_URL}/checkin/group/${groupId}/today`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der heutigen Check-ins');
+  }
+};
+
+export const fetchEducatorCheckinStats = async (educatorId: string) => {
+  try {
+    const res = await axios.get(`${API_URL}/checkin/educator/${educatorId}/stats`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der Check-in Statistiken');
+  }
+};
+
+export const fetchChildHistory = async (childId: string) => {
+  try {
+    const res = await axios.get(`${API_URL}/checkin/child/${childId}/history`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der Kind-Historie');
+  }
+};
+
+export const correctCheckinTime = async (childId: string, newTime: string) => {
+  try {
+    const res = await axios.put(`${API_URL}/checkin/correct-time`, { childId, newTime }, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Korrigieren der Check-in Zeit');
+  }
+};
+
+export const fetchRecentActivity = async (educatorId: string) => {
+  try {
+    const res = await axios.get(`${API_URL}/activity/recent`, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Laden der letzten Aktivitäten');
+  }
+};

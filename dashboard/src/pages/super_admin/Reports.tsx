@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import MascotBear from '../../components/ui/MascotBear';
 import { FaUsers, FaChartLine, FaUserCheck, FaLayerGroup, FaEnvelope, FaBell, FaLock, FaUserShield, FaQrcode, FaInfoCircle } from 'react-icons/fa';
 import { handleExport } from '../../services/reportApi';
+import { useTheme } from 'styled-components';
 
 const ReportGrid = styled.div`
   display: grid;
@@ -22,16 +23,16 @@ const ReportCard = styled(Card)`
   flex-direction: column;
   align-items: stretch;
   padding: 38px 28px 28px 28px;
-  box-shadow: 0 6px 32px rgba(44,62,80,0.13);
+  box-shadow: ${({ theme }) => theme.components.card.boxShadow};
   border-radius: 28px;
   border: 1.5px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.mode === 'dark' ? '#23272F' : '#F9FAFB'};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
   margin-bottom: 0;
   transition: box-shadow 0.18s, border 0.18s, transform 0.18s, background 0.18s;
   &:hover, &:focus {
-    box-shadow: 0 12px 40px rgba(76,175,80,0.18);
-    border: 2.5px solid ${({ theme }) => theme.colors.accent};
-    background: ${({ theme }) => theme.mode === 'dark' ? '#23272F' : '#F4FFF4'};
+    box-shadow: 0 12px 40px ${({ theme }) => theme.colors.primary}22;
+    border: 2.5px solid ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.surface};
     transform: translateY(-3px) scale(1.012);
     outline: none;
   }
@@ -44,10 +45,11 @@ const ReportIcon = styled.div`
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: ${({ theme }) => theme.colors.accent};
+  background: #FFFDE7;
+  border: 2.5px solid ${({ theme }) => theme.colors.accent}99;
   margin: 0 auto 22px auto;
-  box-shadow: 0 2px 12px rgba(255,193,7,0.10);
-  svg { font-size: 36px; color: #fff; }
+  box-shadow: 0 2px 12px ${({ theme }) => theme.colors.accent}0F;
+  svg { font-size: 36px; color: #FFD600; }
 `;
 
 const ReportTitleRow = styled.div`
@@ -59,8 +61,8 @@ const ReportTitleRow = styled.div`
 `;
 
 const ReportTitle = styled.h3`
-  font-size: 1.35em;
-  font-weight: 900;
+  font-size: ${({ theme }) => theme.typography.headline2.fontSize};
+  font-weight: ${({ theme }) => theme.typography.headline2.fontWeight};
   color: ${({ theme }) => theme.colors.primary};
   margin: 0 0 2px 0;
   text-align: center;
@@ -110,7 +112,7 @@ const ReportSubtitle = styled.p`
 `;
 
 const CardSection = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' ? '#1A1D22' : '#F4F6F8'};
+  background: ${({ theme }) => theme.colors.background};
   border-radius: 14px;
   padding: 16px 12px 10px 12px;
   margin-bottom: 18px;
@@ -127,19 +129,31 @@ const PresetRow = styled.div`
 `;
 
 const PresetButton = styled.button`
-  background: ${({ theme }) => theme.colors.accent};
-  color: #212121;
-  font-size: 0.98em;
-  font-weight: 600;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-size: ${({ theme }) => theme.typography.body2.fontSize};
+  font-weight: ${({ theme }) => theme.typography.body2.fontWeight};
   border: none;
   border-radius: 8px;
-  padding: 5px 14px;
+  padding: 7px 18px;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  transition: background 0.18s, color 0.18s, transform 0.18s;
   &:hover, &:focus {
-  background: ${({ theme }) => theme.colors.primary};
-    color: #fff;
+    background: #A5F3C7;
+    color: ${({ theme }) => theme.colors.primary};
     outline: none;
+    transform: scale(1.045);
+  }
+  &:active {
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+    color: ${({ theme }) => theme.colors.primary};
+    transform: scale(0.98);
+  }
+  &:disabled {
+    background: ${({ theme }) => theme.components.button.disabledBackground};
+    color: ${({ theme }) => theme.components.button.disabledColor};
+    opacity: ${({ theme }) => theme.components.button.disabledOpacity};
+    cursor: ${({ theme }) => theme.components.button.disabledCursor};
   }
 `;
 
@@ -193,20 +207,33 @@ const ReportButton = styled.a<{ disabled?: boolean }>`
   text-align: center;
   padding: 12px 0;
   border-radius: 10px;
-  background: ${({ theme, disabled }) => disabled ? theme.colors.disabled : theme.colors.primary};
+  background: linear-gradient(90deg, ${({ theme }) => theme.colors.primary} 90%, ${({ theme }) => theme.colors.accent} 100%);
   color: #fff;
   font-weight: 700;
   text-decoration: none;
   font-size: 1.08em;
-  box-shadow: 0 2px 8px rgba(44,62,80,0.07);
-  transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+  box-shadow: ${({ theme }) => theme.components.button.boxShadow};
+  transition: background 0.18s, box-shadow 0.18s, color 0.18s, transform 0.18s;
   pointer-events: ${({ disabled }) => disabled ? 'none' : 'auto'};
-  opacity: ${({ disabled }) => disabled ? 0.6 : 1};
+  opacity: ${({ disabled, theme }) => disabled ? theme.components.button.disabledOpacity : 1};
+  cursor: ${({ disabled, theme }) => disabled ? theme.components.button.disabledCursor : theme.components.button.cursor};
+  border: none;
   &:hover, &:focus {
-    background: ${({ theme, disabled }) => disabled ? theme.colors.disabled : theme.colors.primaryDark};
+    background: linear-gradient(90deg, ${({ theme }) => theme.colors.primaryDark} 90%, ${({ theme }) => theme.colors.accent} 100%);
     color: #fff;
     outline: none;
-    box-shadow: 0 4px 16px rgba(76,175,80,0.10);
+    box-shadow: 0 4px 16px ${({ theme }) => theme.colors.primary}22;
+    transform: scale(1.045);
+  }
+  &:active {
+    background: linear-gradient(90deg, ${({ theme }) => theme.colors.primary} 90%, ${({ theme }) => theme.colors.accent} 100%);
+    transform: scale(0.98);
+  }
+  &:disabled {
+    background: ${({ theme }) => theme.components.button.disabledBackground};
+    color: ${({ theme }) => theme.components.button.disabledColor};
+    opacity: ${({ theme }) => theme.components.button.disabledOpacity};
+    cursor: ${({ theme }) => theme.components.button.disabledCursor};
   }
 `;
 
@@ -220,7 +247,7 @@ const ErrorMsg = styled.div`
 const SectionHeadline = styled(Headline)`
   margin-top: 38px;
   margin-bottom: 10px;
-  font-size: 1.18em;
+  font-size: ${({ theme }) => theme.typography.headline2.fontSize};
   color: ${({ theme }) => theme.colors.primary};
 `;
 
@@ -277,6 +304,7 @@ const tooltips = {
 };
 
 const Reports: React.FC = () => {
+  const theme = useTheme();
   // Shared state for all date range reports
   const defaultRange = getDefaultYearRange();
   const [userGrowth, setUserGrowth] = useState(defaultRange);
@@ -311,7 +339,7 @@ const Reports: React.FC = () => {
         <BearWrapper>
           <MascotBear size={120} mood="happy" />
         </BearWrapper>
-        <Headline as="div" style={{ fontSize: 18, margin: 0, color: '#388E3C', textAlign: 'center' }}>
+        <Headline as="div" style={{ fontSize: 18, margin: 0, color: theme.colors.primaryDark, textAlign: 'center' }}>
           Willkommen zu den plattformweiten Berichten!<br />
           Hier findest du alle wichtigen Auswertungen für Wachstum, Aktivität und Sicherheit.
         </Headline>

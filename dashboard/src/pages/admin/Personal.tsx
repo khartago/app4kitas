@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../../components/UserContext';
-import { AnimatedMascotsLoader, ErrorMsg, DataTableColumn, CrudPage } from '../../components/ui/AdminDashboardUI';
+import { ErrorMsg, DataTableColumn, CrudPage } from '../../components/ui/AdminDashboardUI';
+import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import ModernModal from '../../components/ui/ModernModal';
 import { FormField, Label, Input, ErrorText, ModalButton } from '../../components/ui/ModernModal';
 import { fetchEducators, addEducator, editEducator, deleteEducator } from '../../services/adminApi';
 import { fetchAllUsers } from '../../services/superAdminApi';
+import { FaChalkboardTeacher } from 'react-icons/fa';
 
 // Types
 interface Educator {
@@ -186,6 +188,7 @@ const Personal: React.FC = () => {
     <CrudPage
       title="Personalverwaltung"
       entityName="Erzieher"
+      icon={FaChalkboardTeacher}
       data={data}
       columns={columns}
       loading={loading}

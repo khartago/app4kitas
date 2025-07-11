@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ModernModal from './ui/ModernModal';
-import { FormField, Label, Input, ErrorText } from './ui/ModernModal';
+import { FormField, Label, Input, ErrorText, Select } from './ui/ModernModal';
 import { updateProfile, uploadAvatar } from '../services/profileApi';
 import { useUser } from './UserContext';
 
@@ -9,29 +9,76 @@ const AvatarButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   display: flex;
   align-items: center;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  gap: 8px;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.accent}15;
+  }
+  
+  span {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    font-size: ${({ theme }) => theme.typography.body2.fontSize};
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    
+    @media (max-width: 1024px) {
+      max-width: 100px;
+    }
+    
+    @media (max-width: 768px) {
+      max-width: 80px;
+      font-size: ${({ theme }) => theme.typography.caption.fontSize};
+    }
+    
+    @media (max-width: 480px) {
+      max-width: 60px;
+    }
+    
+    @media (max-width: 360px) {
+      display: none;
+    }
+  }
 `;
+
 const AvatarImg = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: ${({ theme }) => theme.components.avatar.borderRadius};
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   object-fit: cover;
   background: ${({ theme }) => theme.colors.background};
-  margin-right: 10px;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+  }
 `;
 const EditButton = styled.button`
   background: ${({ theme }) => theme.colors.primary};
   color: #fff;
   border: none;
   border-radius: ${({ theme }) => theme.components.button.borderRadius};
-  padding: 12px 24px;
+  padding: 10px 20px;
   font-family: ${({ theme }) => theme.typography.fontFamily};
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   width: 100%;
   transition: background 0.18s;
   &:hover {
@@ -56,6 +103,7 @@ const UploadLabel = styled.label`
 const UploadInput = styled.input`
   display: block;
   margin-top: 4px;
+  width: 100%;
 `;
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000';
@@ -165,6 +213,7 @@ const ProfileDropdown: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
                   required
                   disabled={loading}
+                  autoComplete="email"
                 />
               </FormField>
               <FormField>
@@ -176,6 +225,7 @@ const ProfileDropdown: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   placeholder="(leer lassen für kein Update)"
                   minLength={6}
                   disabled={loading}
+                  autoComplete="new-password"
                 />
               </FormField>
               <FormField>
@@ -187,6 +237,7 @@ const ProfileDropdown: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   placeholder="(leer lassen für kein Update)"
                   minLength={6}
                   disabled={loading}
+                  autoComplete="new-password"
                 />
               </FormField>
               <EditButton type="submit" disabled={loading}>{loading ? 'Speichern...' : 'Speichern'}</EditButton>

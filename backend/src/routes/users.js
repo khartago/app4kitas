@@ -23,7 +23,7 @@ router.get('/users', authMiddleware, async (req, res) => {
     if (role === 'EDUCATOR') {
       res.json({ educators: users });
     } else if (role === 'PARENT') {
-      res.json({ parents: users });
+      res.json({ users });
     } else {
       res.json({ users });
     }

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
-const { getGroup, createGroup, updateGroup, deleteGroup, assignEducators } = require('../controllers/groupController');
+const { getGroup, createGroup, updateGroup, deleteGroup, assignEducators, getEducatorGroups, getGroupChildren, getTodaysChildren } = require('../controllers/groupController');
 const { authMiddleware } = require('../middlewares/auth');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const { Parser } = require('json2csv');
@@ -107,5 +107,42 @@ router.post('/groups', authMiddleware, createGroup);
 router.put('/groups/:id', authMiddleware, updateGroup);
 router.delete('/groups/:id', authMiddleware, deleteGroup);
 router.put('/groups/:id/educators', authMiddleware, assignEducators);
+
+// Educator-specific routes
+router.get('/educators/:educatorId/groups', authMiddleware, getEducatorGroups);
+router.get('/educators/:educatorId/children', authMiddleware, async (req, res) => {
+  try {
+    const { educatorId } = req.params;
+    
+    // Get the educator's group
+    const educator = await prisma.user.findUnique({
+      where: { id: educatorId },
+      include: {
+        groups: {
+          include: {
+            children: {
+              include: {
+                parents: true
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!educator || educator.role !== 'EDUCATOR') {
+      return res.status(404).json({ error: 'Erzieher nicht gefunden.' });
+    }
+    
+    // Return children from all groups the educator is assigned to
+    const children = educator.groups.flatMap(group => group.children);
+    res.json({ children });
+  } catch (err) {
+    console.error('Error fetching educator children:', err);
+    res.status(500).json({ error: 'Fehler beim Laden der zugewiesenen Kinder.' });
+  }
+});
+router.get('/groups/:groupId/children', authMiddleware, getGroupChildren);
+router.get('/groups/:groupId/children/today', authMiddleware, getTodaysChildren);
 
 module.exports = router; 

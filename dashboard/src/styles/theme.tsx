@@ -1,65 +1,320 @@
+// Extend DefaultTheme to include our custom properties
+declare module 'styled-components' {
+  export interface DefaultTheme {
+    colors: {
+      primary: string;
+      primaryDark: string;
+      accent: string;
+      background: string;
+      surface: string;
+      surfaceAlt: string;
+      error: string;
+      textPrimary: string;
+      textSecondary: string;
+      border: string;
+      disabled: string;
+      tooltipBg: string;
+      tooltipText: string;
+      snackbarBg: string;
+      snackbarText: string;
+      tableRowHover: string;
+      tableStriped: string;
+      cardSurface?: string;
+      success: string;
+      warning: string;
+      info: string;
+      secondary: string;
+    };
+    typography: {
+      fontFamily: string;
+      headline1: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+        letterSpacing: string;
+      };
+      headline2: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+        letterSpacing: string;
+      };
+      headline3: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+        letterSpacing: string;
+      };
+      headline4: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+        letterSpacing: string;
+      };
+      subtitle1: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+      };
+      body1: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+      };
+      body2: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+      };
+      caption: {
+        fontFamily: string;
+        fontSize: string;
+        fontWeight: number;
+      };
+    };
+    components: {
+      button: {
+        padding: string;
+        borderRadius: string;
+        elevation: number;
+        fontWeight: number;
+        fontSize: string;
+        boxShadow: string;
+        background: string;
+        color: string;
+        border: string;
+        hoverBackground: string;
+        activeBackground: string;
+        disabledBackground: string;
+        disabledColor: string;
+        transition: string;
+        hoverTransform: string;
+        activeTransform: string;
+        disabledOpacity: number;
+        cursor: string;
+        disabledCursor: string;
+      };
+      card: {
+        padding: string;
+        borderRadius: string;
+        elevation: number;
+        boxShadow: string;
+        border: string;
+        accentBorder: string;
+        statsBorder: string;
+        statsBackground: string;
+      };
+      input: {
+        padding: string;
+        borderRadius: string;
+        borderColor: string;
+        focusedBorderColor: string;
+        errorBorderColor: string;
+        background: string;
+        color: string;
+        fontSize: string;
+        boxShadow: string;
+        transition: string;
+        focusBoxShadow: string;
+      };
+      table: {
+        borderRadius: string;
+        background: string;
+        headerBackground: string;
+        headerColor: string;
+        rowHover: string;
+        border: string;
+        boxShadow: string;
+        fontSize: string;
+        cellPadding: string;
+        stripedRow: string;
+      };
+      avatar: {
+        size: number;
+        borderRadius: string;
+        border: string;
+        boxShadow: string;
+      };
+      snackbar: {
+        backgroundColor: string;
+        textColor: string;
+        borderRadius: string;
+        fontSize: string;
+        boxShadow: string;
+        duration: number;
+      };
+      dialog: {
+        borderRadius: string;
+        backgroundColor: string;
+        backdropFilter: string;
+        textColor: string;
+        boxShadow: string;
+        padding: string;
+        accentBorder: string;
+      };
+      tooltip: {
+        backgroundColor: string;
+        textColor: string;
+        fontSize: string;
+        borderRadius: string;
+        padding: string;
+        boxShadow: string;
+      };
+      appBar: {
+        height: number;
+        backgroundColor: string;
+        textColor: string;
+        boxShadow: string;
+      };
+      divider: {
+        height: string;
+        background: string;
+        opacity: number;
+        margin: string;
+      };
+      iconCircle: {
+        background: string;
+        border: string;
+        boxShadow: string;
+        color: string;
+        size: number;
+        fontSize: number;
+      };
+    };
+    animations: {
+      defaultDuration: number;
+      transitionCurves: {
+        easeIn: string;
+        easeOut: string;
+        easeInOut: string;
+      };
+      types: {
+        fade: {
+          duration: number;
+          curve: string;
+        };
+        slideLeft: {
+          duration: number;
+          curve: string;
+        };
+        slideUp: {
+          duration: number;
+          curve: string;
+        };
+        scale: {
+          duration: number;
+          curve: string;
+        };
+        bounce: {
+          duration: number;
+          curve: string;
+        };
+        zoom: {
+          duration: number;
+          curve: string;
+        };
+      };
+    };
+    mode: 'light' | 'dark';
+  }
+}
+
 import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 import { ThemeProvider as StyledThemeProvider, DefaultTheme } from 'styled-components';
 
 // Design tokens from styles_app4kitas_MODERN.json
 const colors = {
   light: {
-    primary: '#4CAF50',
-    primaryDark: '#388E3C',
-    accent: '#FFC107',
-    background: '#F5F5F5',
-    surface: '#FFFFFF',
-    error: '#F44336',
+    primary: '#43B97F',
+    primaryDark: '#37996B',
+    accent: '#FFE066',
+    background: '#F4F6F8',
+    surface: '#FAFBFC',
+    surfaceAlt: '#F0F4F8',
+    error: '#FF5A5F',
     textPrimary: '#212121',
     textSecondary: '#757575',
-    border: '#E0E0E0',
+    border: '#E3EAF2',
     disabled: '#BDBDBD',
     tooltipBg: '#333',
     tooltipText: '#FFF',
     snackbarBg: '#323232',
     snackbarText: '#FFF',
+    tableRowHover: '#E3FCEC',
+    tableStriped: '#F6F8FA',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    info: '#2196F3',
+    secondary: '#9C27B0',
   },
   dark: {
-    primary: '#4CAF50',
-    primaryDark: '#388E3C',
-    accent: '#FFD54F',
-    background: '#181C1F',
-    surface: '#23272F',
-    error: '#F44336',
-    textPrimary: '#F5F5F5',
+    primary: '#43B97F',
+    primaryDark: '#37996B',
+    accent: '#FFE066',
+    background: '#181C24',
+    surface: '#232B36',
+    surfaceAlt: '#222B36',
+    error: '#FF5A5F',
+    textPrimary: '#E0E0E0',
     textSecondary: '#BDBDBD',
-    border: '#2C2F36',
+    border: '#2C3440',
     disabled: '#BDBDBD',
     tooltipBg: '#23272F',
     tooltipText: '#FFD54F',
     snackbarBg: '#23272F',
     snackbarText: '#FFD54F',
+    tableRowHover: '#22332B',
+    tableStriped: '#1A202C',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    info: '#2196F3',
+    secondary: '#9C27B0',
   },
 };
 
 const typography = {
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: 'Montserrat, Poppins, Inter, Arial, sans-serif',
   headline1: {
+    fontFamily: 'Montserrat, Arial, sans-serif',
     fontSize: '32px',
-    fontWeight: 700,
+    fontWeight: 800,
+    letterSpacing: '-0.5px',
   },
   headline2: {
+    fontFamily: 'Montserrat, Arial, sans-serif',
     fontSize: '24px',
     fontWeight: 700,
+    letterSpacing: '-0.2px',
+  },
+  headline3: {
+    fontFamily: 'Montserrat, Arial, sans-serif',
+    fontSize: '20px',
+    fontWeight: 600,
+    letterSpacing: '-0.1px',
+  },
+  headline4: {
+    fontFamily: 'Montserrat, Arial, sans-serif',
+    fontSize: '18px',
+    fontWeight: 600,
+    letterSpacing: '-0.1px',
   },
   subtitle1: {
+    fontFamily: 'Montserrat, Arial, sans-serif',
     fontSize: '18px',
     fontWeight: 600,
   },
   body1: {
+    fontFamily: 'Poppins, Inter, Arial, sans-serif',
     fontSize: '16px',
     fontWeight: 400,
   },
   body2: {
+    fontFamily: 'Poppins, Inter, Arial, sans-serif',
     fontSize: '14px',
     fontWeight: 400,
   },
   caption: {
+    fontFamily: 'Poppins, Inter, Arial, sans-serif',
     fontSize: '12px',
     fontWeight: 400,
   },
@@ -104,54 +359,63 @@ const animations = {
 // Add missing appBar component token
 const components = {
   button: {
-    padding: '12px 28px',
-    borderRadius: '14px',
-    elevation: 3,
-    fontWeight: 600,
-    fontSize: '16px',
-    boxShadow: '0 2px 8px rgba(44,62,80,0.10)',
-    background: colors.light.primary,
-    color: '#fff',
-    hoverBackground: colors.light.primaryDark,
-    activeBackground: '#388E3C',
-    disabledBackground: colors.light.disabled,
-    disabledColor: '#fff',
-    transition: 'background 0.18s, box-shadow 0.18s',
-  },
-  card: {
-    padding: '20px',
+    padding: '14px 32px',
     borderRadius: '18px',
     elevation: 2,
-    background: colors.light.surface,
-    boxShadow: '0 2px 12px rgba(44,62,80,0.08)',
+    fontWeight: 700,
+    fontSize: '17px',
+    boxShadow: '0 4px 18px rgba(67,185,127,0.10), 0 1.5px 6px rgba(255,224,102,0.08)',
+    background: 'linear-gradient(90deg, #43B97F 90%, #FFE066 100%)',
+    color: '#fff',
+    border: 'none',
+    hoverBackground: 'linear-gradient(90deg, #388E3C 90%, #FFE066 100%)',
+    activeBackground: 'linear-gradient(90deg, #43B97F 90%, #FFE066 100%)',
+    disabledBackground: 'linear-gradient(90deg, #BDBDBD 60%, #E0E0E0 100%)',
+    disabledColor: '#fff',
+    transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+    hoverTransform: 'scale(1.045)',
+    activeTransform: 'scale(0.98)',
+    disabledOpacity: 0.6,
+    cursor: 'pointer',
+    disabledCursor: 'not-allowed',
+  },
+  card: {
+    padding: '16px',
+    borderRadius: '20px',
+    elevation: 1,
+    boxShadow: '0 4px 24px rgba(67,185,127,0.07), 0 1.5px 6px rgba(44,62,80,0.04)',
     border: `1.5px solid ${colors.light.border}`,
+    accentBorder: `2px solid ${colors.light.accent}55`,
+    statsBorder: `1.5px solid ${colors.light.border}`,
+    statsBackground: colors.light.surfaceAlt,
   },
   input: {
-    padding: '14px',
-    borderRadius: '12px',
-    borderColor: colors.light.border,
-    focusedBorderColor: colors.light.primary,
-    errorBorderColor: colors.light.error,
+    padding: '12px',
+    borderRadius: '10px',
+    borderColor: '#E3EAF2',
+    focusedBorderColor: colors.light.accent,
+    errorBorderColor: '#FF5A5F',
     background: colors.light.surface,
     color: colors.light.textPrimary,
     fontSize: '16px',
-    boxShadow: '0 1px 4px rgba(44,62,80,0.04)',
+    boxShadow: '0 1.5px 6px rgba(67,185,127,0.06)',
     transition: 'border-color 0.18s, box-shadow 0.18s',
+    focusBoxShadow: `0 0 0 2px ${colors.light.accent}33`,
   },
   table: {
-    borderRadius: '14px',
-    background: colors.light.surface,
-    headerBackground: colors.light.primary,
+    borderRadius: '16px',
+    background: 'rgba(255,255,255,0.92)',
+    headerBackground: 'linear-gradient(90deg, #43B97F 80%, #FFD600 100%)',
     headerColor: '#fff',
-    rowHover: '#F1F8E9',
+    rowHover: colors.light.tableRowHover,
     border: `1.5px solid ${colors.light.border}`,
     boxShadow: '0 2px 8px rgba(44,62,80,0.06)',
     fontSize: '15px',
     cellPadding: '14px 18px',
-    stripedRow: '#FAFAFA',
+    stripedRow: colors.light.tableStriped,
   },
   avatar: {
-    size: 56,
+    size: 48,
     borderRadius: '50%',
     border: `2px solid ${colors.light.primary}`,
     boxShadow: '0 2px 8px rgba(44,62,80,0.10)',
@@ -159,31 +423,47 @@ const components = {
   snackbar: {
     backgroundColor: colors.light.snackbarBg,
     textColor: colors.light.snackbarText,
-    borderRadius: '10px',
+    borderRadius: '12px',
     fontSize: '15px',
-    boxShadow: '0 4px 16px rgba(44,62,80,0.18)',
+    boxShadow: '0 6px 24px rgba(67,185,127,0.12)',
     duration: 3000,
   },
   dialog: {
-    borderRadius: '18px',
-    backgroundColor: colors.light.surface,
+    borderRadius: '24px',
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    backdropFilter: 'blur(10px)',
     textColor: colors.light.textPrimary,
-    boxShadow: '0 8px 32px rgba(44,62,80,0.18)',
-    padding: '32px',
+    boxShadow: '0 12px 48px rgba(67,185,127,0.13)',
+    padding: '40px',
+    accentBorder: `2px solid ${colors.light.accent}55`,
   },
   tooltip: {
     backgroundColor: colors.light.tooltipBg,
     textColor: colors.light.tooltipText,
-    fontSize: '13px',
+    fontSize: '12px',
     borderRadius: '8px',
     padding: '8px 14px',
     boxShadow: '0 2px 8px rgba(44,62,80,0.12)',
   },
   appBar: {
-    height: 60,
-    backgroundColor: colors.light.primary,
+    height: 56,
+    backgroundColor: 'linear-gradient(90deg, #43B97F 80%, #FFE066 100%)',
     textColor: '#FFFFFF',
-    boxShadow: '0 2px 8px rgba(44,62,80,0.10)',
+    boxShadow: '0 2px 8px rgba(67,185,127,0.08)',
+  },
+  divider: {
+    height: '2px',
+    background: 'linear-gradient(90deg, #43B97F 0%, #FFD600 100%)',
+    opacity: 0.18,
+    margin: '32px 0',
+  },
+  iconCircle: {
+    background: '#F4F6F8',
+    border: `2.5px solid ${colors.light.primary}33`,
+    boxShadow: '0 2px 12px rgba(67,185,127,0.10)',
+    color: colors.light.primary,
+    size: 48,
+    fontSize: 24,
   },
 };
 
@@ -198,26 +478,41 @@ export const theme = {
   dark: {
     colors: {
       ...colors.dark,
-      cardSurface: '#262B33',
-      tableSurface: '#262B33',
+      cardSurface: colors.dark.surfaceAlt,
     },
-    typography,
+    typography: {
+      ...typography,
+      fontFamily: 'Montserrat, Poppins, Inter, Arial, sans-serif',
+    },
     components: {
       ...components,
-      button: {
-        ...components.button,
-        background: colors.dark.primary,
-        color: '#F5F5F5',
-        hoverBackground: '#5AD77A',
-        activeBackground: '#388E3C',
-        disabledBackground: colors.dark.disabled,
-        disabledColor: '#888',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.32)',
-      },
       card: {
         ...components.card,
-        background: '#262B33',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.32)',
+        boxShadow: '0 4px 24px rgba(67,185,127,0.05), 0 1.5px 6px rgba(44,62,80,0.10)',
+        statsBorder: `1.5px solid ${colors.dark.border}`,
+        statsBackground: colors.dark.surfaceAlt,
+      },
+      iconCircle: {
+        background: '#232B36',
+        border: `2.5px solid ${colors.dark.primary}33`,
+        boxShadow: '0 2px 12px rgba(67,185,127,0.13)',
+        color: colors.dark.primary,
+        size: 48,
+        fontSize: 24,
+      },
+      dialog: {
+        ...components.dialog,
+        backgroundColor: 'rgba(34,43,54,0.90)',
+        backdropFilter: 'blur(12px)',
+        textColor: colors.dark.textPrimary,
+        accentBorder: `2px solid ${colors.dark.accent}55`,
+      },
+      table: {
+        ...components.table,
+        background: 'rgba(35,43,54,0.92)',
+        headerBackground: 'linear-gradient(90deg, #43B97F 80%, #FFD600 100%)',
+        rowHover: colors.dark.tableRowHover,
+        stripedRow: colors.dark.tableStriped,
         border: `1.5px solid ${colors.dark.border}`,
       },
       input: {
@@ -225,48 +520,34 @@ export const theme = {
         background: colors.dark.surface,
         color: colors.dark.textPrimary,
         borderColor: colors.dark.border,
-        focusedBorderColor: colors.dark.primary,
-        errorBorderColor: colors.dark.error,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
-      },
-      table: {
-        ...components.table,
-        background: '#262B33',
-        headerBackground: colors.dark.primary,
-        headerColor: '#F5F5F5',
-        rowHover: '#23272F',
-        border: `1.5px solid ${colors.dark.border}`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-        stripedRow: '#20232A',
-      },
-      avatar: {
-        ...components.avatar,
-        border: `2px solid ${colors.dark.primary}`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.32)',
+        focusedBorderColor: colors.dark.accent,
+        errorBorderColor: '#FF5A5F',
+        focusBoxShadow: `0 0 0 2px ${colors.dark.accent}33`,
       },
       snackbar: {
         ...components.snackbar,
         backgroundColor: colors.dark.snackbarBg,
         textColor: colors.dark.snackbarText,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.32)',
-      },
-      dialog: {
-        ...components.dialog,
-        backgroundColor: colors.dark.surface,
-        textColor: colors.dark.textPrimary,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.32)',
+        boxShadow: '0 6px 24px rgba(67,185,127,0.18)',
       },
       tooltip: {
         ...components.tooltip,
         backgroundColor: colors.dark.tooltipBg,
         textColor: colors.dark.tooltipText,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.32)',
+        borderRadius: '8px',
+        padding: '8px 14px',
       },
       appBar: {
         ...components.appBar,
-        backgroundColor: colors.dark.surface,
-        textColor: colors.dark.primary,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.32)',
+        backgroundColor: 'linear-gradient(90deg, #43B97F 80%, #FFE066 100%)',
+        textColor: '#FFFFFF',
+        boxShadow: '0 2px 8px rgba(67,185,127,0.08)',
+      },
+      divider: {
+        height: '2px',
+        background: 'linear-gradient(90deg, #43B97F 0%, #FFD600 100%)',
+        opacity: 0.18,
+        margin: '32px 0',
       },
     },
     animations,

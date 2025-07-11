@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { useUser } from '../components/UserContext';
-import { fetchNotifications, markNotificationAsRead } from '../services/notificationApi';
+import { fetchNotifications, markNotificationAsRead, Notification } from '../services/notificationApi';
 
 const BellContainer = styled.div`
   position: relative;
@@ -68,13 +68,6 @@ const ErrorMessage = styled.div`
   padding: 0 20px;
 `;
 
-interface Notification {
-  id: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-}
-
 const NotificationBell: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -88,7 +81,7 @@ const NotificationBell: React.FC = () => {
     if (!userId) return;
     try {
       const data = await fetchNotifications(userId);
-      setNotifications(data);
+      setNotifications(data.notifications || []);
     } catch {
       setNotifications([]);
     }
@@ -143,7 +136,7 @@ const NotificationBell: React.FC = () => {
                 unread={!n.read}
                 onClick={() => markAsRead(n.id)}
               >
-                {n.message}
+                {n.body}
                 <br />
                 <span style={{ fontSize: '12px', color: '#999' }}>{new Date(n.createdAt).toLocaleString('de-DE')}</span>
               </NotificationItem>

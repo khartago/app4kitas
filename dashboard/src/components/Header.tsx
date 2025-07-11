@@ -3,10 +3,12 @@ import styled from 'styled-components';
 import ProfileDropdown from './ProfileDropdown';
 import { useDarkMode } from '../styles/theme';
 import { ThemeContext, DefaultTheme } from 'styled-components';
+import { useUser } from './UserContext';
+import { logout as logoutApi } from '../services/authApi';
 
 const SIDEBAR_WIDTH = 200;
 const HEADER_HEIGHT_DESKTOP = 64;
-const HEADER_HEIGHT_MOBILE = 48;
+const HEADER_HEIGHT_MOBILE = 56;
 
 interface HeaderProps {
   title: string;
@@ -23,24 +25,66 @@ const FixedHeader = styled.header`
   width: auto;
   height: ${HEADER_HEIGHT_DESKTOP}px;
   background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.components.appBar.textColor};
+  color: ${({ theme }) => theme.colors.textPrimary};
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  box-shadow: none;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px ${({ theme }) => theme.colors.border}20;
   border: none;
   border-radius: 0;
   z-index: 1000;
   font-family: ${({ theme }) => theme.typography.fontFamily};
-  transition: background 0.18s, box-shadow 0.18s;
-  overflow: visible;
-  @media (max-width: 700px) {
+  transition: all 0.2s ease;
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
     left: 0;
     width: 100%;
     height: ${HEADER_HEIGHT_MOBILE}px;
+    padding: 0 16px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 12px;
+  }
+  
+  @media (max-width: 360px) {
     padding: 0 8px;
-    border-radius: 0;
+  }
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
+`;
+
+const LeftSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 8px;
   }
 `;
 
@@ -48,71 +92,102 @@ const Title = styled.h1`
   font-family: ${({ theme }) => theme.typography.fontFamily};
   font-size: ${({ theme }) => theme.typography.headline2.fontSize};
   font-weight: ${({ theme }) => theme.typography.headline2.fontWeight};
-  color: ${({ theme }) => theme.colors.primary};
-  margin: 0;
-  letter-spacing: 1.2px;
-  white-space: nowrap;
-  overflow: visible;
-  flex-shrink: 0;
-  z-index: 1;
-  @media (max-width: 600px) {
-    font-size: ${({ theme }) => theme.typography.body1.fontSize};
-  }
-`;
-
-const CenterSection = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  @media (max-width: 900px) {
-    justify-content: flex-end;
-  }
-`;
-
-const SearchBar = styled.input`
-  width: 320px;
-  max-width: 100%;
-  padding: 8px 36px 8px 14px;
-  border-radius: ${({ theme }) => theme.components.input.borderRadius};
-  border: 1.5px solid ${({ theme }) => theme.components.input.borderColor};
-  font-size: ${({ theme }) => theme.typography.body1.fontSize};
-  font-family: ${({ theme }) => theme.typography.fontFamily};
-  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.textPrimary};
-  transition: border-color 0.18s;
-  outline: none;
-  &:focus {
-    border-color: ${({ theme }) => theme.components.input.focusedBorderColor};
+  margin: 0;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    font-size: ${({ theme }) => theme.typography.headline3.fontSize};
+    letter-spacing: 0.3px;
   }
-  @media (max-width: 600px) {
-    width: 120px;
+  
+  @media (max-width: 480px) {
+    font-size: ${({ theme }) => theme.typography.body1.fontSize};
+    font-weight: 600;
+    max-width: 120px;
+  }
+  
+  @media (max-width: 360px) {
+    max-width: 100px;
     font-size: ${({ theme }) => theme.typography.body2.fontSize};
   }
-`;
-
-const SearchIcon = styled.span`
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: ${({ theme }) => theme.colors.textSecondary};
-  pointer-events: none;
-  font-size: 1.2em;
 `;
 
 const SearchWrapper = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const SearchBar = styled.input`
+  width: 280px;
+  padding: 8px 36px 8px 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  font-size: ${({ theme }) => theme.typography.body2.fontSize};
+  font-family: ${({ theme }) => theme.typography.fontFamily};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textPrimary};
+  transition: all 0.2s ease;
+  outline: none;
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}20;
+  }
+  
+  @media (max-width: 1024px) {
+    width: 200px;
+  }
+`;
+
+const SearchIcon = styled.span`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: ${({ theme }) => theme.colors.textSecondary};
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const RightSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 20px;
-  @media (max-width: 600px) {
-    gap: 10px;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 0;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 6px;
+  }
+  
+  @media (max-width: 360px) {
+    gap: 4px;
   }
 `;
 
@@ -122,81 +197,163 @@ const IconButton = styled.button`
   justify-content: center;
   background: none;
   border: none;
-  border-radius: 50%;
-  padding: 6px;
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
-  transition: background 0.18s;
+  transition: all 0.2s ease;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  min-width: 36px;
+  height: 36px;
+  
   &:hover, &:focus {
-    background: ${({ theme }) => theme.colors.accent}22;
+    background: ${({ theme }) => theme.colors.accent}15;
     outline: none;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 6px;
+    min-width: 32px;
+    height: 32px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 4px;
+    min-width: 28px;
+    height: 28px;
   }
 `;
 
-const DarkModeButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  padding: 6px;
-  cursor: pointer;
-  transition: background 0.18s;
+const DarkModeButton = styled(IconButton)`
   &:hover, &:focus {
-    background: ${({ theme }) => theme.colors.accent}22;
-    outline: none;
+    background: ${({ theme }) => theme.colors.primary}15;
+  }
+`;
+
+const NotificationButton = styled(IconButton)`
+  position: relative;
+  
+  &:hover, &:focus {
+    background: ${({ theme }) => theme.colors.warning}15;
+  }
+`;
+
+const NotificationBadge = styled.span`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: ${({ theme }) => theme.colors.error};
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.colors.surface};
+  
+  @media (max-width: 768px) {
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+  }
+`;
+
+const MobileSearchButton = styled(IconButton)`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
   }
 `;
 
 const SunIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="5" stroke="#FFC107" strokeWidth="2" fill="#FFC107"/><g stroke="#FFC107" strokeWidth="2"><line x1="11" y1="1" x2="11" y2="4"/><line x1="11" y1="18" x2="11" y2="21"/><line x1="1" y1="11" x2="4" y2="11"/><line x1="18" y1="11" x2="21" y2="11"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="15.66" y1="15.66" x2="17.78" y2="17.78"/><line x1="4.22" y1="17.78" x2="6.34" y2="15.66"/><line x1="15.66" y1="6.34" x2="17.78" y2="4.22"/></g></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
 );
 
 const MoonIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M18 14.5A8 8 0 0 1 7.5 4c0-.2 0-.4.02-.6A8 8 0 1 0 18 14.5z" fill="#FFC107" stroke="#FFC107" strokeWidth="2"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
 );
 
-const BellIcon = ({ color }: { color: string }) => (
-  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true" focusable="false">
-    <path d="M13 23c1.38 0 2.5-1.12 2.5-2.5h-5A2.5 2.5 0 0 0 13 23zm7-5V12c0-3.07-1.63-5.64-5-6.32V5a2 2 0 1 0-4 0v.68C6.63 6.36 5 8.92 5 12v6l-1.29 1.29A1 1 0 0 0 5 21h16a1 1 0 0 0 .71-1.71L20 18z" stroke={color} strokeWidth="2" fill="none"/>
+const BellIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+  </svg>
+);
+
+const SearchIconSVG = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="m21 21-4.35-4.35"/>
   </svg>
 );
 
 const Header: React.FC<HeaderProps> = ({ title, showSearch, searchValue, onSearchChange }) => {
-  const handleLogout = () => {
-    localStorage.removeItem('jwt');
-    window.location.href = '/login';
-  };
+  const { logout } = useUser();
   const { mode, toggle } = useDarkMode();
   const theme = React.useContext(ThemeContext) as DefaultTheme;
+  
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      logout();
+      window.location.href = '/login';
+    }
+  };
+  
   return (
     <FixedHeader>
-      <CenterSection>
-        <Title>{title}</Title>
-        {showSearch && (
-          <SearchWrapper>
-            <SearchBar
-              type="text"
-              placeholder="Suchen..."
-              value={searchValue}
-              onChange={onSearchChange}
-              aria-label="Suchen"
-            />
-            <SearchIcon>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="#757575" strokeWidth="2"/><path d="M16 16L13 13" stroke="#757575" strokeWidth="2" strokeLinecap="round"/></svg>
-            </SearchIcon>
-          </SearchWrapper>
-        )}
-      </CenterSection>
-      <RightSection>
-        <DarkModeButton onClick={toggle} aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'}>
-          {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </DarkModeButton>
-        <IconButton tabIndex={0} aria-label="Benachrichtigungen">
-          <BellIcon color={theme.colors.primary} />
-        </IconButton>
-        <ProfileDropdown onLogout={handleLogout} />
-      </RightSection>
+      <HeaderContent>
+        <LeftSection>
+          <Title title={title}>{title}</Title>
+          {showSearch && (
+            <SearchWrapper>
+              <SearchBar
+                type="text"
+                placeholder="Suchen..."
+                value={searchValue}
+                onChange={onSearchChange}
+                aria-label="Suchen"
+              />
+              <SearchIcon>
+                <SearchIconSVG />
+              </SearchIcon>
+            </SearchWrapper>
+          )}
+        </LeftSection>
+        
+        <RightSection>
+          <DarkModeButton 
+            onClick={toggle} 
+            aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'}
+          >
+            {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </DarkModeButton>
+          
+          <NotificationButton aria-label="Benachrichtigungen">
+            <BellIcon />
+            <NotificationBadge />
+          </NotificationButton>
+          
+          <ProfileDropdown onLogout={handleLogout} />
+        </RightSection>
+      </HeaderContent>
     </FixedHeader>
   );
 };
