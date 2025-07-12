@@ -1793,4 +1793,858 @@ router.get('/reports/custom-attendance', authMiddleware, async (req, res) => {
   }
 });
 
+// Messages report (JSON)
+router.get('/reports/messages', authMiddleware, async (req, res) => {
+  const { startDate, endDate, groupId, type } = req.query;
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+
+  try {
+    const where = {
+      ...(startDate && endDate ? {
+        createdAt: {
+          gte: new Date(startDate + 'T00:00:00.000Z'),
+          lte: new Date(endDate + 'T23:59:59.999Z')
+        }
+      } : {}),
+      ...(institutionId ? { institutionId } : {})
+    };
+
+    const messages = await prisma.message.findMany({
+      where,
+      include: {
+        sender: true,
+        channel: {
+          include: {
+            group: true
+          }
+        }
+      }
+    });
+
+    const report = {
+      totalMessages: messages.length,
+      messagesByChannel: messages.reduce((acc, msg) => {
+        const channelName = msg.channel?.name || 'Direkt';
+        acc[channelName] = (acc[channelName] || 0) + 1;
+        return acc;
+      }, {}),
+      messagesBySender: messages.reduce((acc, msg) => {
+        const senderName = msg.sender?.name || 'Unbekannt';
+        acc[senderName] = (acc[senderName] || 0) + 1;
+        return acc;
+      }, {})
+    };
+
+    res.json({ report });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Erstellen des Nachrichtenberichts.' });
+  }
+});
+
+// Messages report export
+router.get('/reports/messages/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', startDate, endDate, groupId, type } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+
+  try {
+    const where = {
+      ...(startDate && endDate ? {
+        createdAt: {
+          gte: new Date(startDate + 'T00:00:00.000Z'),
+          lte: new Date(endDate + 'T23:59:59.999Z')
+        }
+      } : {}),
+      ...(req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {})
+    };
+
+    const messages = await prisma.message.findMany({
+      where,
+      include: {
+        sender: true,
+        channel: {
+          include: {
+            group: true
+          }
+        }
+      }
+    });
+
+    if (format === 'csv') {
+      const csvData = messages.map(msg => ({
+        'Nachricht': msg.content,
+        'Kanal': msg.channel?.name || 'Direkt',
+        'Absender': msg.sender?.name || 'Unbekannt',
+        'Datum': new Date(msg.createdAt).toLocaleDateString('de-DE'),
+        'Zeit': new Date(msg.createdAt).toLocaleTimeString('de-DE')
+      }));
+      
+      const parser = new Parser({
+        fields: ['Nachricht', 'Kanal', 'Absender', 'Datum', 'Zeit'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      
+      const csv = parser.parse(csvData);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="nachrichten-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: messages.map(msg => ({
+          ...msg,
+          nachricht: msg.content,
+          kanal: msg.channel?.name || 'Direkt',
+          absender: msg.sender?.name || 'Unbekannt',
+          datum: new Date(msg.createdAt).toLocaleDateString('de-DE'),
+          zeit: new Date(msg.createdAt).toLocaleTimeString('de-DE')
+        })),
+        headers: ['Nachricht', 'Kanal', 'Absender', 'Datum', 'Zeit'],
+        columns: ['nachricht', 'kanal', 'absender', 'datum', 'zeit'],
+        colWidths: [200, 120, 120, 80, 80],
+        title: 'Nachrichten Bericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `nachrichten-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="nachrichten-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Nachrichtenberichts.' });
+  }
+});
+
+// Notifications report (JSON)
+router.get('/reports/notifications', authMiddleware, async (req, res) => {
+  const { startDate, endDate, type, priority } = req.query;
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+
+  try {
+    const where = {
+      ...(startDate && endDate ? {
+        createdAt: {
+          gte: new Date(startDate + 'T00:00:00.000Z'),
+          lte: new Date(endDate + 'T23:59:59.999Z')
+        }
+      } : {}),
+      ...(priority ? { priority } : {}),
+      ...(institutionId ? { institutionId } : {})
+    };
+
+    const notifications = await prisma.notificationLog.findMany({
+      where,
+      include: {
+        user: true,
+        sender: true
+      }
+    });
+
+    const report = {
+      totalNotifications: notifications.length,
+      notificationsByPriority: notifications.reduce((acc, notif) => {
+        acc[notif.priority] = (acc[notif.priority] || 0) + 1;
+        return acc;
+      }, {}),
+      notificationsBySender: notifications.reduce((acc, notif) => {
+        const senderName = notif.sender?.name || 'System';
+        acc[senderName] = (acc[senderName] || 0) + 1;
+        return acc;
+      }, {})
+    };
+
+    res.json({ report });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Erstellen des Benachrichtigungsberichts.' });
+  }
+});
+
+// Notifications report export
+router.get('/reports/notifications/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', startDate, endDate, type, priority } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+
+  try {
+    const where = {
+      ...(startDate && endDate ? {
+        createdAt: {
+          gte: new Date(startDate + 'T00:00:00.000Z'),
+          lte: new Date(endDate + 'T23:59:59.999Z')
+        }
+      } : {}),
+      ...(priority ? { priority } : {}),
+      ...(req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {})
+    };
+
+    const notifications = await prisma.notificationLog.findMany({
+      where,
+      include: {
+        user: true,
+        sender: true
+      }
+    });
+
+    if (format === 'csv') {
+      const csvData = notifications.map(notif => ({
+        'Titel': notif.title,
+        'Nachricht': notif.body,
+        'Priorität': notif.priority,
+        'Empfänger': notif.user?.name || 'Unbekannt',
+        'Absender': notif.sender?.name || 'System',
+        'Datum': new Date(notif.createdAt).toLocaleDateString('de-DE'),
+        'Zeit': new Date(notif.createdAt).toLocaleTimeString('de-DE')
+      }));
+      
+      const parser = new Parser({
+        fields: ['Titel', 'Nachricht', 'Priorität', 'Empfänger', 'Absender', 'Datum', 'Zeit'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      
+      const csv = parser.parse(csvData);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="benachrichtigungen-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: notifications.map(notif => ({
+          ...notif,
+          titel: notif.title,
+          nachricht: notif.body,
+          prioritaet: notif.priority,
+          empfaenger: notif.user?.name || 'Unbekannt',
+          absender: notif.sender?.name || 'System',
+          datum: new Date(notif.createdAt).toLocaleDateString('de-DE'),
+          zeit: new Date(notif.createdAt).toLocaleTimeString('de-DE')
+        })),
+        headers: ['Titel', 'Nachricht', 'Priorität', 'Empfänger', 'Absender', 'Datum', 'Zeit'],
+        columns: ['titel', 'nachricht', 'prioritaet', 'empfaenger', 'absender', 'datum', 'zeit'],
+        colWidths: [150, 200, 80, 120, 120, 80, 80],
+        title: 'Benachrichtigungen Bericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `benachrichtigungen-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="benachrichtigungen-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Benachrichtigungsberichts.' });
+  }
+});
+
+// Users report (JSON)
+router.get('/reports/users', authMiddleware, async (req, res) => {
+  const { role, institutionId: filterInstitutionId } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+
+  // Validate role if provided
+  if (role && !['SUPER_ADMIN', 'ADMIN', 'EDUCATOR', 'PARENT'].includes(role)) {
+    return res.status(400).json({ error: 'Ungültige Rolle' });
+  }
+
+  // Validate institutionId if provided
+  if (filterInstitutionId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filterInstitutionId)) {
+    return res.status(400).json({ error: 'Ungültiges institutionId Format' });
+  }
+
+  try {
+    const where = {
+      ...(role ? { role } : {}),
+      ...(filterInstitutionId ? { institutionId: filterInstitutionId } : {}),
+      ...(req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {})
+    };
+
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        institution: true,
+        groups: true,
+        children: true
+      }
+    });
+
+    const report = {
+      totalUsers: users.length,
+      usersByRole: users.reduce((acc, user) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
+        return acc;
+      }, {}),
+      usersByInstitution: users.reduce((acc, user) => {
+        const institutionName = user.institution?.name || 'Keine Institution';
+        acc[institutionName] = (acc[institutionName] || 0) + 1;
+        return acc;
+      }, {}),
+      activeUsers: users.filter(user => user.lastLoginAt && 
+        new Date(user.lastLoginAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length
+    };
+
+    res.json({ report });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Erstellen des Benutzerberichts.' });
+  }
+});
+
+// Users report export
+router.get('/reports/users/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', role, institutionId: filterInstitutionId } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+
+  try {
+    const where = {
+      ...(role ? { role } : {}),
+      ...(filterInstitutionId ? { institutionId: filterInstitutionId } : {}),
+      ...(req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {})
+    };
+
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        institution: true,
+        groups: true,
+        children: true
+      }
+    });
+
+    if (format === 'csv') {
+      const csvData = users.map(user => ({
+        'Name': user.name,
+        'E-Mail': user.email,
+        'Rolle': user.role,
+        'Institution': user.institution?.name || 'Keine Institution',
+        'Gruppen': user.groups?.map(g => g.name).join('; ') || 'Keine Gruppen',
+        'Kinder': user.children?.length || 0,
+        'Erstellt am': new Date(user.createdAt).toLocaleDateString('de-DE'),
+        'Letzter Login': user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('de-DE') : 'Nie'
+      }));
+      
+      const parser = new Parser({
+        fields: ['Name', 'E-Mail', 'Rolle', 'Institution', 'Gruppen', 'Kinder', 'Erstellt am', 'Letzter Login'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      
+      const csv = parser.parse(csvData);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="benutzer-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: users.map(user => ({
+          ...user,
+          name: user.name,
+          email: user.email,
+          rolle: user.role,
+          institution: user.institution?.name || 'Keine Institution',
+          gruppen: user.groups?.map(g => g.name).join('; ') || 'Keine Gruppen',
+          kinder: user.children?.length || 0,
+          erstelltAm: new Date(user.createdAt).toLocaleDateString('de-DE'),
+          letzterLogin: user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('de-DE') : 'Nie'
+        })),
+        headers: ['Name', 'E-Mail', 'Rolle', 'Institution', 'Gruppen', 'Kinder', 'Erstellt am', 'Letzter Login'],
+        columns: ['name', 'email', 'rolle', 'institution', 'gruppen', 'kinder', 'erstelltAm', 'letzterLogin'],
+        colWidths: [120, 180, 80, 120, 150, 60, 80, 80],
+        title: 'Benutzer Bericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `benutzer-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="benutzer-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Benutzerberichts.' });
+  }
+});
+
+// Statistics report (JSON)
+router.get('/reports/statistics', authMiddleware, async (req, res) => {
+  const { startDate, endDate, institutionId: filterInstitutionId } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+
+  try {
+    const where = req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {};
+    let messageDateFilter = {};
+    let notificationDateFilter = {};
+    let checkInDateFilter = {};
+    let daysInRange = 1;
+    
+    if (startDate && endDate) {
+      // Validate date format
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+        return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+      }
+      
+      const start = new Date(startDate + 'T00:00:00.000Z');
+      const end = new Date(endDate + 'T23:59:59.999Z');
+      
+      // Validate date range
+      if (start > end) {
+        return res.status(400).json({ error: 'startDate muss vor endDate liegen' });
+      }
+      
+      // Different models use different date field names
+      messageDateFilter = {
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      };
+      
+      notificationDateFilter = {
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      };
+      
+      checkInDateFilter = {
+        timestamp: {
+          gte: start,
+          lte: end
+        }
+      };
+      
+      // Calculate days in range
+      daysInRange = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    const [totalChildren, totalUsers, totalGroups, totalMessages, totalNotifications, totalCheckIns, totalInstitutions] = await Promise.all([
+      prisma.child.count({ where }),
+      prisma.user.count({ where }),
+      prisma.group.count({ where }),
+      prisma.message.count({ where: { ...where, ...messageDateFilter } }),
+      prisma.notificationLog.count({ where: { ...where, ...notificationDateFilter } }),
+      prisma.checkInLog.count({ where: { ...where, ...checkInDateFilter } }),
+      prisma.institution.count({})
+    ]);
+
+    const statistics = {
+      totalChildren,
+      totalUsers,
+      totalGroups,
+      totalMessages,
+      totalNotifications,
+      totalCheckIns,
+      totalInstitutions,
+      averageMessagesPerDay: totalMessages / daysInRange,
+      averageNotificationsPerDay: totalNotifications / daysInRange
+    };
+
+    res.json({ statistics });
+  } catch (err) {
+    console.error('Statistics error:', err);
+    res.status(500).json({ error: 'Fehler beim Erstellen des Statistikenberichts.' });
+  }
+});
+
+// Statistics report export
+router.get('/reports/statistics/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', startDate, endDate } = req.query;
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+
+  try {
+    const where = req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {};
+    const dateFilter = startDate && endDate ? {
+      createdAt: {
+        gte: new Date(startDate + 'T00:00:00.000Z'),
+        lte: new Date(endDate + 'T23:59:59.999Z')
+      }
+    } : {};
+
+    const [totalChildren, totalUsers, totalGroups, totalMessages, totalNotifications, totalCheckIns] = await Promise.all([
+      prisma.child.count({ where }),
+      prisma.user.count({ where }),
+      prisma.group.count({ where }),
+      prisma.message.count({ where: { ...where, ...dateFilter } }),
+      prisma.notificationLog.count({ where: { ...where, ...dateFilter } }),
+      prisma.checkInLog.count({ where: { ...where, ...dateFilter } })
+    ]);
+
+    const statistics = [
+      { metric: 'Gesamte Kinder', value: totalChildren },
+      { metric: 'Gesamte Benutzer', value: totalUsers },
+      { metric: 'Gesamte Gruppen', value: totalGroups },
+      { metric: 'Gesamte Nachrichten', value: totalMessages },
+      { metric: 'Gesamte Benachrichtigungen', value: totalNotifications },
+      { metric: 'Gesamte Check-ins', value: totalCheckIns }
+    ];
+
+    if (format === 'csv') {
+      const csvData = statistics.map(stat => ({
+        'Metrik': stat.metric,
+        'Wert': stat.value
+      }));
+      
+      const parser = new Parser({
+        fields: ['Metrik', 'Wert'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      
+      const csv = parser.parse(csvData);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="statistiken-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: statistics.map(stat => ({
+          ...stat,
+          metrik: stat.metric,
+          wert: stat.value.toString()
+        })),
+        headers: ['Metrik', 'Wert'],
+        columns: ['metrik', 'wert'],
+        colWidths: [200, 100],
+        title: 'Statistiken Bericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `statistiken-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="statistiken-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Statistikenberichts.' });
+  }
+});
+
+// Attendance report (JSON)
+router.get('/reports/attendance', authMiddleware, async (req, res) => {
+  const { startDate, endDate, date, groupId } = req.query;
+  
+  // Support both single date and date range
+  let start, end;
+  if (date) {
+    // Single date mode
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+    }
+    
+    // Validate date is actually valid
+    const dateObj = new Date(date + 'T00:00:00.000Z');
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ error: 'Ungültiges Datum' });
+    }
+    
+    start = dateObj;
+    end = new Date(date + 'T23:59:59.999Z');
+    
+    // Reject future dates (strictly after today, local time)
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const inputDate = new Date(date + 'T00:00:00');
+    if (inputDate > today) {
+      return res.status(400).json({ error: 'Zukünftige Daten sind nicht erlaubt' });
+    }
+  } else if (startDate && endDate) {
+    // Date range mode
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+    }
+    
+    // Validate dates are actually valid
+    const startDateObj = new Date(startDate + 'T00:00:00.000Z');
+    const endDateObj = new Date(endDate + 'T00:00:00.000Z');
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ error: 'Ungültiges Datum' });
+    }
+    
+    start = startDateObj;
+    end = new Date(endDate + 'T23:59:59.999Z');
+    
+    // Reject future dates (strictly after today, local time)
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const inputStartDate = new Date(startDate + 'T00:00:00');
+    const inputEndDate = new Date(endDate + 'T00:00:00');
+    if (inputStartDate > today || inputEndDate > today) {
+      return res.status(400).json({ error: 'Zukünftige Daten sind nicht erlaubt' });
+    }
+    
+    // Validate date range
+    if (start > end) {
+      return res.status(400).json({ error: 'startDate muss vor endDate liegen' });
+    }
+  } else {
+    return res.status(400).json({ error: 'date oder startDate und endDate sind erforderlich (YYYY-MM-DD)' });
+  }
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+  
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  try {
+    const children = await prisma.child.findMany({
+      where: {
+        ...(groupId ? { groupId } : {}),
+        ...(institutionId ? { institutionId } : {})
+      },
+      include: { checkIns: true }
+    });
+    
+    let presentToday = 0;
+    let absentToday = 0;
+    let totalChildren = children.length;
+    children.forEach(child => {
+      const checkins = child.checkIns.filter(
+        ci => ci.timestamp >= start && ci.timestamp <= end && ci.type === 'IN'
+      );
+      if (checkins.length > 0) {
+        presentToday++;
+      } else {
+        absentToday++;
+      }
+    });
+    const report = {
+      totalChildren,
+      presentToday,
+      absentToday,
+      children: children.map(child => {
+        const checkins = child.checkIns.filter(
+          ci => ci.timestamp >= start && ci.timestamp <= end
+        );
+        return {
+          childId: child.id,
+          name: child.name,
+          checkInCount: checkins.filter(ci => ci.type === 'IN').length,
+          checkOutCount: checkins.filter(ci => ci.type === 'OUT').length,
+          totalCheckIns: checkins.length
+        };
+      })
+    };
+    res.json({ report });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Erstellen des Anwesenheitsberichts.' });
+  }
+});
+
+// Attendance report export
+router.get('/reports/attendance/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', startDate, endDate, date, groupId } = req.query;
+  
+  // Support both single date and date range
+  let start, end;
+  if (date) {
+    // Single date mode
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+    }
+    start = new Date(date + 'T00:00:00.000Z');
+    end = new Date(date + 'T23:59:59.999Z');
+  } else if (startDate && endDate) {
+    // Date range mode
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+    }
+    start = new Date(startDate + 'T00:00:00.000Z');
+    end = new Date(endDate + 'T23:59:59.999Z');
+  } else {
+    return res.status(400).json({ error: 'date oder startDate und endDate sind erforderlich (YYYY-MM-DD)' });
+  }
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+  
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  try {
+    const children = await prisma.child.findMany({
+      where: {
+        ...(groupId ? { groupId } : {}),
+        ...(institutionId ? { institutionId } : {})
+      },
+      include: { checkIns: true }
+    });
+    
+    const report = children.map(child => {
+      const checkins = child.checkIns.filter(
+        ci => ci.timestamp >= start && ci.timestamp <= end
+      );
+      return {
+        name: child.name,
+        checkInCount: checkins.filter(ci => ci.type === 'IN').length,
+        checkOutCount: checkins.filter(ci => ci.type === 'OUT').length,
+        totalCheckIns: checkins.length
+      };
+    });
+    if (format === 'csv') {
+      const parser = new Parser({
+        fields: ['name', 'checkInCount', 'checkOutCount', 'totalCheckIns'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      const csv = parser.parse(report);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="anwesenheit-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: report,
+        headers: ['Name', 'Check-ins', 'Check-outs', 'Gesamt Check-ins'],
+        columns: ['name', 'checkInCount', 'checkOutCount', 'totalCheckIns'],
+        colWidths: [120, 80, 80, 100],
+        title: 'Anwesenheitsbericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `anwesenheit-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="anwesenheit-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Anwesenheitsberichts.' });
+  }
+});
+
+// Check-in report (JSON)
+router.get('/reports/check-in', authMiddleware, async (req, res) => {
+  const { startDate, endDate, childId } = req.query;
+  if (!startDate || !endDate) return res.status(400).json({ error: 'startDate und endDate sind erforderlich (YYYY-MM-DD)' });
+  
+  // Validate date format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
+  }
+  
+  // Validate childId if provided
+  if (childId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(childId)) {
+    return res.status(400).json({ error: 'Ungültiges childId Format' });
+  }
+  
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Berichte' });
+  }
+  
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  try {
+    const where = {
+      ...(childId ? { childId } : {}),
+      ...(institutionId ? { institutionId } : {})
+    };
+    const start = new Date(startDate + 'T00:00:00.000Z');
+    const end = new Date(endDate + 'T23:59:59.999Z');
+    const checkIns = await prisma.checkInLog.findMany({
+      where: {
+        ...where,
+        timestamp: { gte: start, lte: end }
+      }
+    });
+    const report = {
+      totalCheckIns: checkIns.filter(ci => ci.type === 'IN').length,
+      totalCheckOuts: checkIns.filter(ci => ci.type === 'OUT').length,
+      checkIns
+    };
+    res.json({ report });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Erstellen des Check-in-Berichts.' });
+  }
+});
+
+// Check-in report export
+router.get('/reports/check-in/export', authMiddleware, async (req, res) => {
+  const { format = 'csv', startDate, endDate, childId } = req.query;
+  if (!startDate || !endDate) return res.status(400).json({ error: 'startDate und endDate sind erforderlich (YYYY-MM-DD)' });
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung für Export' });
+  }
+  const institutionId = req.user.role === 'ADMIN' ? req.user.institutionId : undefined;
+  try {
+    const where = {
+      ...(childId ? { childId } : {}),
+      ...(institutionId ? { institutionId } : {})
+    };
+    const start = new Date(startDate + 'T00:00:00.000Z');
+    const end = new Date(endDate + 'T23:59:59.999Z');
+    const checkIns = await prisma.checkInLog.findMany({
+      where: {
+        ...where,
+        timestamp: { gte: start, lte: end }
+      }
+    });
+    const report = checkIns.map(ci => ({
+      childId: ci.childId,
+      type: ci.type,
+      timestamp: ci.timestamp.toISOString(),
+      actorId: ci.actorId
+    }));
+    if (format === 'csv') {
+      const parser = new Parser({
+        fields: ['childId', 'type', 'timestamp', 'actorId'],
+        delimiter: ';',
+        quote: '"',
+        header: true
+      });
+      const csv = parser.parse(report);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="checkin-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send('\ufeff' + csv);
+    } else if (format === 'pdf') {
+      const pdfBytes = await generatePDFExport({
+        data: report,
+        headers: ['Kind ID', 'Typ', 'Zeitstempel', 'Akteur ID'],
+        columns: ['childId', 'type', 'timestamp', 'actorId'],
+        colWidths: [80, 60, 160, 80],
+        title: 'Check-in Bericht',
+        info: createInfoLines(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`),
+        headerColor: [0.20, 0.55, 0.74],
+        filename: `checkin-${new Date().toISOString().split('T')[0]}.pdf`
+      });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="checkin-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.end(Buffer.from(pdfBytes));
+    } else {
+      res.status(400).json({ error: 'Unterstütztes Format: csv oder pdf' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Exportieren des Check-in-Berichts.' });
+  }
+});
+
 module.exports = router; 

@@ -24,6 +24,10 @@ const upload = multer({ storage });
 
 // List all children
 router.get('/children', authMiddleware, async (req, res) => {
+  // Only ADMIN and SUPER_ADMIN can list all children
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
   try {
     const where = {};
     if (req.user.role === 'ADMIN') {

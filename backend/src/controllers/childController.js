@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const QRCode = require('qrcode');
 const fs = require('fs');
 const { logActivity } = require('./activityController');
+const { isUUID } = require('validator');
 
 // GET /children/:id
 async function getChild(req, res) {
@@ -40,9 +41,13 @@ async function createChild(req, res) {
   if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
     return res.status(403).json({ error: 'Nur Admin kann Kinder anlegen' });
   }
-  const { name, birthdate, groupId, parentIds } = req.body;
+  const { name, birthdate, groupId, parentIds, institutionId: bodyInstitutionId } = req.body;
   if (!name || !birthdate) {
     return res.status(400).json({ error: 'Name und Geburtsdatum erforderlich' });
+  }
+  // Validate date format (YYYY-MM-DD)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
+    return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD)' });
   }
   try {
     // Check group institution
@@ -55,9 +60,17 @@ async function createChild(req, res) {
       }
     }
     const qrCodeSecret = crypto.randomBytes(16).toString('hex');
-    const institutionId = user.institutionId;
-    if (!institutionId) {
-      return res.status(400).json({ error: 'Institution nicht gefunden' });
+    let institutionId;
+    if (user.role === 'SUPER_ADMIN') {
+      institutionId = bodyInstitutionId;
+      if (!institutionId) {
+        return res.status(400).json({ error: 'Institution muss angegeben werden' });
+      }
+    } else {
+      institutionId = user.institutionId;
+      if (!institutionId) {
+        return res.status(400).json({ error: 'Institution nicht gefunden' });
+      }
     }
     const child = await prisma.child.create({
       data: {

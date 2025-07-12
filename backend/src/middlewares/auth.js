@@ -9,10 +9,18 @@ function authMiddleware(req, res, next) {
     // Fallback to Authorization header
     const authHeader = req.headers['authorization'];
     if (authHeader) {
-      token = authHeader.split(' ')[1];
+      const parts = authHeader.split(' ');
+      if (parts.length !== 2 || parts[0] !== 'Bearer') {
+        return res.status(401).json({ error: 'Ungültiges Authorization-Header Format' });
+      }
+      token = parts[1];
     }
   }
-  if (!token) return res.status(401).json({ error: 'Token fehlt' });
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Token fehlt' });
+  }
+  
   try {
     const user = verifyToken(token);
     req.user = user;
@@ -25,7 +33,10 @@ function authMiddleware(req, res, next) {
 function requireRole(role) {
   return function (req, res, next) {
     authMiddleware(req, res, function () {
-      if (!req.user || req.user.role !== role) {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Token fehlt' });
+      }
+      if (req.user.role !== role) {
         return res.status(403).json({ error: 'Keine Berechtigung' });
       }
       next();

@@ -7,6 +7,11 @@ const prisma = new PrismaClient();
 
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
+    // Role-based access control - only ADMIN and SUPER_ADMIN can access statistics
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Keine Berechtigung für Statistiken' });
+    }
+
     const userInstitutionFilter = req.user.role === 'ADMIN' ? { institutionId: req.user.institutionId } : {};
 
     const users = await prisma.user.count({ where: userInstitutionFilter });

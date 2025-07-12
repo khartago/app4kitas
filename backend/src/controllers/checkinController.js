@@ -23,36 +23,48 @@ async function checkin(req, res) {
       orderBy: { timestamp: 'asc' }
     });
 
+    // Fetch child to get institutionId
+    const child = await prisma.child.findUnique({ where: { id: childId } });
+    if (!child) return res.status(404).json({ success: false, message: 'Kind nicht gefunden' });
+
     if (todayLogs.length === 0) {
       // First scan: check-in
       const log = await prisma.checkInLog.create({
-        data: { childId, actorId, type: 'IN', method, timestamp: new Date() },
+        data: { childId, actorId, type: 'IN', method, timestamp: new Date(), institutionId: child.institutionId },
       });
       
-      // Log activity
-      await logActivity(
-        actorId,
-        'CHECKIN_RECORDED',
-        'Child',
-        childId,
-        `Check-in recorded for child`
-      );
+      // Log activity (don't fail if logging fails)
+      try {
+        await logActivity(
+          actorId,
+          'CHECKIN_RECORDED',
+          'Child',
+          childId,
+          `Check-in recorded for child`
+        );
+      } catch (error) {
+        console.warn('Failed to log check-in activity:', error);
+      }
       
       return res.status(201).json(log);
     } else if (todayLogs.length === 1 && todayLogs[0].type === 'IN') {
       // Second scan: check-out
       const log = await prisma.checkInLog.create({
-        data: { childId, actorId, type: 'OUT', method, timestamp: new Date() },
+        data: { childId, actorId, type: 'OUT', method, timestamp: new Date(), institutionId: child.institutionId },
       });
       
-      // Log activity
-      await logActivity(
-        actorId,
-        'CHECKIN_RECORDED',
-        'Child',
-        childId,
-        `Check-out recorded for child`
-      );
+      // Log activity (don't fail if logging fails)
+      try {
+        await logActivity(
+          actorId,
+          'CHECKIN_RECORDED',
+          'Child',
+          childId,
+          `Check-out recorded for child`
+        );
+      } catch (error) {
+        console.warn('Failed to log check-out activity:', error);
+      }
       
       return res.status(201).json(log);
     } else if (todayLogs.length === 2 || (todayLogs.length === 1 && todayLogs[0].type === 'OUT')) {
@@ -70,7 +82,50 @@ async function checkin(req, res) {
 // GET /checkin/child/:childId
 async function childHistory(req, res) {
   const { childId } = req.params;
+  const user = req.user;
+  
   try {
+    // Check if user has access to this child
+    const child = await prisma.child.findUnique({
+      where: { id: childId },
+      include: {
+        group: {
+          include: {
+            educators: true
+          }
+        },
+        parents: true
+      }
+    });
+    
+
+    
+    if (!child) {
+      return res.status(404).json({ success: false, message: 'Kind nicht gefunden' });
+    }
+    
+    // Super admins and admins can access any child
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+      // Allow access
+    }
+    // Educators can access children in their groups
+    else if (user.role === 'EDUCATOR') {
+      const isInEducatorGroup = child.group.educators.some(educator => educator.id === user.id);
+      if (!isInEducatorGroup) {
+        return res.status(403).json({ success: false, message: 'Keine Berechtigung für diese Kind-Historie' });
+      }
+    }
+    // Parents can only access their own children
+    else if (user.role === 'PARENT') {
+      const isParent = child.parents.some(parent => parent.id === user.id);
+      if (!isParent) {
+        return res.status(403).json({ success: false, message: 'Keine Berechtigung für diese Kind-Historie' });
+      }
+    }
+    else {
+      return res.status(403).json({ success: false, message: 'Keine Berechtigung für diese Kind-Historie' });
+    }
+    
     const logs = await prisma.checkInLog.findMany({
       where: { childId },
       orderBy: { timestamp: 'desc' },

@@ -1,6 +1,7 @@
 const prisma = require('../models/prismaClient');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
+const { sanitizeFileName, detectMalware } = require('../utils/sanitizer');
 
 // GET /profile
 async function getProfile(req, res) {
@@ -41,7 +42,18 @@ async function updateProfile(req, res) {
 async function uploadAvatar(req, res) {
   const userId = req.user.id;
   if (!req.file) return res.status(400).json({ success: false, message: 'Avatar erforderlich' });
-  const avatarUrl = `/uploads/${req.file.filename}`;
+  
+  // Check for malware in uploaded file
+  if (detectMalware(req.file.buffer, req.file.filename)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Suspicious file content detected. Upload rejected for security reasons.' 
+    });
+  }
+  
+  // Sanitize file name
+  const safeFileName = sanitizeFileName(req.file.filename);
+  const avatarUrl = `/uploads/${safeFileName}`;
   try {
     // Find old avatarUrl
     const existingUser = await prisma.user.findUnique({ where: { id: userId } });

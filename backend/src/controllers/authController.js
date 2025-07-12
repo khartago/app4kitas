@@ -1,40 +1,65 @@
-const prisma = require('../models/prismaClient');
-const { signToken } = require('../utils/jwt');
 const bcrypt = require('bcryptjs');
+const { PrismaClient } = require('@prisma/client');
+const { signToken } = require('../utils/jwt');
+const { sanitizeUserInput } = require('../utils/sanitizer');
 const { logActivity } = require('./activityController');
+
+const prisma = new PrismaClient();
+
+// Simple email format validation
+function isValidEmail(email) {
+  return typeof email === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+}
 
 // POST /register (nur SUPER_ADMIN)
 async function register(req, res) {
-  const { email, password, name, role, institutionId } = req.body;
-  if (!email || !password || !name || !role) {
-    return res.status(400).json({ success: false, message: 'Alle Felder sind erforderlich' });
-  }
-  // Nur SUPER_ADMIN darf registrieren
-  if (!req.user || req.user.role !== 'SUPER_ADMIN') {
-    return res.status(403).json({ success: false, message: 'Keine Berechtigung' });
-  }
-  
-  // Für ADMIN und EDUCATOR ist institutionId erforderlich
-  if ((role === 'ADMIN' || role === 'EDUCATOR') && !institutionId) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Institution ID ist für ADMIN und EDUCATOR Benutzer erforderlich' 
-    });
-  }
-  
   try {
-    const hashed = await bcrypt.hash(password, 10);
+    const { email, password, name, role, institutionId } = req.body;
     
+    // Validate required fields
+    if (!email || !password || !name || !role) {
+      return res.status(400).json({ success: false, message: 'Alle Felder sind erforderlich' });
+    }
+    
+    // Validate role
+    if (!['ADMIN', 'EDUCATOR', 'PARENT'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Ungültige Rolle' });
+    }
+    
+    // Check if user is SUPER_ADMIN
+    if (req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Nur SUPER_ADMIN kann neue Benutzer registrieren' });
+    }
+    
+    // Validate email format
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Ungültiges E-Mail-Format' });
+    }
+    
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'E-Mail bereits registriert' });
+    }
+    
+    // Validate institutionId for ADMIN/EDUCATOR roles
+    if ((role === 'ADMIN' || role === 'EDUCATOR') && !institutionId) {
+      return res.status(400).json({ success: false, message: 'Institution-ID erforderlich für ADMIN/EDUCATOR' });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Create user with sanitized input
     const user = await prisma.user.create({
-      data: { 
-        email, 
-        password: hashed, 
-        name, 
-        role, 
-        institutionId: (role === 'ADMIN' || role === 'EDUCATOR') ? institutionId : null 
+      data: {
+        email,
+        password: hashedPassword,
+        name: sanitizeUserInput(name), // Sanitize name to prevent XSS
+        role,
+        institutionId: (role === 'ADMIN' || role === 'EDUCATOR') ? institutionId : null
       }
     });
-    
     // Log activity
     await logActivity(
       req.user.id,
@@ -45,7 +70,6 @@ async function register(req, res) {
       institutionId || null,
       null
     );
-    
     res.status(201).json({ 
       id: user.id, 
       email: user.email, 
@@ -65,6 +89,10 @@ async function login(req, res) {
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'E-Mail und Passwort erforderlich' });
     }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Ungültiges E-Mail-Format' });
+    }
+    // SQL injection or invalid user
     const user = await prisma.user.findUnique({ where: { email }, include: { institution: true } });
     if (!user) {
       await prisma.failedLogin.create({
@@ -102,7 +130,6 @@ async function login(req, res) {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
     });
-    
     // Log login activity
     await logActivity(
       user.id,
@@ -113,7 +140,6 @@ async function login(req, res) {
       user.institutionId || null,
       null
     );
-    
     res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, avatarUrl: user.avatarUrl, institutionId: user.institutionId } });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Interner Serverfehler beim Login' });

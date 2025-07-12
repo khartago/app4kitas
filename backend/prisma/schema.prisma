@@ -43,6 +43,10 @@ model Institution {
   closingTime String?
   closedDays  ClosedDay[]
   repeatedClosedDays Json?
+  // New relations for logs and messages
+  checkIns   CheckInLog[]
+  messages   Message[]
+  notifications NotificationLog[]
 }
 
 model User {
@@ -117,6 +121,8 @@ model CheckInLog {
   type      CheckType
   timestamp DateTime    @default(now())
   method    CheckMethod
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
 }
 
 model Message {
@@ -145,6 +151,8 @@ model Message {
   replies   Message[] @relation("MessageReplies")
   // Reactions
   reactions MessageReaction[]
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
 }
 
 model MessageReaction {
@@ -224,6 +232,8 @@ model NotificationLog {
   createdAt DateTime @default(now())
   sender    User?    @relation("NotificationSender", fields: [senderId], references: [id])
   senderId  String?
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  institutionId String
 }
 
 model DeviceToken {

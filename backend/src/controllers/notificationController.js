@@ -303,7 +303,8 @@ async function sendNotification(req, res) {
             senderId: currentUser.id,
             title, 
             body,
-            priority 
+            priority,
+            institutionId: currentUser.institutionId
           }
         })
       )

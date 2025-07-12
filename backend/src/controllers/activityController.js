@@ -4,6 +4,17 @@ const prisma = new PrismaClient();
 // Log an activity
 const logActivity = async (userId, action, entity = null, entityId = null, details = null, institutionId = null, groupId = null) => {
   try {
+    // Verify user exists before logging activity
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    });
+    
+    if (!userExists) {
+      console.warn(`Cannot log activity: User ${userId} does not exist`);
+      return null;
+    }
+    
     const activityLog = await prisma.activityLog.create({
       data: {
         userId,
@@ -27,7 +38,8 @@ const logActivity = async (userId, action, entity = null, entityId = null, detai
     return activityLog;
   } catch (error) {
     console.error('Error logging activity:', error);
-    throw new Error('Fehler beim Protokollieren der Aktivität');
+    // Don't throw error, just log it to avoid breaking the main flow
+    return null;
   }
 };
 

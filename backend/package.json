@@ -4,7 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:auth": "jest --testNamePattern='Auth API'",
+    "test:crud": "jest --testNamePattern='CRUD Operations'",
+    "test:upload": "jest --testNamePattern='File Upload API'",
+    "test:integration": "jest --testNamePattern='Backend Integration Tests'",
+    "test:unit": "jest --testNamePattern='Unit Tests'",
+    "test:error": "jest --testNamePattern='Error Handling Tests'",
+    "test:ci": "jest --ci --coverage --watchAll=false",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
@@ -16,6 +25,7 @@
     "@faker-js/faker": "^9.8.0",
     "@prisma/client": "^6.10.1",
     "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -28,6 +38,15 @@
     "multer": "^2.0.1",
     "pdf-lib": "^1.17.1",
     "prisma": "^6.10.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "validator": "^13.15.15",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.0.4",
+    "supertest": "^7.1.3",
+    "ts-node": "^10.9.2"
   }
 }

@@ -1,5 +1,9 @@
-const prisma = require('../models/prismaClient');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { sanitizeText, sanitizeFileName, detectMalware } = require('../utils/sanitizer');
 const { logActivity } = require('./activityController');
+const fs = require('fs');
+const path = require('path');
 
 // Helper function to create educator-only group chat
 async function createEducatorGroupChat(institutionId, institutionName) {
@@ -67,21 +71,23 @@ async function getUserChannelsHelper(userId, userRole, institutionId) {
 
   // Add group channels for educators and parents only
   if (userRole === 'EDUCATOR' || userRole === 'PARENT') {
-    user.groups.forEach(group => {
-      if (group.channel) {
-        channels.push({
-          id: group.channel.id,
-          name: `${group.name} Chat`,
-          type: 'GROUP_CHAT',
-          groupId: group.id,
-          groupName: group.name,
-          institutionId: group.institutionId,
-          institutionName: group.institution.name,
-          lastMessage: null,
-          unreadCount: 0
-        });
-      }
-    });
+    if (user.groups && Array.isArray(user.groups)) {
+      user.groups.forEach(group => {
+        if (group && group.channel) {
+          channels.push({
+            id: group.channel.id,
+            name: `${group.name} Chat`,
+            type: 'GROUP_CHAT',
+            groupId: group.id,
+            groupName: group.name,
+            institutionId: group.institutionId,
+            institutionName: group.institution?.name || 'Institution',
+            lastMessage: null,
+            unreadCount: 0
+          });
+        }
+      });
+    }
   }
 
   // Add educator-only group chat for educators
@@ -534,7 +540,28 @@ async function sendMessage(req, res) {
   let fileType = null;
 
   if (req.file) {
-    fileUrl = `/uploads/${req.file.filename}`;
+    // Check for malware before processing
+    if (detectMalware(req.file.buffer, req.file.originalname)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Suspicious file content detected. Upload rejected for security reasons.' 
+      });
+    }
+    
+    // Save file to disk after malware check passes
+    const uploadsDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const safeFileName = sanitizeFileName(req.file.originalname);
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const fileName = unique + '-' + safeFileName;
+    const filePath = path.join(uploadsDir, fileName);
+    
+    fs.writeFileSync(filePath, req.file.buffer);
+    fileUrl = `/uploads/${fileName}`;
+    
     if (req.file.mimetype.startsWith('image/')) {
       fileType = 'IMAGE';
     } else if (req.file.mimetype === 'application/pdf') {
@@ -556,10 +583,11 @@ async function sendMessage(req, res) {
   try {
     let messageData = {
       senderId,
-      content: content || '', // Ensure content is empty string if no text provided
+      content: content ? sanitizeText(content) : '', // Sanitize content to prevent XSS
       fileUrl,
       fileType,
-      replyToId: replyToId || undefined
+      replyToId: replyToId || undefined,
+      institutionId: user.institutionId // Set institutionId from user
     };
 
     if (channelId) {
@@ -936,7 +964,7 @@ async function editMessage(req, res) {
     const updatedMessage = await prisma.message.update({
       where: { id: messageId },
       data: {
-        content: content || '',
+        content: content ? sanitizeText(content) : '', // Sanitize content to prevent XSS
         isEdited: true,
         editedAt: new Date()
       },

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { sanitizeText, sanitizeFileName, detectMalware } = require('../utils/sanitizer');
 
 // Add a new note for a child
 const addNote = async (req, res) => {
@@ -30,14 +31,22 @@ const addNote = async (req, res) => {
       return res.status(404).json({ error: 'Kind nicht gefunden oder kein Zugriff' });
     }
 
-    // Create note
+    // Check for malware in uploaded file
+    if (req.file && detectMalware(req.file.buffer, req.file.filename)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Suspicious file content detected. Upload rejected for security reasons.'
+      });
+    }
+
+    // Create note with sanitized content
     const note = await prisma.note.create({
       data: {
-        content,
+        content: sanitizeText(content), // Sanitize content to prevent XSS
         childId,
         educatorId,
-        attachmentUrl: req.file ? `/uploads/${req.file.filename}` : null,
-        attachmentName: req.file ? req.file.originalname : null,
+        attachmentUrl: req.file ? `/uploads/${sanitizeFileName(req.file.filename)}` : null,
+        attachmentName: req.file ? sanitizeFileName(req.file.originalname) : null,
         attachmentType: req.file ? req.file.mimetype : null
       },
       include: {
@@ -153,15 +162,23 @@ const updateNote = async (req, res) => {
       return res.status(404).json({ error: 'Notiz nicht gefunden oder kein Zugriff' });
     }
 
+    // Check for malware in uploaded file
+    if (req.file && detectMalware(req.file.buffer, req.file.filename)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Suspicious file content detected. Upload rejected for security reasons.'
+      });
+    }
+
     // Update note
     const updatedNote = await prisma.note.update({
       where: {
         id: noteId
       },
       data: {
-        content,
-        attachmentUrl: req.file ? `/uploads/${req.file.filename}` : note.attachmentUrl,
-        attachmentName: req.file ? req.file.originalname : note.attachmentName,
+        content: sanitizeText(content), // Sanitize content to prevent XSS
+        attachmentUrl: req.file ? `/uploads/${sanitizeFileName(req.file.filename)}` : note.attachmentUrl,
+        attachmentName: req.file ? sanitizeFileName(req.file.originalname) : note.attachmentName,
         attachmentType: req.file ? req.file.mimetype : note.attachmentType
       },
       include: {
