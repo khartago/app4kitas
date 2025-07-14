@@ -47,6 +47,8 @@ model Institution {
   checkIns   CheckInLog[]
   messages   Message[]
   notifications NotificationLog[]
+  // GDPR soft delete
+  deletedAt  DateTime?
 }
 
 model User {
@@ -78,6 +80,13 @@ model User {
   directMessages2 DirectMessage[] @relation("DirectMessageUser2")
   reactions    MessageReaction[]  @relation("UserReactions")
   chatReadStatus ChatReadStatus[] @relation("UserChatReadStatus")
+  // GDPR relations
+  dataRestrictions DataRestriction[]
+  dataObjections   DataObjection[]
+  restrictionRequests DataRestriction[] @relation("RestrictionRequestedBy")
+  objectionRequests  DataObjection[]   @relation("ObjectionRequestedBy")
+  // GDPR soft delete
+  deletedAt    DateTime?
 }
 
 model Child {
@@ -96,6 +105,8 @@ model Child {
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
   notes     Note[]
+  // GDPR soft delete
+  deletedAt DateTime?
 }
 
 model Group {
@@ -110,6 +121,8 @@ model Group {
   channel   ChatChannel? @relation("GroupChannel")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  // GDPR soft delete
+  deletedAt DateTime?
 }
 
 model CheckInLog {
@@ -123,6 +136,8 @@ model CheckInLog {
   method    CheckMethod
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
+  // GDPR soft delete
+  deletedAt DateTime?
 }
 
 model Message {
@@ -153,6 +168,8 @@ model Message {
   reactions MessageReaction[]
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
+  // GDPR soft delete
+  deletedAt DateTime?
 }
 
 model MessageReaction {
@@ -234,6 +251,8 @@ model NotificationLog {
   senderId  String?
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
+  // GDPR soft delete
+  deletedAt DateTime?
 }
 
 model DeviceToken {
@@ -258,6 +277,8 @@ model ClosedDay {
   reason         String?
   institution    Institution  @relation(fields: [institutionId], references: [id])
   institutionId  String
+  // GDPR soft delete
+  deletedAt      DateTime?
 }
 
 model ActivityLog {
@@ -271,6 +292,8 @@ model ActivityLog {
   institutionId  String?
   groupId        String?
   createdAt      DateTime @default(now())
+  // GDPR soft delete
+  deletedAt      DateTime?
 }
 
 model PersonalTask {
@@ -284,6 +307,8 @@ model PersonalTask {
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  // GDPR soft delete
+  deletedAt   DateTime?
 }
 
 model Note {
@@ -298,4 +323,46 @@ model Note {
   attachmentType String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  // GDPR soft delete
+  deletedAt      DateTime?
+}
+
+// GDPR Compliance Models
+
+model DataRestriction {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  reason      String
+  duration    Int      @default(30) // days
+  requestedBy User     @relation("RestrictionRequestedBy", fields: [requestedById], references: [id])
+  requestedById String
+  status      String   @default("ACTIVE") // ACTIVE, EXPIRED, REMOVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DataObjection {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  reason        String
+  processingType String  // Type of processing being objected to
+  requestedBy   User     @relation("ObjectionRequestedBy", fields: [requestedById], references: [id])
+  requestedById String
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model DataBreach {
+  id            String   @id @default(uuid())
+  type          String   // Type of breach
+  description   String
+  affectedUsers Int      // Number of affected users
+  discoveredAt  DateTime @default(now())
+  reportedAt    DateTime @default(now())
+  status        String   @default("REPORTED") // REPORTED, INVESTIGATING, RESOLVED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

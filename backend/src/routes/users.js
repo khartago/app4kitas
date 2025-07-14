@@ -16,7 +16,10 @@ router.get('/users', authMiddleware, async (req, res) => {
   }
   const { role } = req.query;
   try {
-    const where = role ? { role } : {};
+    const where = {
+      deletedAt: null // Exclude soft-deleted users
+    };
+    if (role) where.role = role;
     if ((role === 'EDUCATOR' || role === 'PARENT') && req.user.role === 'ADMIN') {
       where.institutionId = req.user.institutionId;
     }
@@ -39,7 +42,12 @@ router.get('/users', authMiddleware, async (req, res) => {
 router.get('/users/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ 
+      where: { 
+        id,
+        deletedAt: null // Exclude soft-deleted users
+      } 
+    });
     if (!user) {
       return res.status(404).json({ error: 'Nutzer nicht gefunden.' });
     }
@@ -93,13 +101,23 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Nutzer nicht gefunden.' });
     }
     
+    // Check if user is already soft-deleted
+    if (user.deletedAt) {
+      return res.status(400).json({ error: 'Nutzer ist bereits zur Löschung markiert.' });
+    }
+    
     // Prevent deleting SUPER_ADMIN users
     if (user.role === 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'SUPER_ADMIN Nutzer können nicht gelöscht werden.' });
     }
     
-    await prisma.user.delete({ where: { id } });
-    res.json({ success: true, message: 'Nutzer erfolgreich gelöscht.' });
+    // Soft delete the user
+    await prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
+    
+    res.json({ success: true, message: 'Nutzer zur Löschung markiert.' });
   } catch (err) {
     if (err.code === 'P2025') {
       res.status(404).json({ error: 'Nutzer nicht gefunden.' });
@@ -120,7 +138,10 @@ router.get('/educators/export', authMiddleware, async (req, res) => {
 
   try {
     const educators = await prisma.user.findMany({
-      where: { role: 'EDUCATOR' },
+      where: { 
+        role: 'EDUCATOR',
+        deletedAt: null // Exclude soft-deleted users
+      },
       include: {
         groups: true
       },
@@ -185,7 +206,10 @@ router.get('/parents/export', authMiddleware, async (req, res) => {
 
   try {
     const parents = await prisma.user.findMany({
-      where: { role: 'PARENT' },
+      where: { 
+        role: 'PARENT',
+        deletedAt: null // Exclude soft-deleted users
+      },
       include: {
         children: true
       },

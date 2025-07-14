@@ -145,6 +145,7 @@ app.use('/api/institution-settings', require('./routes/institutionSettings'));
 app.use('/api/personalTasks', require('./routes/personalTasks'));
 app.use('/api/activity', require('./routes/activity'));
 app.use('/api', require('./routes/notes'));
+app.use('/api/gdpr', require('./routes/gdprDeletion'));
 
 // 404 handler for non-existent /api routes
 app.use((req, res, next) => {

@@ -157,6 +157,25 @@
 | DELETE  | /api/personalTasks/:id          | Ja   | Alle           | :id (Aufgaben-ID)                            |
 | PATCH   | /api/personalTasks/:id/toggle   | Ja   | Alle           | :id (Aufgaben-ID)                            |
 
+## DSGVO-Compliance (Data Subject Rights)
+
+| Methode | Pfad                            | Auth | Rollen         | Body/Params                                  |
+|---------|---------------------------------|------|---------------|----------------------------------------------|
+| GET     | /api/gdpr/data-export/:userId   | Ja   | User selbst, SUPER_ADMIN | :userId (Benutzer-ID)                    |
+| GET     | /api/gdpr/data-portability/:userId | Ja | User selbst, SUPER_ADMIN | :userId (Benutzer-ID)                   |
+| DELETE  | /api/gdpr/delete-account/:userId | Ja  | User selbst, SUPER_ADMIN | :userId (Benutzer-ID)                    |
+| PATCH   | /api/gdpr/restrict/:userId      | Ja   | User selbst, SUPER_ADMIN | { reason?, duration? }                    |
+| POST    | /api/gdpr/object/:userId        | Ja   | User selbst, SUPER_ADMIN | { reason, processingType }                |
+| GET     | /api/gdpr/status/:userId        | Ja   | User selbst, SUPER_ADMIN | :userId (Benutzer-ID)                    |
+
+**DSGVO-Funktionalitäten:**
+- **Datenexport**: Vollständiger Export aller personenbezogenen Daten (Art. 15 DSGVO)
+- **Datenportabilität**: Maschinenlesbares Format für Datenübertragung (Art. 20 DSGVO)
+- **Kontolöschung**: Vollständige Datenlöschung mit Datei-Cleanup (Art. 17 DSGVO)
+- **Datenbeschränkung**: Temporäre Einschränkung der Datenverarbeitung (Art. 18 DSGVO)
+- **Widerspruch**: Verarbeitungstyp-spezifische Widersprüche (Art. 21 DSGVO)
+- **Status-Abfrage**: DSGVO-Status und Aktivitäten eines Benutzers
+
 ## Datei-Uploads
 - Profilbilder: POST /api/profile/avatar (Feld: avatar)
 - Kinderfotos:  PUT /api/children/:id/photo (Feld: photo)
@@ -227,6 +246,18 @@
 | GET     | /api/reports/active-educators         | Ja   | ADMIN, SUPER_ADMIN | ?from=YYYY-MM-DD&to=YYYY-MM-DD, ?format=csv |
 | GET     | /api/reports/checkin-methods          | Ja   | ADMIN, SUPER_ADMIN | ?from=YYYY-MM-DD&to=YYYY-MM-DD, ?format=csv |
 | GET     | /api/reports/platform-stats           | Ja   | SUPER_ADMIN    | –                                           |
+| GET     | /api/reports/messages         | Ja   | ADMIN, SUPER_ADMIN | ?startDate, ?endDate, ?groupId, ?type |
+| GET     | /api/reports/messages/export  | Ja   | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?startDate, ?endDate, ?groupId, ?type |
+| GET     | /api/reports/notifications    | Ja   | ADMIN, SUPER_ADMIN | ?startDate, ?endDate, ?type, ?priority |
+| GET     | /api/reports/notifications/export | Ja | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?startDate, ?endDate, ?type, ?priority |
+| GET     | /api/reports/users            | Ja   | ADMIN, SUPER_ADMIN | ?role, ?institutionId |
+| GET     | /api/reports/users/export     | Ja   | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?role, ?institutionId |
+| GET     | /api/reports/statistics       | Ja   | ADMIN, SUPER_ADMIN | ?startDate, ?endDate, ?institutionId |
+| GET     | /api/reports/statistics/export| Ja   | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?startDate, ?endDate, ?institutionId |
+| GET     | /api/reports/attendance       | Ja   | ADMIN, SUPER_ADMIN | ?startDate, ?endDate, ?groupId |
+| GET     | /api/reports/attendance/export| Ja   | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?startDate, ?endDate, ?groupId |
+| GET     | /api/reports/check-in         | Ja   | ADMIN, SUPER_ADMIN | ?startDate, ?endDate, ?childId |
+| GET     | /api/reports/check-in/export  | Ja   | ADMIN, SUPER_ADMIN | ?format=csv|pdf, ?startDate, ?endDate, ?childId |
 
 ## Export-Funktionen (Verbessert)
 | Methode | Pfad                        | Auth | Rollen         | Body/Params                                  |
@@ -452,6 +483,18 @@
 - `GET /api/reports/active-educators` - Aktive Erzieher
 - `GET /api/reports/checkin-methods` - Check-in Methoden
 - `GET /api/reports/platform-stats` - Plattformstatistiken (SUPER_ADMIN)
+- `GET /api/reports/messages` - Nachrichtenbericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/messages/export` - Nachrichtenbericht exportieren (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/notifications` - Benachrichtigungsbericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/notifications/export` - Benachrichtigungsbericht exportieren (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/users` - Benutzerbericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/users/export` - Benutzerbericht exportieren (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/statistics` - Statistikenbericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/statistics/export` - Statistikenbericht exportieren (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/attendance` - Anwesenheitsbericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/attendance/export` - Anwesenheitsbericht exportieren (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/check-in` - Check-in Bericht (ADMIN, SUPER_ADMIN)
+- `GET /api/reports/check-in/export` - Check-in Bericht exportieren (ADMIN, SUPER_ADMIN)
 
 ### 📁 Datei-Uploads
 - `POST /api/profile/avatar` - Profilbild hochladen

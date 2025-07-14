@@ -1,209 +1,122 @@
 import React from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { useDarkMode } from '../styles/theme';
-import MascotBear from '../components/ui/MascotBear';
-import AppLogo from '../components/ui/AppLogo';
 
-// Animations
-const fadeInUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-`;
-
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-`;
-
-// Styled Components
 const Container = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: ${props => props.theme.colors.background};
   min-height: 100vh;
-  background: ${({ theme }) => theme.mode === 'dark' 
-    ? 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%)' 
-    : 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)'};
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 120px;
-  position: relative;
-  overflow-x: hidden;
-`;
-
-const BackgroundShapes = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 1;
-`;
-
-const Shape = styled.div<{ top: string; left: string; size: string; delay: string }>`
-  position: absolute;
-  top: ${props => props.top};
-  left: ${props => props.left};
-  width: ${props => props.size};
-  height: ${props => props.size};
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  animation: ${float} 6s ease-in-out infinite;
-  animation-delay: ${props => props.delay};
-`;
-
-const Card = styled.div`
-  background: ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(15, 15, 35, 0.95)' 
-    : 'rgba(255, 255, 255, 0.95)'};
-  backdrop-filter: blur(20px);
-  border-radius: 30px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-  padding: 50px;
-  max-width: 1000px;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  z-index: 2;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(255, 255, 255, 0.1)' 
-    : 'rgba(0, 0, 0, 0.1)'};
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
   @media (max-width: 768px) {
-    padding: 40px 25px;
-    margin: 0 10px;
+    padding: 1rem;
   }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 50px;
-  position: relative;
-  animation: ${fadeInUp} 1s ease-out;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+  
+  @media (max-width: 768px) {
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+  }
 `;
 
 const Title = styled.h1`
-  font-size: 3.5rem;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  
-  @media (max-width: 768px) {
-    font-size: 2.5rem;
-  }
+  color: ${props => props.theme.colors.primary};
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
 `;
 
 const Subtitle = styled.p`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: 1.3rem;
-  font-weight: 300;
-  
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
-  }
+  color: ${props => props.theme.colors.textSecondary};
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  margin-bottom: 2rem;
+  line-height: 1.5;
 `;
 
-const MascotContainer = styled.div`
-  position: absolute;
-  top: 30px;
-  right: 30px;
-  animation: ${float} 4s ease-in-out infinite;
+const Section = styled.section`
+  margin-bottom: 2.5rem;
+  background: ${props => props.theme.colors.surface};
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid ${props => props.theme.colors.border};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
   @media (max-width: 768px) {
-    position: static;
-    text-align: center;
-    margin-bottom: 30px;
-  }
-`;
-
-const Section = styled.div`
-  margin-bottom: 50px;
-  padding: 40px;
-  background: ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(255, 255, 255, 0.05)' 
-    : 'rgba(0, 0, 0, 0.02)'};
-  border-radius: 25px;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(255, 255, 255, 0.1)' 
-    : 'rgba(0, 0, 0, 0.1)'};
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
   }
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 2rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: 30px;
+  color: ${props => props.theme.colors.primary};
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 0.5rem;
   
   @media (max-width: 768px) {
-    font-size: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 `;
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-  margin-bottom: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  @media (min-width: 769px) and (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
 
 const InfoCard = styled.div`
-  padding: 25px;
-  background: ${({ theme }) => theme.colors.surface};
-  border-radius: 20px;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(255, 255, 255, 0.1)' 
-    : 'rgba(0, 0, 0, 0.1)'};
-  transition: all 0.3s ease;
+  padding: 1.5rem;
+  background: ${props => props.theme.colors.background};
+  border-radius: 6px;
+  border: 1px solid ${props => props.theme.colors.border};
+  transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
 const InfoTitle = styled.h3`
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: 15px;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-weight: 600;
+  color: ${props => props.theme.colors.textPrimary};
+  margin-bottom: 1rem;
 `;
 
 const InfoText = styled.p`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  line-height: 1.7;
-  margin-bottom: 10px;
-  font-size: 1rem;
+  color: ${props => props.theme.colors.textSecondary};
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
 `;
 
 const TechList = styled.ul`
@@ -213,122 +126,109 @@ const TechList = styled.ul`
 `;
 
 const TechItem = styled.li`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: 8px;
-  padding-left: 20px;
+  color: ${props => props.theme.colors.textSecondary};
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
   position: relative;
-  font-size: 1rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   
   &:before {
     content: "▸";
     position: absolute;
     left: 0;
-    color: ${({ theme }) => theme.colors.primary};
+    color: ${props => props.theme.colors.primary};
     font-weight: bold;
-    font-size: 1.2rem;
-  }
-`;
-
-const Button = styled.button`
-  padding: 15px 30px;
-  border: none;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin: 15px;
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
   }
 `;
 
 const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
   
   @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  @media (min-width: 769px) and (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 
-const Highlight = styled.span`
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: 700;
+const Button = styled.button`
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: ${props => props.theme.colors.primary};
+  color: white;
+  width: 100%;
+  
+  &:hover {
+    background: ${props => props.theme.colors.primaryDark};
+    transform: translateY(-1px);
+  }
 `;
 
 const DeveloperInfo = styled.div`
   text-align: center;
-  padding: 40px;
-  background: ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(76, 175, 80, 0.1)' 
-    : 'rgba(76, 175, 80, 0.05)'};
-  border-radius: 25px;
-  border: 1px solid ${({ theme }) => theme.mode === 'dark' 
-    ? 'rgba(76, 175, 80, 0.3)' 
-    : 'rgba(76, 175, 80, 0.2)'};
-  margin-bottom: 40px;
-  position: relative;
-  overflow: hidden;
+  padding: 2rem;
+  background: ${props => props.theme.colors.primary}10;
+  border-radius: 8px;
+  border: 1px solid ${props => props.theme.colors.primary}30;
+  margin-bottom: 2rem;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  @media (max-width: 768px) {
+    padding: 1.5rem;
   }
 `;
 
 const DeveloperName = styled.h2`
-  font-size: 2.5rem;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.primary};
-  margin-bottom: 15px;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: ${props => props.theme.colors.primary};
+  margin-bottom: 0.75rem;
 `;
 
 const DeveloperRole = styled.p`
-  font-size: 1.4rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: 20px;
+  font-size: clamp(1rem, 3vw, 1.1rem);
+  color: ${props => props.theme.colors.textSecondary};
+  margin-bottom: 1rem;
   font-weight: 500;
 `;
 
 const DeveloperContact = styled.div`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: 1.1rem;
+  color: ${props => props.theme.colors.textSecondary};
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   line-height: 1.6;
 `;
 
 const LinkedInLink = styled.a`
   color: #0077b5;
   text-decoration: none;
-  margin-top: 15px;
+  margin-top: 1rem;
   display: inline-block;
-  font-weight: 600;
-  padding: 10px 20px;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
   background: rgba(0, 119, 181, 0.1);
-  border-radius: 25px;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
   
   &:hover {
     background: rgba(0, 119, 181, 0.2);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
   }
+`;
+
+const Highlight = styled.span`
+  color: ${props => props.theme.colors.primary};
+  font-weight: 600;
 `;
 
 // Component Data
@@ -405,108 +305,9 @@ const specialFeaturesData = [
   }
 ];
 
-// Sub-Components
-const BackgroundShapesComponent: React.FC = () => (
-  <BackgroundShapes>
-    <Shape top="5%" left="5%" size="80px" delay="0s" />
-    <Shape top="15%" left="85%" size="120px" delay="2s" />
-    <Shape top="70%" left="10%" size="100px" delay="4s" />
-    <Shape top="85%" left="80%" size="90px" delay="1s" />
-  </BackgroundShapes>
-);
-
-const DeveloperSection: React.FC = () => (
-  <DeveloperInfo>
-    <DeveloperName>Rayane Bouzir</DeveloperName>
-    <DeveloperRole>Full-Stack Developer</DeveloperRole>
-    <DeveloperContact>
-      Spezialisiert auf moderne Web-Technologien, DSGVO-konforme Lösungen und 
-      skalierbare Systemarchitekturen für Bildungsplattformen.
-      <br />
-      <LinkedInLink 
-        href="https://www.linkedin.com/in/rayane-bouzir-594a09274/" 
-        target="_blank" 
-        rel="noopener noreferrer">
-        LinkedIn Profile
-      </LinkedInLink>
-    </DeveloperContact>
-  </DeveloperInfo>
-);
-
-const TechStackSection: React.FC = () => (
-  <Section>
-    <SectionTitle>🛠️ Technologie-Stack</SectionTitle>
-    <Grid>
-      <InfoCard>
-        <InfoTitle>Frontend</InfoTitle>
-        <TechList>
-          {techStackData.frontend.map((tech, index) => (
-            <TechItem key={index}>{tech}</TechItem>
-          ))}
-        </TechList>
-      </InfoCard>
-      
-      <InfoCard>
-        <InfoTitle>Backend</InfoTitle>
-        <TechList>
-          {techStackData.backend.map((tech, index) => (
-            <TechItem key={index}>{tech}</TechItem>
-          ))}
-        </TechList>
-      </InfoCard>
-      
-      <InfoCard>
-        <InfoTitle>Mobile App</InfoTitle>
-        <TechList>
-          {techStackData.mobile.map((tech, index) => (
-            <TechItem key={index}>{tech}</TechItem>
-          ))}
-        </TechList>
-      </InfoCard>
-      
-      <InfoCard>
-        <InfoTitle>Infrastruktur</InfoTitle>
-        <TechList>
-          {techStackData.infrastructure.map((tech, index) => (
-            <TechItem key={index}>{tech}</TechItem>
-          ))}
-        </TechList>
-      </InfoCard>
-    </Grid>
-  </Section>
-);
-
-const CoreFeaturesSection: React.FC = () => (
-  <Section>
-    <SectionTitle>🎯 Kernfunktionen</SectionTitle>
-    <Grid>
-      {coreFeaturesData.map((feature, index) => (
-        <InfoCard key={index}>
-          <InfoTitle>{feature.title}</InfoTitle>
-          <InfoText>{feature.description}</InfoText>
-        </InfoCard>
-      ))}
-    </Grid>
-  </Section>
-);
-
-const SpecialFeaturesSection: React.FC = () => (
-  <Section>
-    <SectionTitle>🌟 Besondere Features</SectionTitle>
-    <Grid>
-      {specialFeaturesData.map((feature, index) => (
-        <InfoCard key={index}>
-          <InfoTitle>{feature.title}</InfoTitle>
-          <InfoText>{feature.description}</InfoText>
-        </InfoCard>
-      ))}
-    </Grid>
-  </Section>
-);
-
-// Main Component
 const Credits: React.FC = () => {
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -518,91 +319,158 @@ const Credits: React.FC = () => {
 
   return (
     <Container>
-      <BackgroundShapesComponent />
+      <Header>
+        <Title>Entwicklung & Credits</Title>
+        <Subtitle>App4KITAs - DSGVO-konforme Kita-Management-Plattform</Subtitle>
+      </Header>
 
-      <Card>
-        <Header>
-          <Title>Entwicklung & Credits</Title>
-          <Subtitle>App4KITAs - DSGVO-konforme Kita-Management-Plattform</Subtitle>
-          <MascotContainer>
-            <MascotBear size={80} />
-          </MascotContainer>
-        </Header>
+      <DeveloperInfo>
+        <DeveloperName>Rayane Bouzir</DeveloperName>
+        <DeveloperRole>Full-Stack Developer</DeveloperRole>
+        <DeveloperContact>
+          Spezialisiert auf moderne Web-Technologien, DSGVO-konforme Lösungen und 
+          skalierbare Systemarchitekturen für Bildungsplattformen.
+          <br />
+          <LinkedInLink 
+            href="https://www.linkedin.com/in/rayane-bouzir-594a09274/" 
+            target="_blank" 
+            rel="noopener noreferrer">
+            LinkedIn Profile
+          </LinkedInLink>
+        </DeveloperContact>
+      </DeveloperInfo>
 
-        <DeveloperSection />
+      <Section>
+        <SectionTitle>👨‍💻 Projektleitung & Entwicklung</SectionTitle>
+        <InfoCard>
+          <InfoTitle>Konzept & Umsetzung</InfoTitle>
+          <InfoText>
+            <Highlight>App4KITAs</Highlight> wurde von Grund auf konzipiert und entwickelt, 
+            um eine moderne, sichere und benutzerfreundliche Lösung für Kindertagesstätten zu schaffen.
+          </InfoText>
+          <InfoText>
+            Das Projekt entstand aus der Notwendigkeit, eine vollständig digitale, 
+            DSGVO-konforme Plattform zu entwickeln, die sowohl die administrativen 
+            als auch die pädagogischen Anforderungen moderner Kitas erfüllt.
+          </InfoText>
+        </InfoCard>
+      </Section>
 
-        <Section>
-          <SectionTitle>👨‍💻 Projektleitung & Entwicklung</SectionTitle>
+      <Section>
+        <SectionTitle>🛠️ Technologie-Stack</SectionTitle>
+        <Grid>
           <InfoCard>
-            <InfoTitle>Konzept & Umsetzung</InfoTitle>
-            <InfoText>
-              <Highlight>App4KITAs</Highlight> wurde von Grund auf konzipiert und entwickelt, 
-              um eine moderne, sichere und benutzerfreundliche Lösung für Kindertagesstätten zu schaffen.
-            </InfoText>
-            <InfoText>
-              Das Projekt entstand aus der Notwendigkeit, eine vollständig digitale, 
-              DSGVO-konforme Plattform zu entwickeln, die sowohl die administrativen 
-              als auch die pädagogischen Anforderungen moderner Kitas erfüllt.
-            </InfoText>
+            <InfoTitle>Frontend</InfoTitle>
+            <TechList>
+              {techStackData.frontend.map((tech, index) => (
+                <TechItem key={index}>{tech}</TechItem>
+              ))}
+            </TechList>
           </InfoCard>
-        </Section>
-
-        <TechStackSection />
-        <CoreFeaturesSection />
-
-        <Section>
-          <SectionTitle>🔒 Sicherheit & Compliance</SectionTitle>
+          
           <InfoCard>
-            <InfoTitle>DSGVO-Konformität</InfoTitle>
-            <InfoText>
-              Vollständige Einhaltung der europäischen Datenschutzrichtlinien mit 
-              Datenminimierung, Recht auf Löschung und Transparenz.
-            </InfoText>
-            <InfoText>
-              Alle Daten werden in Europa gehostet und verschlüsselt übertragen.
-            </InfoText>
+            <InfoTitle>Backend</InfoTitle>
+            <TechList>
+              {techStackData.backend.map((tech, index) => (
+                <TechItem key={index}>{tech}</TechItem>
+              ))}
+            </TechList>
           </InfoCard>
-        </Section>
-
-        <Section>
-          <SectionTitle>📚 Dokumentation</SectionTitle>
+          
           <InfoCard>
-            <InfoTitle>Umfassende Dokumentation</InfoTitle>
-            <InfoText>
-              Vollständige API-Dokumentation, Benutzerhandbücher, 
-              Entwickler-Dokumentation und Deployment-Anleitungen.
-            </InfoText>
-            <InfoText>
-              Alle Komponenten sind dokumentiert und folgen bewährten Praktiken.
-            </InfoText>
+            <InfoTitle>Mobile App</InfoTitle>
+            <TechList>
+              {techStackData.mobile.map((tech, index) => (
+                <TechItem key={index}>{tech}</TechItem>
+              ))}
+            </TechList>
           </InfoCard>
-        </Section>
-
-        <SpecialFeaturesSection />
-
-        <Section>
-          <SectionTitle>📄 Lizenz & Support</SectionTitle>
+          
           <InfoCard>
-            <InfoTitle>Professionelle Lösung</InfoTitle>
-            <InfoText>
-              App4KITAs ist eine professionelle, DSGVO-konforme Lösung 
-              mit umfassendem Support und kontinuierlicher Weiterentwicklung.
-            </InfoText>
-            <InfoText>
-              © 2025 App4KITAs - Made in Europe 🇪🇺
-            </InfoText>
+            <InfoTitle>Infrastruktur</InfoTitle>
+            <TechList>
+              {techStackData.infrastructure.map((tech, index) => (
+                <TechItem key={index}>{tech}</TechItem>
+              ))}
+            </TechList>
           </InfoCard>
-        </Section>
+        </Grid>
+      </Section>
 
-        <ButtonGroup>
-          <Button onClick={handleBackToDashboard}>
-            Zum Dashboard
-          </Button>
-          <Button onClick={handleBackToLanding}>
-            Zur Startseite
-          </Button>
-        </ButtonGroup>
-      </Card>
+      <Section>
+        <SectionTitle>🎯 Kernfunktionen</SectionTitle>
+        <Grid>
+          {coreFeaturesData.map((feature, index) => (
+            <InfoCard key={index}>
+              <InfoTitle>{feature.title}</InfoTitle>
+              <InfoText>{feature.description}</InfoText>
+            </InfoCard>
+          ))}
+        </Grid>
+      </Section>
+
+      <Section>
+        <SectionTitle>🔒 Sicherheit & Compliance</SectionTitle>
+        <InfoCard>
+          <InfoTitle>DSGVO-Konformität</InfoTitle>
+          <InfoText>
+            Vollständige Einhaltung der europäischen Datenschutzrichtlinien mit 
+            Datenminimierung, Recht auf Löschung und Transparenz.
+          </InfoText>
+          <InfoText>
+            Alle Daten werden in Europa gehostet und verschlüsselt übertragen.
+          </InfoText>
+        </InfoCard>
+      </Section>
+
+      <Section>
+        <SectionTitle>📚 Dokumentation</SectionTitle>
+        <InfoCard>
+          <InfoTitle>Umfassende Dokumentation</InfoTitle>
+          <InfoText>
+            Vollständige API-Dokumentation, Benutzerhandbücher, 
+            Entwickler-Dokumentation und Deployment-Anleitungen.
+          </InfoText>
+          <InfoText>
+            Alle Komponenten sind dokumentiert und folgen bewährten Praktiken.
+          </InfoText>
+        </InfoCard>
+      </Section>
+
+      <Section>
+        <SectionTitle>🌟 Besondere Features</SectionTitle>
+        <Grid>
+          {specialFeaturesData.map((feature, index) => (
+            <InfoCard key={index}>
+              <InfoTitle>{feature.title}</InfoTitle>
+              <InfoText>{feature.description}</InfoText>
+            </InfoCard>
+          ))}
+        </Grid>
+      </Section>
+
+      <Section>
+        <SectionTitle>📄 Lizenz & Support</SectionTitle>
+        <InfoCard>
+          <InfoTitle>Professionelle Lösung</InfoTitle>
+          <InfoText>
+            App4KITAs ist eine professionelle, DSGVO-konforme Lösung 
+            mit umfassendem Support und kontinuierlicher Weiterentwicklung.
+          </InfoText>
+          <InfoText>
+            © {currentYear} App4KITAs - Made in Europe 🇪🇺
+          </InfoText>
+        </InfoCard>
+      </Section>
+
+      <ButtonGroup>
+        <Button onClick={handleBackToDashboard}>
+          Zum Dashboard
+        </Button>
+        <Button onClick={handleBackToLanding}>
+          Zur Startseite
+        </Button>
+      </ButtonGroup>
     </Container>
   );
 };

@@ -40,7 +40,7 @@ const AppLogo: React.FC<AppLogoProps> = ({ size = 48, variant = 'icon', classNam
       viewBox="0 0 48 48"
       aria-label="App4KITAs Logo: Haus mit Herz"
       role="img"
-      tabIndex={0}
+      tabIndex={-1}
       className={className}
     >
       <title>App4KITAs Logo: Haus mit Herz</title>
@@ -53,7 +53,7 @@ const AppLogo: React.FC<AppLogoProps> = ({ size = 48, variant = 'icon', classNam
     </Svg>
   );
 
-  const wordmark = <Wordmark>KITA</Wordmark>;
+  const wordmark = <Wordmark>App4KITAs</Wordmark>;
 
   if (variant === 'icon') return icon;
   if (variant === 'horizontal') {

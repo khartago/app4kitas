@@ -12,7 +12,10 @@ async function getChild(req, res) {
   const user = req.user;
   try {
     const child = await prisma.child.findUnique({
-      where: { id },
+      where: { 
+        id,
+        deletedAt: null // Exclude soft-deleted children
+      },
       include: { parents: true, group: { include: { educators: true, institution: true } } }
     });
     if (!child) return res.status(404).json({ error: 'Kind nicht gefunden' });
@@ -179,28 +182,33 @@ async function deleteChild(req, res) {
       return res.status(404).json({ error: 'Kind nicht gefunden' });
     }
     
-    if (user.role !== 'SUPER_ADMIN' && existingChild.group?.institutionId !== user.institutionId) {
+    if (existingChild.deletedAt) {
+      return res.status(400).json({ error: 'Kind ist bereits zur Löschung markiert' });
+    }
+    
+    if (user.role !== 'SUPER_ADMIN' && existingChild.institutionId !== user.institutionId) {
       return res.status(403).json({ error: 'Keine Berechtigung (Institution)' });
     }
     
-    await prisma.child.delete({
-      where: { id }
-    });
+    // Use GDPR service for soft delete with cascading logic
+    const gdprService = require('../services/gdprService');
+    const result = await gdprService.softDeleteChild(id, user.id, 'Child deleted by admin');
     
     // Log activity
     await logActivity(
       user.id,
-      'CHILD_DELETED',
+      'CHILD_SOFT_DELETED',
       'Child',
       id,
-      `Deleted child: ${existingChild.name}`,
+      `Soft deleted child: ${existingChild.name}`,
       user.institutionId || null,
       existingChild.groupId || null
     );
     
-    res.json({ message: 'Kind erfolgreich gelöscht' });
+    res.json({ message: 'Kind zur Löschung markiert' });
   } catch (err) {
-    res.status(400).json({ error: 'Fehler beim Löschen des Kindes' });
+    console.error('Error deleting child:', err);
+    res.status(500).json({ error: 'Fehler beim Löschen des Kindes' });
   }
 }
 

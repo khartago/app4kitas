@@ -157,22 +157,34 @@ router.delete('/institutionen/:id', requireRole('SUPER_ADMIN'), async (req, res)
     if (!institution) {
       return res.status(404).json({ error: 'Institution nicht gefunden.' });
     }
-    // Delete all chat channels for this institution
-    await prisma.chatChannel.deleteMany({ where: { institutionId: id } });
-    await prisma.institution.delete({ where: { id } });
+    
+    if (institution.deletedAt) {
+      return res.status(400).json({ error: 'Institution ist bereits zur Löschung markiert.' });
+    }
+    
+    // Use GDPR service for soft delete with cascading logic
+    const gdprService = require('../services/gdprService');
+    const result = await gdprService.softDeleteInstitution(id, req.user.id, 'Institution deleted by super admin');
+    
     // Log activity
     await logActivity(
       req.user.id,
-      'INSTITUTION_DELETED',
+      'INSTITUTION_SOFT_DELETED',
       'Institution',
       id,
-      `Deleted institution: ${institution.name}`,
+      `Soft deleted institution: ${institution.name}`,
       institution.id,
       null
     );
-    res.json({ success: true });
+    
+    res.json({ 
+      success: true, 
+      message: 'Institution zur Löschung markiert',
+      institution: result.institution
+    });
   } catch (err) {
-    res.status(404).json({ error: 'Institution nicht gefunden.' });
+    console.error('Error deleting institution:', err);
+    res.status(500).json({ error: 'Fehler beim Löschen der Institution.' });
   }
 });
 

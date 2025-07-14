@@ -315,8 +315,13 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear error when user starts typing again
+    if (error) {
+      setError(null);
+    }
+    
     setLoading(true);
-    setError(null);
     try {
       const data = await login(email, password);
       setBenutzer(data.user);
@@ -337,6 +342,18 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleInputChange = (field: 'email' | 'password', value: string) => {
+    if (field === 'email') {
+      setEmail(value);
+    } else {
+      setPassword(value);
+    }
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
+    }
+  };
+
   if (!userLoading && benutzer) return null;
 
   return (
@@ -345,7 +362,7 @@ const Login: React.FC = () => {
       <MascotBearResponsiveStyle />
       <Background>
         <Card>
-          <DarkModeButton onClick={toggle} aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'}>
+          <DarkModeButton onClick={toggle} aria-label={mode === 'dark' ? 'Lichtmodus aktivieren' : 'Dunkelmodus aktivieren'} tabIndex={-1}>
             {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
           </DarkModeButton>
           <MascotInCard>
@@ -355,6 +372,7 @@ const Login: React.FC = () => {
                 className="mascot-bear"
                 mood="happy"
                 waving
+                noWaving
               />
             </span>
           </MascotInCard>
@@ -362,9 +380,9 @@ const Login: React.FC = () => {
           <Welcome>Willkommen zurück!</Welcome>
           <Subheadline>Bitte melden Sie sich an, um fortzufahren.</Subheadline>
           <Headline>Anmeldung</Headline>
-          <form onSubmit={handleLogin} style={{ width: '100%' }}>
+          <form onSubmit={handleLogin} style={{ width: '100%' }} role="form">
             {error && (
-              <ErrorMsg>
+              <ErrorMsg tabIndex={-1}>
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F44336" opacity="0.15"/><path d="M12 8v4m0 4h.01" stroke="#F44336" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {error}
               </ErrorMsg>
@@ -373,20 +391,20 @@ const Login: React.FC = () => {
               type="email"
               placeholder="E-Mail"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => handleInputChange('email', e.target.value)}
               required
-              autoFocus
               autoComplete="username"
+              autoFocus
             />
             <Input
               type="password"
               placeholder="Passwort"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={e => handleInputChange('password', e.target.value)}
               required
               autoComplete="current-password"
             />
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !email.trim() || !password.trim()}>
               {loading ? 'Anmelden...' : 'Anmelden'}
             </Button>
           </form>

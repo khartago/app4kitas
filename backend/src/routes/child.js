@@ -29,7 +29,9 @@ router.get('/children', authMiddleware, async (req, res) => {
     return res.status(403).json({ error: 'Keine Berechtigung' });
   }
   try {
-    const where = {};
+    const where = {
+      deletedAt: null // Exclude soft-deleted children
+    };
     if (req.user.role === 'ADMIN') {
       where.institutionId = req.user.institutionId;
     }
@@ -56,7 +58,9 @@ router.get('/children/export', authMiddleware, async (req, res) => {
   }
 
   try {
-    const where = {};
+    const where = {
+      deletedAt: null // Exclude soft-deleted children
+    };
     if (user.role === 'ADMIN') {
       where.institutionId = user.institutionId;
     }

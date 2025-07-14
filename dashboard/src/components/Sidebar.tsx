@@ -59,6 +59,11 @@ const icons = {
   Chat: <IconWrapper icon={FaComments} size={22} />,
   Notizen: <IconWrapper icon={FaStickyNote} size={22} />,
   Checkin: <IconWrapper icon={FaSignInAlt} size={22} />,
+  GDPR: (
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
 };
 
 const SidebarContainer = styled.nav`
@@ -351,6 +356,7 @@ const navItemsByRole = {
     { label: 'Eltern', path: '/dashboard/superadmin/eltern' },
     { label: 'Statistiken', path: '/dashboard/superadmin/statistiken' },
     { label: 'Berichte', path: '/dashboard/superadmin/berichte' },
+    { label: 'GDPR', path: '/dashboard/superadmin/gdpr' },
   ],
   ADMIN: [
     { label: 'Dashboard', path: '/dashboard/admin/dashboard' },
@@ -395,7 +401,7 @@ const Sidebar: React.FC = () => {
   const navItems = navItemsByRole[benutzer.role as keyof typeof navItemsByRole] || [];
 
   return (
-    <SidebarContainer>
+    <SidebarContainer role="navigation">
       <LogoArea>
         <Link to="/">
           <AppLogo size={36} variant="icon" />

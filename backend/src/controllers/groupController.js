@@ -7,7 +7,10 @@ async function getGroup(req, res) {
   const user = req.user;
   try {
     const group = await prisma.group.findUnique({
-      where: { id },
+      where: { 
+        id,
+        deletedAt: null // Exclude soft-deleted groups
+      },
       include: {
         children: { include: { parents: true } },
         educators: true,
@@ -166,40 +169,48 @@ async function deleteGroup(req, res) {
     return res.status(403).json({ error: 'Nur Admin kann Gruppen löschen' });
   }
   const { id } = req.params;
+  
   try {
     // Check if group exists and user has permission
     const existingGroup = await prisma.group.findUnique({
       where: { id },
       include: { children: true }
     });
+    
     if (!existingGroup) {
       return res.status(404).json({ error: 'Gruppe nicht gefunden' });
     }
+    
+    if (existingGroup.deletedAt) {
+      return res.status(400).json({ error: 'Gruppe ist bereits zur Löschung markiert' });
+    }
+    
     if (user.role !== 'SUPER_ADMIN' && existingGroup.institutionId !== user.institutionId) {
       return res.status(403).json({ error: 'Keine Berechtigung (Institution)' });
     }
-    // Check if group has children
-    if (existingGroup.children && existingGroup.children.length > 0) {
-      return res.status(400).json({ error: 'Gruppe kann nicht gelöscht werden, da sie noch Kinder enthält' });
-    }
-    // Delete group chat channel
-    await prisma.chatChannel.deleteMany({ where: { groupId: id } });
-    await prisma.group.delete({
-      where: { id }
-    });
+    
+    // Use GDPR service for soft delete with cascading logic
+    const gdprService = require('../services/gdprService');
+    const result = await gdprService.softDeleteGroup(id, user.id, 'Group deleted by admin');
+    
     // Log activity
     await logActivity(
       user.id,
-      'GROUP_DELETED',
+      'GROUP_SOFT_DELETED',
       'Group',
       id,
-      `Deleted group: ${existingGroup.name}`,
+      `Soft deleted group: ${existingGroup.name} (children moved to no group)`,
       user.institutionId || null,
       existingGroup.id
     );
-    res.json({ message: 'Gruppe erfolgreich gelöscht' });
+    
+    res.json({ 
+      message: 'Gruppe zur Löschung markiert',
+      childrenMoved: existingGroup.children?.length || 0
+    });
   } catch (err) {
-    res.status(400).json({ error: 'Fehler beim Löschen der Gruppe' });
+    console.error('Error deleting group:', err);
+    res.status(500).json({ error: 'Fehler beim Löschen der Gruppe' });
   }
 }
 
@@ -270,6 +281,7 @@ async function getEducatorGroups(req, res) {
     
     const groups = await prisma.group.findMany({
       where: {
+        deletedAt: null, // Exclude soft-deleted groups
         educators: {
           some: {
             id: educatorId
@@ -278,6 +290,7 @@ async function getEducatorGroups(req, res) {
       },
       include: {
         children: {
+          where: { deletedAt: null }, // Exclude soft-deleted children
           include: {
             parents: true
           }
@@ -323,9 +336,13 @@ async function getGroupChildren(req, res) {
   
   try {
     const group = await prisma.group.findUnique({
-      where: { id: groupId },
+      where: { 
+        id: groupId,
+        deletedAt: null // Exclude soft-deleted groups
+      },
       include: {
         children: {
+          where: { deletedAt: null }, // Exclude soft-deleted children
           include: {
             parents: true
           }
@@ -372,9 +389,13 @@ async function getTodaysChildren(req, res) {
   
   try {
     const group = await prisma.group.findUnique({
-      where: { id: groupId },
+      where: { 
+        id: groupId,
+        deletedAt: null // Exclude soft-deleted groups
+      },
       include: {
         children: {
+          where: { deletedAt: null }, // Exclude soft-deleted children
           include: {
             parents: true
           }

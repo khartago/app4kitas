@@ -222,7 +222,7 @@ const MascotBear: React.FC<MascotBearProps> = ({ size = 160, height, mood = 'hap
           xmlns="http://www.w3.org/2000/svg"
           aria-label={title}
           role="img"
-          tabIndex={0}
+          tabIndex={-1}
           className={className}
         >
           <title>{title}</title>
@@ -263,7 +263,7 @@ const MascotBear: React.FC<MascotBearProps> = ({ size = 160, height, mood = 'hap
         xmlns="http://www.w3.org/2000/svg"
         aria-label={title}
         role="img"
-        tabIndex={0}
+        tabIndex={-1}
         className={className}
       >
         <title>{title}</title>

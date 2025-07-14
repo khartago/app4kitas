@@ -10,6 +10,9 @@ import Header from './components/Header';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
 import Credits from './pages/Credits';
+import Compliance from './pages/Compliance';
+import Privacy from './pages/Privacy';
+import CookieConsent, { CookieConsentData } from './components/CookieConsent';
 import { UserContextProvider, useUser } from './components/UserContext';
 import { createGlobalStyle } from 'styled-components';
 
@@ -138,6 +141,19 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const App: React.FC = () => {
+  const handleCookieConsentChange = (consent: CookieConsentData) => {
+    console.log('Cookie consent updated:', consent);
+    // Here you can implement analytics tracking based on consent
+    if (consent.analytics) {
+      // Enable analytics
+      console.log('Analytics enabled');
+    }
+    if (consent.marketing) {
+      // Enable marketing cookies
+      console.log('Marketing cookies enabled');
+    }
+  };
+
   return (
     <ThemeProvider>
       <GlobalStyle />
@@ -147,8 +163,11 @@ const App: React.FC = () => {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/credits" element={<Credits />} />
+            <Route path="/compliance" element={<Compliance />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/dashboard/*" element={<AppRoutes />} />
           </Routes>
+          <CookieConsent onConsentChange={handleCookieConsentChange} />
         </UserContextProvider>
       </Router>
     </ThemeProvider>

@@ -140,7 +140,10 @@ async function login(req, res) {
       user.institutionId || null,
       null
     );
-    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, avatarUrl: user.avatarUrl, institutionId: user.institutionId } });
+    res.json({ 
+      user: { id: user.id, email: user.email, name: user.name, role: user.role, avatarUrl: user.avatarUrl, institutionId: user.institutionId },
+      token: token
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Interner Serverfehler beim Login' });
   }
