@@ -4,7 +4,7 @@ import { ErrorMsg, DataTableColumn, CrudPage } from '../../components/ui/AdminDa
 import { AnimatedMascotsLoader } from '../../components/ui/LoadingSpinner';
 import ModernModal from '../../components/ui/ModernModal';
 import { FormField, Label, Input, ErrorText, ModalButton } from '../../components/ui/ModernModal';
-import { fetchChildren, addChild, editChild, deleteChild, uploadChildPhoto, fetchGroups, fetchParents, fetchChildQRCode } from '../../services/adminApi';
+import { fetchChildren, addChild, editChild, deleteChild, uploadChildPhoto, fetchGroups, fetchParents, fetchChildQRCode, updateChildConsent, setManualConsent } from '../../services/adminApi';
 import { FaChild } from 'react-icons/fa';
 
 // Types
@@ -18,6 +18,8 @@ interface Child {
   parents?: { id: string; name: string }[];
   photoUrl?: string;
   institutionId: string;
+  consentGiven?: boolean;
+  consentDate?: string;
 }
 
 interface Group {
@@ -61,6 +63,15 @@ const Children: React.FC = () => {
   const [qrChild, setQrChild] = useState<Child | null>(null);
   const [editParentsOnly, setEditParentsOnly] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  
+  // Consent management state
+  const [consentModalOpen, setConsentModalOpen] = useState(false);
+  const [consentDetailsModalOpen, setConsentDetailsModalOpen] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+  const [manualConsentForm, setManualConsentForm] = useState({
+    manualConsentGiven: false,
+    paperConsentDate: new Date().toISOString().split('T')[0]
+  });
 
   // Initial form state
   const initialForm = { name: '', birthdate: '', groupId: '', parentIds: [] };
@@ -194,6 +205,35 @@ const Children: React.FC = () => {
       win.document.title = 'QR-Code drucken';
       win.print();
       win.close();
+    }
+  };
+
+  // Consent management handlers
+  const handleConsentDetails = (child: Child) => {
+    setSelectedChild(child);
+    setConsentDetailsModalOpen(true);
+  };
+
+  const handleManualConsent = (child: Child) => {
+    setSelectedChild(child);
+    setManualConsentForm({
+      manualConsentGiven: child.consentGiven || false,
+      paperConsentDate: new Date().toISOString().split('T')[0]
+    });
+    setConsentModalOpen(true);
+  };
+
+  const handleManualConsentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedChild) return;
+
+    try {
+      await setManualConsent(selectedChild.id, manualConsentForm);
+      setConsentModalOpen(false);
+      setSelectedChild(null);
+      await load(); // Reload data
+    } catch (error) {
+      console.error('Error setting manual consent:', error);
     }
   };
 
@@ -532,6 +572,83 @@ const Children: React.FC = () => {
       }
     },
     {
+      key: 'consentGiven',
+      label: 'DSGVO Zustimmung',
+      editable: false,
+      filterable: true,
+      sortable: true,
+      render: (value, row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '11px',
+            fontWeight: '500',
+            backgroundColor: row.consentGiven ? '#4caf50' : '#f44336',
+            color: 'white'
+          }}>
+            {row.consentGiven ? 'Gegeben' : 'Nicht gegeben'}
+          </span>
+            <button
+              onClick={() => handleConsentDetails(row)}
+              style={{
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '10px',
+                backgroundColor: '#fff',
+                cursor: 'pointer'
+              }}
+              title="Einwilligungsdetails anzeigen"
+            >
+              Details
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+          <select
+            value={row.consentGiven ? 'true' : 'false'}
+            onChange={async (e) => {
+              const consentGiven = e.target.value === 'true';
+              try {
+                await updateChildConsent(row.id, consentGiven);
+                await load(); // Reload data to get updated consent status
+              } catch (error) {
+                console.error('Error updating consent:', error);
+              }
+            }}
+            style={{
+                padding: '2px 4px',
+                borderRadius: '3px',
+              border: '1px solid #ddd',
+                fontSize: '10px',
+              backgroundColor: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="false">Nicht gegeben</option>
+            <option value="true">Gegeben</option>
+          </select>
+            <button
+              onClick={() => handleManualConsent(row)}
+              style={{
+                padding: '2px 4px',
+                borderRadius: '3px',
+                border: '1px solid #2196F3',
+                fontSize: '10px',
+                backgroundColor: '#fff',
+                color: '#2196F3',
+                cursor: 'pointer'
+              }}
+              title="Manuelle Einwilligung setzen"
+            >
+              Papier
+            </button>
+          </div>
+        </div>
+      )
+    },
+    {
       key: 'qr',
       label: 'QR-Code',
       editable: false,
@@ -581,14 +698,30 @@ const Children: React.FC = () => {
         {formError && <ErrorText>{formError}</ErrorText>}
         <form onSubmit={handleModalSubmit}>
           {editParentsOnly ? (
-            <FormField>
-              <Label htmlFor="parentIds">Eltern</Label>
-              <ParentSelector
-                selectedParentIds={form.parentIds}
-                onChange={(parentIds) => setForm(f => ({ ...f, parentIds }))}
-                placeholder="Eltern auswählen..."
-              />
-            </FormField>
+            <>
+                          <FormField>
+                <Label htmlFor="parentIds">Eltern</Label>
+                <ParentSelector
+                  selectedParentIds={form.parentIds}
+                  onChange={(parentIds) => setForm(f => ({ ...f, parentIds }))}
+                  placeholder="Eltern auswählen..."
+                />
+              </FormField>
+              <FormField>
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffeaa7',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  color: '#856404'
+                }}>
+                  <strong>DSGVO-Hinweis:</strong> Neue Kinder werden ohne Einwilligung für sensitive Datenverarbeitung erstellt. 
+                  Eltern müssen vor Check-ins, Notizen oder Foto-Uploads ihre Einwilligung geben. 
+                  Die Einwilligung kann später in der Kinderliste verwaltet werden.
+                </div>
+              </FormField>
+            </>
           ) : (
             <>
               <FormField>
@@ -673,6 +806,105 @@ const Children: React.FC = () => {
             </div>
           </div>
         ) : null}
+      </ModernModal>
+
+      {/* Consent Details Modal */}
+      <ModernModal 
+        open={consentDetailsModalOpen} 
+        onClose={() => { setConsentDetailsModalOpen(false); setSelectedChild(null); }} 
+        title={selectedChild ? `Einwilligungsdetails für ${selectedChild.name}` : 'Einwilligungsdetails'}
+      >
+        {selectedChild && (
+          <div style={{ padding: '16px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>Aktueller Status</h4>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: selectedChild.consentGiven ? '#d4edda' : '#f8d7da',
+                border: `1px solid ${selectedChild.consentGiven ? '#c3e6cb' : '#f5c6cb'}`,
+                borderRadius: '4px',
+                color: selectedChild.consentGiven ? '#155724' : '#721c24'
+              }}>
+                <strong>Gesamtstatus:</strong> {selectedChild.consentGiven ? 'Einwilligung gegeben' : 'Keine Einwilligung'}
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>Details</h4>
+              <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                <p><strong>Kind:</strong> {selectedChild.name}</p>
+                <p><strong>Geburtsdatum:</strong> {new Date(selectedChild.birthdate).toLocaleDateString('de-DE')}</p>
+                <p><strong>Gruppe:</strong> {selectedChild.group?.name || 'Keine Gruppe'}</p>
+                <p><strong>Eltern:</strong> {selectedChild.parents?.map(p => p.name).join(', ') || 'Keine Eltern zugeordnet'}</p>
+                {selectedChild.consentDate && (
+                  <p><strong>Einwilligungsdatum:</strong> {new Date(selectedChild.consentDate).toLocaleDateString('de-DE')}</p>
+                )}
+              </div>
+            </div>
+
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#fff3cd', 
+              border: '1px solid #ffeaa7', 
+              borderRadius: '4px',
+              fontSize: '13px'
+            }}>
+              <strong>DSGVO-Hinweis:</strong> Ohne gültige Einwilligung sind Check-ins, Notizen und Foto-Uploads für dieses Kind nicht möglich.
+            </div>
+          </div>
+        )}
+      </ModernModal>
+
+      {/* Manual Consent Modal */}
+      <ModernModal 
+        open={consentModalOpen} 
+        onClose={() => { setConsentModalOpen(false); setSelectedChild(null); }} 
+        title={selectedChild ? `Manuelle Einwilligung für ${selectedChild.name}` : 'Manuelle Einwilligung'}
+      >
+        {selectedChild && (
+          <form onSubmit={handleManualConsentSubmit}>
+            <FormField>
+              <Label>Einwilligung basierend auf Papier-Einwilligung</Label>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={manualConsentForm.manualConsentGiven}
+                    onChange={(e) => setManualConsentForm(f => ({ ...f, manualConsentGiven: e.target.checked }))}
+                  />
+                  Einwilligung liegt vor (Papier-Einwilligung unterschrieben)
+                </label>
+              </div>
+            </FormField>
+
+            {manualConsentForm.manualConsentGiven && (
+              <FormField>
+                <Label htmlFor="paperConsentDate">Datum der Papier-Einwilligung *</Label>
+                <Input
+                  id="paperConsentDate"
+                  type="date"
+                  value={manualConsentForm.paperConsentDate}
+                  onChange={(e) => setManualConsentForm(f => ({ ...f, paperConsentDate: e.target.value }))}
+                  required
+                />
+              </FormField>
+            )}
+
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#d1ecf1', 
+              border: '1px solid #bee5eb', 
+              borderRadius: '4px',
+              fontSize: '13px',
+              marginBottom: '16px'
+            }}>
+              <strong>Hinweis:</strong> Diese Funktion ist für den Fall gedacht, dass Eltern eine Papier-Einwilligung unterschrieben haben, 
+              aber noch keine digitale Einwilligung in der App gegeben haben.
+            </div>
+
+            <ModalButton type="submit">Einwilligung speichern</ModalButton>
+          </form>
+        )}
       </ModernModal>
     </CrudPage>
   );

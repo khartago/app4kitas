@@ -228,6 +228,8 @@ interface Child {
   name: string; 
   age?: number | string;
   birthdate?: string;
+  consentGiven?: boolean;
+  consentDate?: string;
 }
 
 interface Note {
@@ -464,9 +466,28 @@ const Notizen: React.FC = () => {
               searchPlaceholder="Kind suchen..."
             />
             {selectedChild && (
-              <Headline>
-                Notizen für {selectedChild.name}
-              </Headline>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Headline>
+                  Notizen für {selectedChild.name}
+                </Headline>
+                {/* Consent Status Indicator */}
+                {!selectedChild.consentGiven && (
+                  <div style={{
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <FaExclamationTriangle size={10} />
+                    Keine DSGVO Zustimmung
+                  </div>
+                )}
+              </div>
             )}
           </TopBar>
           

@@ -2,26 +2,40 @@
 process.env.NODE_ENV = 'test';
 
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const request = require('supertest');
+const app = require('../src/app');
 
 const prisma = new PrismaClient();
 
-// Test data storage
-let testDataStorage = {
+// Global test data storage
+const testDataStorage = {
   users: [],
-  institutions: [],
-  groups: [],
   children: [],
-  checkinLogs: [],
+  groups: [],
+  institutions: [],
+  notes: [],
+  checkIns: [],
   messages: [],
   notifications: [],
+  activityLogs: [],
+  personalTasks: [],
+  gdprRequests: [],
+  dataRestrictions: [],
+  dataObjections: [],
+  dataBreaches: [],
+  closedDays: [],
+  deviceTokens: [],
+  failedLogins: [],
+  chatChannels: [],
+  directMessages: [],
+  messageReactions: [],
+  chatReadStatus: [],
   notes: [],
-  activities: [],
-  channels: [], // Added for chat channels
   
-  // Helper functions for creating test data
+  // Helper to create test data
   async createUser(userData) {
-    const hashedPassword = await bcrypt.hash(userData.password || 'testpassword', 10);
+    const hashedPassword = await bcrypt.hash(userData.password || 'testpass123', 10);
     const user = await prisma.user.create({
       data: {
         ...userData,
@@ -31,7 +45,15 @@ let testDataStorage = {
     this.users.push(user);
     return user;
   },
-  
+
+  async createInstitution(institutionData) {
+    const institution = await prisma.institution.create({
+      data: institutionData
+    });
+    this.institutions.push(institution);
+    return institution;
+  },
+
   async createGroup(groupData) {
     const group = await prisma.group.create({
       data: groupData
@@ -39,7 +61,7 @@ let testDataStorage = {
     this.groups.push(group);
     return group;
   },
-  
+
   async createChild(childData) {
     const child = await prisma.child.create({
       data: childData
@@ -47,259 +69,175 @@ let testDataStorage = {
     this.children.push(child);
     return child;
   },
-  
-  async deleteUser(userId) {
-    try {
-      await prisma.user.delete({ where: { id: userId } });
-    } catch (e) {
-      // Ignore if already deleted
-    }
-  },
-  
-  async deleteGroup(groupId) {
-    try {
-      await prisma.group.delete({ where: { id: groupId } });
-    } catch (e) {
-      // Ignore if already deleted
-    }
-  },
-  
-  async deleteChild(childId) {
-    try {
-      await prisma.child.delete({ where: { id: childId } });
-    } catch (e) {
-      // Ignore if already deleted
-    }
-  },
 
-  async deleteChannel(channelId) {
+  // Cleanup function - delete in correct order to avoid foreign key constraints
+  async cleanup() {
     try {
-      await prisma.chatChannel.delete({ where: { id: channelId } });
-    } catch (e) {
-      // Ignore if already deleted
-    }
-  },
-
-  async deleteInstitution(institutionId) {
-    try {
-      await prisma.institution.delete({ where: { id: institutionId } });
-    } catch (e) {
-      // Ignore if already deleted
+      // Delete in reverse dependency order
+      await prisma.messageReaction.deleteMany({});
+      await prisma.chatReadStatus.deleteMany({});
+      await prisma.directMessage.deleteMany({});
+      await prisma.chatChannel.deleteMany({});
+      await prisma.note.deleteMany({});
+      await prisma.personalTask.deleteMany({});
+      await prisma.activityLog.deleteMany({});
+      await prisma.notificationLog.deleteMany({});
+      await prisma.message.deleteMany({});
+      await prisma.checkInLog.deleteMany({});
+      await prisma.deviceToken.deleteMany({});
+      await prisma.failedLogin.deleteMany({});
+      await prisma.closedDay.deleteMany({});
+      await prisma.dataRestriction.deleteMany({});
+      await prisma.dataObjection.deleteMany({});
+      await prisma.dataBreach.deleteMany({});
+      await prisma.gDPRRequest.deleteMany({});
+      await prisma.child.deleteMany({});
+      await prisma.group.deleteMany({});
+      await prisma.user.deleteMany({});
+      await prisma.institution.deleteMany({});
+    } catch (error) {
+      console.error('Cleanup error:', error);
     }
   }
 };
 
-// Global test setup
-beforeAll(async () => {
-  // Ensure database is connected
-  await prisma.$connect();
-});
-
-// Global test teardown
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
-// Helper function to create test data
-async function createTestData() {
-  // Generate unique identifiers to avoid conflicts
+// Helper to create complete test data for a test
+async function createTestData(options = {}) {
   const timestamp = Date.now();
-  const uniqueSuffix = `-${timestamp}`;
-  
-  // Clean up any existing test data in correct order
-  try {
-    await prisma.checkInLog.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.message.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.notificationLog.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.note.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.activityLog.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.child.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.group.deleteMany({});
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.user.deleteMany({
-      where: {
-        email: {
-          contains: '-test@app4kitas.de'
-        }
-      }
-    });
-  } catch (e) {
-    // Ignore if already deleted
-  }
-  
-  try {
-    await prisma.institution.deleteMany({
-      where: {
-        name: {
-          contains: 'Test Kita'
-        }
-      }
-    });
-  } catch (e) {
-    // Ignore if already deleted
-  }
+  const {
+    institutionName = `Test Kita ${timestamp}`,
+    adminEmail = `admin-${timestamp}@test.de`,
+    parentEmail = `parent-${timestamp}@test.de`,
+    educatorEmail = `educator-${timestamp}@test.de`,
+    childName = `Test Child ${timestamp}`,
+    groupName = `Test Group ${timestamp}`,
+    adminRole = 'ADMIN',
+    parentRole = 'PARENT',
+    educatorRole = 'EDUCATOR'
+  } = options;
 
-  // Create test institution
-  const testInstitution = await prisma.institution.create({
-    data: {
-      name: `Test Kita ${uniqueSuffix}`,
-      address: 'Test Address 123'
-    }
+  // Create institution
+  const institution = await testDataStorage.createInstitution({
+    name: institutionName,
+    address: 'Test Address'
   });
-  testDataStorage.institutions.push(testInstitution);
 
-  // Create test users with hashed passwords
-  const hashedPassword = await bcrypt.hash('testpassword', 10);
-  
-  // Create users one by one to avoid race conditions
-  const superAdmin = await prisma.user.create({
-    data: {
-      email: `test.superadmin${uniqueSuffix}@app4kitas.de`,
-      password: hashedPassword,
-      name: 'Test Super Admin',
-      role: 'SUPER_ADMIN',
-      phone: '+49123456789'
-    }
+  // Create admin user
+  const adminUser = await testDataStorage.createUser({
+    email: adminEmail,
+    password: 'testpass123',
+    name: 'Test Admin',
+    role: adminRole,
+    institutionId: institution.id
   });
-  
-  const admin = await prisma.user.create({
-    data: {
-      email: `test.admin${uniqueSuffix}@app4kitas.de`,
-      password: hashedPassword,
-      name: 'Test Admin',
-      role: 'ADMIN',
-      phone: '+49123456788',
-      institutionId: testInstitution.id
-    }
-  });
-  
-  const educator = await prisma.user.create({
-    data: {
-      email: `test.educator${uniqueSuffix}@app4kitas.de`,
-      password: hashedPassword,
-      name: 'Test Educator',
-      role: 'EDUCATOR',
-      phone: '+49123456787',
-      institutionId: testInstitution.id
-    }
-  });
-  
-  const parent = await prisma.user.create({
-    data: {
-      email: `test.parent${uniqueSuffix}@app4kitas.de`,
-      password: hashedPassword,
-      name: 'Test Parent',
-      role: 'PARENT',
-      phone: '+49123456786',
-      institutionId: testInstitution.id
-    }
-  });
-  
-  const testUsers = [superAdmin, admin, educator, parent];
-  testDataStorage.users.push(...testUsers);
 
-  // Create test group with educator
-  const testGroup = await prisma.group.create({
+  // Create parent user
+  const parentUser = await testDataStorage.createUser({
+    email: parentEmail,
+    password: 'testpass123',
+    name: 'Test Parent',
+    role: parentRole
+  });
+
+  // Create educator user
+  const educatorUser = await testDataStorage.createUser({
+    email: educatorEmail,
+    password: 'testpass123',
+    name: 'Test Educator',
+    role: educatorRole,
+    institutionId: institution.id
+  });
+
+  // Create group
+  const group = await testDataStorage.createGroup({
+    name: groupName,
+    institutionId: institution.id
+  });
+
+  // Connect educator to group
+  await prisma.group.update({
+    where: { id: group.id },
     data: {
-      name: `Test Group ${uniqueSuffix}`,
-      institutionId: testInstitution.id,
       educators: {
-        connect: [{ id: educator.id }] // Connect the educator to the group
+        connect: { id: educatorUser.id }
       }
     }
   });
-  testDataStorage.groups.push(testGroup);
 
-  // Create test child
-  const testChild = await prisma.child.create({
+  // Create child
+  const child = await testDataStorage.createChild({
+    name: childName,
+    birthdate: new Date('2018-01-01T00:00:00.000Z'),
+    institutionId: institution.id,
+    groupId: group.id,
+    qrCodeSecret: `test-qr-secret-${timestamp}`,
+    manualConsentGiven: false,
+    manualConsentDate: null
+  });
+
+  // Connect parent to child
+  await prisma.child.update({
+    where: { id: child.id },
     data: {
-      name: `Test Child ${uniqueSuffix}`,
-      birthdate: new Date('2020-01-01'),
-      groupId: testGroup.id,
-      institutionId: testInstitution.id,
-      qrCodeSecret: `test-qr-secret-${timestamp}`,
       parents: {
-        connect: [{ id: parent.id }]
+        connect: { id: parentUser.id }
       }
     }
   });
-  testDataStorage.children.push(testChild);
-
-  // Create test channel for the group
-  const testChannel = await prisma.chatChannel.create({
-    data: {
-      name: `Test Channel ${uniqueSuffix}`,
-      type: 'GROUP_CHAT',
-      groupId: testGroup.id,
-      institutionId: testInstitution.id
-    }
-  });
-  testDataStorage.channels = testDataStorage.channels || [];
-  testDataStorage.channels.push(testChannel);
 
   return {
-    institution: testInstitution,
-    users: testUsers,
-    group: testGroup,
-    child: testChild,
-    channel: testChannel
+    institution,
+    adminUser,
+    parentUser,
+    educatorUser,
+    group,
+    child,
+    timestamp
   };
 }
 
-// Helper function to login and get cookies
-async function loginUser(request, app, email, password) {
-  try {
-    const res = await request(app)
-      .post('/api/login')
-      .send({ email, password });
-    
-    if (res.statusCode === 200) {
-      return res.headers['set-cookie'];
-    }
-    return null;
-  } catch (error) {
-    console.error('Login error:', error);
-    return null;
+// Helper to login user and get cookies
+async function loginUser(email, password) {
+  const response = await request(app)
+    .post('/auth/login')
+    .send({ email, password });
+  
+  if (response.status === 200) {
+    return response.headers['set-cookie'];
+  }
+  return null;
+}
+
+// Helper to set cookie header only if defined
+function maybeSetCookie(request, cookies) {
+  if (cookies) {
+    request.set('Cookie', cookies);
   }
 }
 
-module.exports = { 
-  prisma, 
-  createTestData, 
+// Helper to hash passwords for test data
+async function hashPassword(password) {
+  return await bcrypt.hash(password, 10);
+}
+
+// Global setup and teardown
+beforeAll(async () => {
+  // Ensure clean database before all tests
+  await testDataStorage.cleanup();
+});
+
+afterAll(async () => {
+  // Clean up after all tests
+  await testDataStorage.cleanup();
+  await prisma.$disconnect();
+});
+
+module.exports = {
+  prisma,
+  createTestData,
+  testDataStorage,
+  createUser: testDataStorage.createUser.bind(testDataStorage),
   loginUser,
-  testDataStorage 
+  maybeSetCookie,
+  hashPassword,
 }; 

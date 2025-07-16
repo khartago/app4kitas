@@ -124,11 +124,11 @@ async function login(req, res) {
       institutionId: (user.role === 'ADMIN' || user.role === 'EDUCATOR') ? user.institutionId : undefined
     });
     res.cookie('token', token, {
-      httpOnly: true,
-      secure: false, // true in production with HTTPS
-      sameSite: 'lax',
+      httpOnly: process.env.COOKIE_HTTP_ONLY === 'true',
+      secure: process.env.COOKIE_SECURE === 'true', // true in production with HTTPS
+      sameSite: process.env.COOKIE_SAME_SITE || 'lax',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 7 * 24 * 60 * 60 * 1000 // 1 week
     });
     // Log login activity
     await logActivity(
@@ -166,9 +166,9 @@ async function logout(req, res) {
 
   // Clear the token cookie with the same options it was set with
   res.clearCookie('token', {
-    httpOnly: true,
-    secure: false, // true in production with HTTPS
-    sameSite: 'lax',
+    httpOnly: process.env.COOKIE_HTTP_ONLY === 'true',
+    secure: process.env.COOKIE_SECURE === 'true', // true in production with HTTPS
+    sameSite: process.env.COOKIE_SAME_SITE || 'lax',
     path: '/',
     expires: new Date(0)
   });

@@ -5,266 +5,105 @@ const app = require('../src/app');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const jwt = require('../src/utils/jwt');
+const { loginUser, hashPassword } = require('./setup');
 
-describe('GDPR Deletion API Tests', () => {
-  let superAdminToken;
-  let adminToken;
-  let educatorToken;
-  let testUserId;
-  let testChildId;
-  let testGroupId;
-  let testInstitutionId;
+describe('GDPR Deletion & Export', () => {
+  let testInstitution;
+  let testUser;
+  let testChild;
+  let testGroup;
+  let superAdmin;
+  let superAdminCookies;
+  let adminUser;
+  let adminCookies;
+  let educatorUser;
+  let educatorCookies;
+  let parentUser;
+  let parentCookies;
 
-  beforeAll(async () => {
-    // Clean up any existing test data before creating new test data
-    // Delete in correct order to respect foreign key constraints
-    const testUserEmails = [
-      'superadmin@gdpr.test',
-      'admin@gdpr.test',
-      'educator@gdpr.test'
-    ];
-    try {
-      // Delete children first
-      await prisma.child.deleteMany({
-        where: {
-          OR: [
-            { qrCodeSecret: 'test-qr-secret-gdpr' },
-            { name: 'Test Child GDPR' },
-            { name: 'Child in Group' }
-          ]
-        }
-      });
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    try {
-      // Delete groups
-      await prisma.group.deleteMany({
-        where: {
-          OR: [
-            { name: 'Test Group GDPR' },
-            { name: 'Group with Child' }
-          ]
-        }
-      });
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    try {
-      // Delete all related data referencing test users
-      const testUsers = await prisma.user.findMany({
-        where: { email: { in: testUserEmails } },
-        select: { id: true }
-      });
-      const testUserIds = testUsers.map(u => u.id);
-      if (testUserIds.length > 0) {
-        // Delete notifications
-        await prisma.notificationLog.deleteMany({ where: { OR: [{ userId: { in: testUserIds } }, { senderId: { in: testUserIds } }] } }).catch(() => {});
-        // Delete activity logs
-        await prisma.activityLog.deleteMany({ where: { userId: { in: testUserIds } } }).catch(() => {});
-        // Delete notes
-        await prisma.note.deleteMany({ where: { educatorId: { in: testUserIds } } }).catch(() => {});
-        // Delete messages
-        await prisma.message.deleteMany({ where: { senderId: { in: testUserIds } } }).catch(() => {});
-        // Delete personal tasks
-        await prisma.personalTask.deleteMany({ where: { userId: { in: testUserIds } } }).catch(() => {});
-        // Delete checkins
-        await prisma.checkInLog.deleteMany({ where: { actorId: { in: testUserIds } } }).catch(() => {});
-        // Delete device tokens
-        await prisma.deviceToken.deleteMany({ where: { userId: { in: testUserIds } } }).catch(() => {});
-        // Delete chat read status
-        await prisma.chatReadStatus.deleteMany({ where: { userId: { in: testUserIds } } }).catch(() => {});
-        // Delete message reactions
-        await prisma.messageReaction.deleteMany({ where: { userId: { in: testUserIds } } }).catch(() => {});
-        // Delete data restrictions/objections
-        await prisma.dataRestriction.deleteMany({ where: { OR: [{ userId: { in: testUserIds } }, { requestedById: { in: testUserIds } }] } }).catch(() => {});
-        await prisma.dataObjection.deleteMany({ where: { OR: [{ userId: { in: testUserIds } }, { requestedById: { in: testUserIds } }] } }).catch(() => {});
-        // Delete chat channels where user is a participant
-        await prisma.chatChannel.deleteMany({ where: { participants: { some: { id: { in: testUserIds } } } } }).catch(() => {});
-        // Delete direct messages where user is a participant
-        await prisma.directMessage.deleteMany({ where: { OR: [{ user1Id: { in: testUserIds } }, { user2Id: { in: testUserIds } }] } }).catch(() => {});
-      }
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    try {
-      // Delete users
-      await prisma.user.deleteMany({
-        where: {
-          email: { in: testUserEmails }
-        }
-      });
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    try {
-      // Delete institutions
-      await prisma.institution.deleteMany({
-        where: {
-          name: 'Test Institution GDPR'
-        }
-      });
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    // Create test institution (only use fields from schema)
-    const testInstitution = await prisma.institution.create({
+  beforeEach(async () => {
+    const timestamp = Date.now();
+    // Create unique institution
+    testInstitution = await prisma.institution.create({
       data: {
-        name: 'Test Institution GDPR',
-        address: 'Test Address'
+        name: `GDPR Test Kita ${timestamp}`,
+        address: 'GDPR Test Address'
       }
     });
-    testInstitutionId = testInstitution.id;
-
-    // Create test group
-    const testGroup = await prisma.group.create({
+    // Create users
+    superAdmin = await prisma.user.create({
       data: {
-        name: 'Test Group GDPR',
-        institutionId: testInstitutionId
+        email: `superadmin-gdpr-${timestamp}@test.de`,
+        password: await hashPassword('SuperSecret123!'),
+        role: 'SUPER_ADMIN',
+        institutionId: testInstitution.id,
+        name: 'Super Admin GDPR'
       }
     });
-    testGroupId = testGroup.id;
-
-    // Create test child (all required fields)
-    const child = await prisma.child.create({
+    adminUser = await prisma.user.create({
       data: {
-        name: 'Test Child GDPR',
-        birthdate: new Date('2020-01-01'),
-        groupId: testGroupId,
-        qrCodeSecret: 'test-qr-secret-gdpr',
-        institutionId: testInstitutionId
-      }
-    });
-    testChildId = child.id;
-
-    // Create test users with proper hashed passwords
-    const bcrypt = require('bcrypt');
-    const hashedPassword = await bcrypt.hash('password', 10);
-    
-    const superAdmin = await prisma.user.create({
-      data: {
-        email: 'superadmin@gdpr.test',
-        password: hashedPassword,
-        name: 'Super Admin GDPR',
-        role: 'SUPER_ADMIN'
-      }
-    });
-
-    const admin = await prisma.user.create({
-      data: {
-        email: 'admin@gdpr.test',
-        password: hashedPassword,
-        name: 'Admin GDPR',
+        email: `admin-gdpr-${timestamp}@test.de`,
+        password: await hashPassword('AdminSecret123!'),
         role: 'ADMIN',
-        institutionId: testInstitutionId
+        institutionId: testInstitution.id,
+        name: 'Admin GDPR'
       }
     });
-
-    const educator = await prisma.user.create({
+    educatorUser = await prisma.user.create({
       data: {
-        email: 'educator@gdpr.test',
-        password: hashedPassword,
-        name: 'Educator GDPR',
+        email: `educator-gdpr-${timestamp}@test.de`,
+        password: await hashPassword('EducatorSecret123!'),
         role: 'EDUCATOR',
-        institutionId: testInstitutionId
+        institutionId: testInstitution.id,
+        name: 'Educator GDPR'
       }
     });
-
-    testUserId = educator.id;
-
-    // Login and get tokens
-    const superAdminResponse = await request(app)
-      .post('/api/login')
-      .send({
-        email: 'superadmin@gdpr.test',
-        password: 'password'
-      });
-    console.log('SuperAdmin login response:', superAdminResponse.status, superAdminResponse.body);
-    superAdminToken = superAdminResponse.body.token;
-
-    const adminResponse = await request(app)
-      .post('/api/login')
-      .send({
-        email: 'admin@gdpr.test',
-        password: 'password'
-      });
-    console.log('Admin login response:', adminResponse.status, adminResponse.body);
-    adminToken = adminResponse.body.token;
-
-    const educatorResponse = await request(app)
-      .post('/api/login')
-      .send({
-        email: 'educator@gdpr.test',
-        password: 'password'
-      });
-    console.log('Educator login response:', educatorResponse.status, educatorResponse.body);
-    educatorToken = educatorResponse.body.token;
-
-    // Debug: Test token verification directly
-    console.log('Testing token verification:');
-    console.log('JWT_SECRET:', process.env.JWT_SECRET);
-    console.log('SuperAdmin token:', superAdminToken);
-    try {
-      const decoded = jwt.verifyToken(superAdminToken);
-      console.log('Token verification successful:', decoded);
-    } catch (error) {
-      console.log('Token verification failed:', error.message);
-    }
+    parentUser = await prisma.user.create({
+      data: {
+        email: `parent-gdpr-${timestamp}@test.de`,
+        password: await hashPassword('ParentSecret123!'),
+        role: 'PARENT',
+        institutionId: testInstitution.id,
+        name: 'Parent GDPR'
+      }
+    });
+    // Create group
+    testGroup = await prisma.group.create({
+      data: {
+        name: `GDPR Gruppe ${timestamp}`,
+        institutionId: testInstitution.id
+      }
+    });
+    // Create child
+    testChild = await prisma.child.create({
+      data: {
+        name: `GDPR Kind ${timestamp}`,
+        birthdate: '2018-01-01T00:00:00.000Z',
+        institutionId: testInstitution.id,
+        groupId: testGroup.id,
+        qrCodeSecret: `test-qr-secret-${timestamp}`
+      }
+    });
+    // Login users
+    superAdminCookies = await loginUser(superAdmin.email, 'SuperSecret123!');
+    adminCookies = await loginUser(adminUser.email, 'AdminSecret123!');
+    educatorCookies = await loginUser(educatorUser.email, 'EducatorSecret123!');
+    parentCookies = await loginUser(parentUser.email, 'ParentSecret123!');
   });
 
-  afterAll(async () => {
-    // Clean up test data in correct order (respecting foreign keys)
-    try {
-      // Delete children first
-      await prisma.child.deleteMany({
-        where: { 
-          OR: [
-            { id: testChildId },
-            { institutionId: testInstitutionId }
-          ]
-        }
-      });
-
-      // Delete groups
-      await prisma.group.deleteMany({
-        where: { 
-          OR: [
-            { id: testGroupId },
-            { institutionId: testInstitutionId }
-          ]
-        }
-      });
-
-      // Delete users
-      await prisma.user.deleteMany({
-        where: {
-          email: {
-            in: ['superadmin@gdpr.test', 'admin@gdpr.test', 'educator@gdpr.test']
-          }
-        }
-      });
-
-      // Finally delete institution
-      await prisma.institution.deleteMany({
-        where: { id: testInstitutionId }
-      });
-    } catch (error) {
-      console.log('Cleanup error (expected in some test scenarios):', error.message);
-    }
-
-    await prisma.$disconnect();
+  afterEach(async () => {
+    // Cleanup order: children -> groups -> users -> institution
+    await prisma.child.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.group.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.user.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.institution.delete({ where: { id: testInstitution.id } });
   });
 
   describe('GET /api/gdpr/pending-deletions', () => {
     it('should return pending deletions for SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/pending-deletions')
-        .set('Authorization', `Bearer ${superAdminToken}`);
+        .set('Cookie', superAdminCookies);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -274,7 +113,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should deny access for non-SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/pending-deletions')
-        .set('Authorization', `Bearer ${adminToken}`);
+        .set('Cookie', adminCookies);
 
       expect(response.status).toBe(403);
     });
@@ -284,7 +123,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should return GDPR audit logs for SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/audit-logs')
-        .set('Authorization', `Bearer ${superAdminToken}`);
+        .set('Cookie', superAdminCookies);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -294,7 +133,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should accept limit parameter', async () => {
       const response = await request(app)
         .get('/api/gdpr/audit-logs?limit=10')
-        .set('Authorization', `Bearer ${superAdminToken}`);
+        .set('Cookie', superAdminCookies);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -303,7 +142,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should deny access for non-SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/audit-logs')
-        .set('Authorization', `Bearer ${adminToken}`);
+        .set('Cookie', adminCookies);
 
       expect(response.status).toBe(403);
     });
@@ -313,7 +152,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should return retention periods for SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/retention-periods')
-        .set('Authorization', `Bearer ${superAdminToken}`);
+        .set('Cookie', superAdminCookies);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -325,7 +164,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should deny access for non-SUPER_ADMIN', async () => {
       const response = await request(app)
         .get('/api/gdpr/retention-periods')
-        .set('Authorization', `Bearer ${adminToken}`);
+        .set('Cookie', adminCookies);
 
       expect(response.status).toBe(403);
     });
@@ -335,7 +174,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should trigger cleanup for SUPER_ADMIN', async () => {
       const response = await request(app)
         .post('/api/gdpr/cleanup')
-        .set('Authorization', `Bearer ${superAdminToken}`);
+        .set('Cookie', superAdminCookies);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -345,7 +184,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should deny access for non-SUPER_ADMIN', async () => {
       const response = await request(app)
         .post('/api/gdpr/cleanup')
-        .set('Authorization', `Bearer ${adminToken}`);
+        .set('Cookie', adminCookies);
 
       expect(response.status).toBe(403);
     });
@@ -365,7 +204,7 @@ describe('GDPR Deletion API Tests', () => {
           password: hashedPassword,
           name: 'Delete Test User',
           role: 'EDUCATOR',
-          institutionId: testInstitutionId
+          institutionId: testInstitution.id
         }
       });
     });
@@ -373,7 +212,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should soft delete user for SUPER_ADMIN', async () => {
       const response = await request(app)
         .post(`/api/gdpr/soft-delete/user/${userToDelete.id}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test deletion' });
 
       expect(response.status).toBe(200);
@@ -389,8 +228,8 @@ describe('GDPR Deletion API Tests', () => {
 
     it('should allow user to soft delete own account', async () => {
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/user/${testUserId}`)
-        .set('Authorization', `Bearer ${educatorToken}`)
+        .post(`/api/gdpr/soft-delete/user/${educatorUser.id}`)
+        .set('Cookie', educatorCookies)
         .send({ reason: 'Personal deletion request' });
 
       expect(response.status).toBe(200);
@@ -404,7 +243,7 @@ describe('GDPR Deletion API Tests', () => {
 
       const response = await request(app)
         .post(`/api/gdpr/soft-delete/user/${superAdmin.id}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(403);
@@ -414,7 +253,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should deny access for unauthorized user', async () => {
       const response = await request(app)
         .post(`/api/gdpr/soft-delete/user/${userToDelete.id}`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Cookie', adminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(403);
@@ -423,7 +262,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should return 404 for non-existent user', async () => {
       const response = await request(app)
         .post('/api/gdpr/soft-delete/user/non-existent-id')
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(404);
@@ -432,9 +271,19 @@ describe('GDPR Deletion API Tests', () => {
 
   describe('POST /api/gdpr/soft-delete/child/:childId', () => {
     it('should soft delete child for ADMIN', async () => {
+      // Create a fresh child for this test (without group assignment)
+      const freshChild = await prisma.child.create({
+        data: {
+          name: 'Fresh Child for Admin Test',
+          birthdate: new Date('2020-01-01'),
+          qrCodeSecret: `fresh-child-admin-${Date.now()}`,
+          institutionId: testInstitution.id
+        }
+      });
+
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/child/${testChildId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .post(`/api/gdpr/soft-delete/child/${freshChild.id}`)
+        .set('Cookie', adminCookies)
         .send({ reason: 'Child left institution' });
 
       expect(response.status).toBe(200);
@@ -443,25 +292,49 @@ describe('GDPR Deletion API Tests', () => {
 
       // Verify child is soft deleted
       const deletedChild = await prisma.child.findUnique({
-        where: { id: testChildId }
+        where: { id: freshChild.id }
       });
       expect(deletedChild.deletedAt).not.toBeNull();
+
+      // Clean up the child after the test
+      try {
+        await prisma.child.delete({ where: { id: freshChild.id } });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     });
 
     it('should allow SUPER_ADMIN to soft delete child', async () => {
+      // Create a fresh child for this test (without group assignment)
+      const freshChild = await prisma.child.create({
+        data: {
+          name: 'Fresh Child for Super Admin Test',
+          birthdate: new Date('2020-01-01'),
+          qrCodeSecret: `fresh-child-superadmin-${Date.now()}`,
+          institutionId: testInstitution.id
+        }
+      });
+
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/child/${testChildId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .post(`/api/gdpr/soft-delete/child/${freshChild.id}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test deletion' });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
+
+      // Clean up the child after the test
+      try {
+        await prisma.child.delete({ where: { id: freshChild.id } });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     });
 
     it('should deny access for non-ADMIN', async () => {
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/child/${testChildId}`)
-        .set('Authorization', `Bearer ${educatorToken}`)
+        .post(`/api/gdpr/soft-delete/child/${testChild.id}`)
+        .set('Cookie', educatorCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(403);
@@ -470,9 +343,17 @@ describe('GDPR Deletion API Tests', () => {
 
   describe('POST /api/gdpr/soft-delete/group/:groupId', () => {
     it('should soft delete empty group for ADMIN', async () => {
+      // Create a fresh group for this test
+      const freshGroup = await prisma.group.create({
+        data: {
+          name: 'Fresh Group for Admin Test',
+          institutionId: testInstitution.id
+        }
+      });
+
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/group/${testGroupId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .post(`/api/gdpr/soft-delete/group/${freshGroup.id}`)
+        .set('Cookie', adminCookies)
         .send({ reason: 'Group closed' });
 
       expect(response.status).toBe(200);
@@ -481,7 +362,7 @@ describe('GDPR Deletion API Tests', () => {
 
       // Verify group is soft deleted
       const deletedGroup = await prisma.group.findUnique({
-        where: { id: testGroupId }
+        where: { id: freshGroup.id }
       });
       expect(deletedGroup.deletedAt).not.toBeNull();
     });
@@ -491,7 +372,7 @@ describe('GDPR Deletion API Tests', () => {
       const groupWithChild = await prisma.group.create({
         data: {
           name: 'Group with Child',
-          institutionId: testInstitutionId
+          institutionId: testInstitution.id
         }
       });
 
@@ -501,13 +382,13 @@ describe('GDPR Deletion API Tests', () => {
           birthdate: new Date('2020-01-01'),
           groupId: groupWithChild.id,
           qrCodeSecret: `child-in-group-${Date.now()}`,
-          institutionId: testInstitutionId
+          institutionId: testInstitution.id
         }
       });
 
       const response = await request(app)
         .post(`/api/gdpr/soft-delete/group/${groupWithChild.id}`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Cookie', adminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(200);
@@ -530,9 +411,17 @@ describe('GDPR Deletion API Tests', () => {
     });
 
     it('should allow SUPER_ADMIN to soft delete group', async () => {
+      // Create a fresh group for this test
+      const freshGroup = await prisma.group.create({
+        data: {
+          name: 'Fresh Group for Super Admin Test',
+          institutionId: testInstitution.id
+        }
+      });
+
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/group/${testGroupId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .post(`/api/gdpr/soft-delete/group/${freshGroup.id}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test deletion' });
 
       expect(response.status).toBe(200);
@@ -541,8 +430,8 @@ describe('GDPR Deletion API Tests', () => {
 
     it('should deny access for non-ADMIN', async () => {
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/group/${testGroupId}`)
-        .set('Authorization', `Bearer ${educatorToken}`)
+        .post(`/api/gdpr/soft-delete/group/${testGroup.id}`)
+        .set('Cookie', educatorCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(403);
@@ -551,9 +440,17 @@ describe('GDPR Deletion API Tests', () => {
 
   describe('POST /api/gdpr/soft-delete/institution/:institutionId', () => {
     it('should soft delete institution for SUPER_ADMIN', async () => {
+      // Create a fresh institution for this test
+      const freshInstitution = await prisma.institution.create({
+        data: {
+          name: 'Fresh Institution for Super Admin Test',
+          address: 'Fresh Address'
+        }
+      });
+
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/institution/${testInstitutionId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .post(`/api/gdpr/soft-delete/institution/${freshInstitution.id}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Institution closed' });
 
       expect(response.status).toBe(200);
@@ -562,15 +459,15 @@ describe('GDPR Deletion API Tests', () => {
 
       // Verify institution is soft deleted
       const deletedInstitution = await prisma.institution.findUnique({
-        where: { id: testInstitutionId }
+        where: { id: freshInstitution.id }
       });
       expect(deletedInstitution.deletedAt).not.toBeNull();
     });
 
     it('should deny access for non-SUPER_ADMIN', async () => {
       const response = await request(app)
-        .post(`/api/gdpr/soft-delete/institution/${testInstitutionId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .post(`/api/gdpr/soft-delete/institution/${testInstitution.id}`)
+        .set('Cookie', adminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(403);
@@ -581,7 +478,7 @@ describe('GDPR Deletion API Tests', () => {
     it('should handle invalid user ID gracefully', async () => {
       const response = await request(app)
         .post('/api/gdpr/soft-delete/user/invalid-uuid')
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(404);
@@ -591,7 +488,7 @@ describe('GDPR Deletion API Tests', () => {
       // Test with non-existent user
       const response = await request(app)
         .post('/api/gdpr/soft-delete/user/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set('Cookie', superAdminCookies)
         .send({ reason: 'Test' });
 
       expect(response.status).toBe(404);

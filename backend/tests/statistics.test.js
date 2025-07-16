@@ -1,43 +1,60 @@
 const request = require('supertest');
 const app = require('../src/app');
-const { createTestData, loginUser, testDataStorage, prisma } = require('./setup');
+const { createTestData, loginUser, testDataStorage, prisma, hashPassword } = require('./setup');
 
 describe('Statistics API', () => {
-  let superAdminCookies;
+  let testInstitution;
+  let testUser;
+  let testChild;
+  let testGroup;
+  let adminUser;
   let adminCookies;
-  let educatorCookies;
-  let parentCookies;
-  let testData;
 
-  beforeAll(async () => {
-    // Create test data and get user credentials
-    testData = await createTestData();
-    
-    // Login as different roles for testing using the created test data
-    superAdminCookies = await loginUser(request, app, testData.users[0].email, 'testpassword');
-    adminCookies = await loginUser(request, app, testData.users[1].email, 'testpassword');
-    educatorCookies = await loginUser(request, app, testData.users[2].email, 'testpassword');
-    parentCookies = await loginUser(request, app, testData.users[3].email, 'testpassword');
+  beforeEach(async () => {
+    const timestamp = Date.now();
+    // Create unique institution
+    testInstitution = await prisma.institution.create({
+      data: {
+        name: `Statistics Test Kita ${timestamp}`,
+        address: 'Statistics Test Address'
+      }
+    });
+    // Create admin user
+    adminUser = await prisma.user.create({
+      data: {
+        email: `admin-statistics-${timestamp}@test.de`,
+        password: await hashPassword('AdminStatistics123!'),
+        role: 'ADMIN',
+        institutionId: testInstitution.id,
+        name: 'Admin Statistics'
+      }
+    });
+    // Create group
+    testGroup = await prisma.group.create({
+      data: {
+        name: `Statistics Gruppe ${timestamp}`,
+        institutionId: testInstitution.id
+      }
+    });
+    // Create child
+    testChild = await prisma.child.create({
+      data: {
+        name: `Statistics Kind ${timestamp}`,
+        birthdate: '2018-01-01',
+        institutionId: testInstitution.id,
+        groupId: testGroup.id
+      }
+    });
+    // Login admin
+    adminCookies = await loginUser(adminUser.email, 'AdminStatistics123!');
   });
 
-  afterAll(async () => {
-    // Clean up test data
-    for (const child of testDataStorage.children) {
-      await testDataStorage.deleteChild(child.id);
-    }
-    for (const group of testDataStorage.groups) {
-      await testDataStorage.deleteGroup(group.id);
-    }
-    for (const user of testDataStorage.users) {
-      await testDataStorage.deleteUser(user.id);
-    }
-    for (const institution of testDataStorage.institutions) {
-      try {
-        await prisma.institution.delete({ where: { id: institution.id } });
-      } catch (e) {
-        // Ignore if already deleted
-      }
-    }
+  afterEach(async () => {
+    // Cleanup order: children -> groups -> users -> institution
+    await prisma.child.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.group.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.user.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.institution.delete({ where: { id: testInstitution.id } });
   });
 
   describe('GET /api/stats', () => {

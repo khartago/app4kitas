@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
-const { createTestData, loginUser, testDataStorage } = require('./setup');
+const { createTestData, loginUser, testDataStorage, hashPassword } = require('./setup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 let superAdminCookies;
 let adminCookies;
@@ -13,18 +15,80 @@ beforeAll(async () => {
   const testData = await createTestData();
   testInstitutionId = testData.institution.id;
 
-  // Login as different roles for testing
+  // Login as different roles for testing and get cookies
   superAdminCookies = await loginUser(request, app, testData.users[0].email, 'testpassword');
   adminCookies = await loginUser(request, app, testData.users[1].email, 'testpassword');
   educatorCookies = await loginUser(request, app, testData.users[2].email, 'testpassword');
   parentCookies = await loginUser(request, app, testData.users[3].email, 'testpassword');
+  
+  // Debug: Check if cookies were obtained
+  console.log('Cookies obtained:', {
+    superAdmin: !!superAdminCookies,
+    admin: !!adminCookies,
+    educator: !!educatorCookies,
+    parent: !!parentCookies
+  });
 });
 
 afterAll(async () => {
   // Cleanup handled in setup.js afterAll
 });
 
-describe('CRUD Operations', () => {
+describe('CRUD API', () => {
+  let testInstitution;
+  let testUser;
+  let testChild;
+  let testGroup;
+  let adminUser;
+  let adminCookies;
+
+  beforeEach(async () => {
+    const timestamp = Date.now();
+    // Create unique institution
+    testInstitution = await prisma.institution.create({
+      data: {
+        name: `CRUD Test Kita ${timestamp}`,
+        address: 'CRUD Test Address'
+      }
+    });
+    // Create admin user
+    adminUser = await prisma.user.create({
+      data: {
+        email: `admin-crud-${timestamp}@test.de`,
+        password: await hashPassword('AdminCrud123!'),
+        role: 'ADMIN',
+        institutionId: testInstitution.id,
+        name: 'Admin CRUD'
+      }
+    });
+    // Create group
+    testGroup = await prisma.group.create({
+      data: {
+        name: `CRUD Gruppe ${timestamp}`,
+        institutionId: testInstitution.id
+      }
+    });
+    // Create child
+    testChild = await prisma.child.create({
+      data: {
+        name: `CRUD Kind ${timestamp}`,
+        birthdate: '2018-01-01',
+        institutionId: testInstitution.id,
+        groupId: testGroup.id
+      }
+    });
+    // Login admin
+    adminCookies = await loginUser(adminUser.email, 'AdminCrud123!');
+  });
+
+  afterEach(async () => {
+    // Cleanup order: children -> groups -> users -> institution
+    await prisma.child.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.group.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.user.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.institution.delete({ where: { id: testInstitution.id } });
+  });
+
   describe('Children CRUD', () => {
     it('should get all children (super admin)', async () => {
       const res = await request(app)
@@ -78,12 +142,14 @@ describe('CRUD Operations', () => {
       const childData = {
         name: 'Test Child ' + Date.now(),
         birthdate: '2019-01-01',
-        groupId: group.id
+        groupId: group.id,
+        parentIds: [parent.id]
       };
       const res = await request(app)
         .post('/api/children')
         .set('Cookie', adminCookies)
         .send(childData);
+      console.log('Child creation response:', res.statusCode, res.body);
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('id');
       expect(res.body).toHaveProperty('name', childData.name);
@@ -106,17 +172,24 @@ describe('CRUD Operations', () => {
     });
 
     it('should create a new child (super admin)', async () => {
-      // Create a unique group for this test
+      // Create a unique parent and group for this test
+      const parent = await testDataStorage.createUser({
+        name: 'Parent for Super Admin Child ' + Date.now(),
+        email: `parent-superadmin-child-${Date.now()}@test.com`,
+        password: 'password123',
+        role: 'PARENT',
+        institutionId: testInstitutionId
+      });
       const group = await testDataStorage.createGroup({
         name: 'Group for Super Admin Child ' + Date.now(),
         institutionId: testInstitutionId
       });
-      
       const childData = {
         name: 'Test Child Super Admin ' + Date.now(),
         birthdate: '2019-01-01',
         groupId: group.id,
-        institutionId: testInstitutionId
+        institutionId: testInstitutionId,
+        parentIds: [parent.id]
       };
 
       const res = await request(app)
@@ -127,7 +200,6 @@ describe('CRUD Operations', () => {
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('id');
       expect(res.body).toHaveProperty('name', childData.name);
-      
       // Clean up
       try {
         await testDataStorage.deleteChild(res.body.id);
@@ -136,6 +208,11 @@ describe('CRUD Operations', () => {
       }
       try {
         await testDataStorage.deleteGroup(group.id);
+      } catch (e) {
+        // Ignore if already deleted
+      }
+      try {
+        await testDataStorage.deleteUser(parent.id);
       } catch (e) {
         // Ignore if already deleted
       }

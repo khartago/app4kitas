@@ -26,13 +26,13 @@ Das **Super Admin Dashboard** ist die zentrale Verwaltungsoberfläche für die A
 
 ### 🏢 **Institutionen** (`Institutionen.tsx`)
 - **Vollständige CRUD-Operationen** für Institutionen
-- **Admin-Verwaltung** pro Institution
-- **Export-Funktionen**: CSV/PDF für Institutionen und Admins
+- **Einrichtungsleiter-Verwaltung** pro Institution
+- **Export-Funktionen**: CSV/PDF für Institutionen und Einrichtungsleiter
 - **Erweiterte Suche** und Filterung
 
 **Features:**
 - Institution erstellen/bearbeiten/löschen
-- Admin-Zuordnung zu Institutionen
+- Einrichtungsleiter-Zuordnung zu Institutionen
 - Duplikatsprüfung für Namen und E-Mails
 - Responsive Tabellen mit Paginierung
 - Export-Funktionen (CSV/PDF)
@@ -206,32 +206,25 @@ Das **Super Admin Dashboard** ist die zentrale Verwaltungsoberfläche für die A
 - **Dynamische Dateinamen**: Datum-basierte Organisation
 
 ### **Berichtstypen**
-- **Echtzeit-Berichte**: Live-Daten
-- **Historische Berichte**: Zeitraum-basierte Analysen
-- **Trend-Berichte**: Entwicklungsanalysen
-- **Compliance-Berichte**: Rechtliche Anforderungen
+- **System-weite Berichte**: Plattform-übergreifende Analysen
+- **Institutions-Berichte**: Einrichtungs-spezifische Daten
+- **Benutzer-Berichte**: Nutzer-Aktivitätsanalysen
+- **Compliance-Berichte**: DSGVO-konforme Dokumentation
 
 ## 🔄 Workflow-Integration
 
-### **Benutzer-Onboarding**
-1. **Institution erstellen** → Admin zuweisen
-2. **Erzieher hinzufügen** → Gruppen zuweisen
-3. **Eltern registrieren** → Kinder zuordnen
-4. **System konfigurieren** → Bereitschaft für Produktivbetrieb
-
 ### **Tägliche Verwaltung**
-- **Dashboard-Monitoring**: Übersicht über alle Aktivitäten
-- **Persönliche Aufgaben**: Aufgabenverwaltung direkt im Dashboard
-- **Benutzer-Management**: Schnelle Änderungen
-- **Berichts-Generierung**: Automatisierte Reports
-- **System-Monitoring**: Performance und Sicherheit
+1. **Dashboard-Check**: Übersicht über alle Aktivitäten
+2. **System-Monitoring**: Plattform-weite Überwachung
+3. **Institutions-Koordination**: Einrichtungsverwaltung
+4. **Benutzer-Support**: Technischer Support
+5. **Compliance-Monitoring**: DSGVO-Überwachung
 
-### **Aufgaben-Workflow**
-1. **Aufgabe erstellen**: Titel, Beschreibung, Priorität festlegen
-2. **Aufgaben verwalten**: Bearbeiten, Status ändern, löschen
-3. **Prioritäten setzen**: Hoch/Mittel/Niedrig für bessere Organisation
-4. **Fortschritt verfolgen**: Erledigte Aufgaben mit Zeitstempel
-5. **Filterung nutzen**: Schnelle Übersicht über offene/erledigte Aufgaben
+### **Wöchentliche Aufgaben**
+- **System-Überprüfung**: Plattform-Performance prüfen
+- **Statistik-Analyse**: Trends und Entwicklungen
+- **Export-Generierung**: Berichte für Behörden
+- **Security-Monitoring**: Sicherheitsüberwachung
 
 ## 🎨 Design-System
 
@@ -280,6 +273,19 @@ Das **Super Admin Dashboard** ist die zentrale Verwaltungsoberfläche für die A
 - **Global Scaling**: Multi-Region Support
 - **Enterprise Features**: White-Label-Lösungen
 
+## 🎯 Plattform-weite Features
+
+### **System-Administration**
+- **Institution-Management**: Vollständige CRUD-Operationen
+- **Benutzer-Management**: Alle Rollen verwalten
+- **System-Konfiguration**: Plattform-Einstellungen
+- **Monitoring**: System-Überwachung
+
+### **Compliance**
+- **GDPR-Compliance**: Vollständige DSGVO-Implementierung
+- **Audit-Trail**: Vollständige Aktivitätsprotokollierung
+- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
+
 ---
 
-**App4KITAs Super Admin Dashboard** - Die zentrale Verwaltungsoberfläche für moderne Kindertagesstätten-Management. 🏛️✨ 
+**Super Admin Dashboard** - Zentrale Verwaltungsoberfläche für die App4KITAs Plattform. 

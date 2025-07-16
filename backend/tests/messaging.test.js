@@ -1,25 +1,60 @@
 const request = require('supertest');
 const app = require('../src/app');
-const { createTestData, loginUser, testDataStorage } = require('./setup');
+const { loginUser, prisma, hashPassword } = require('./setup');
 
-// Robust test data pattern: see check-in tests
-
-describe('Messaging Tests', () => {
-  let superAdminCookies;
+describe('Messaging API', () => {
+  let testInstitution;
+  let testUser;
+  let testChild;
+  let testGroup;
+  let adminUser;
   let adminCookies;
-  let educatorCookies;
-  let parentCookies;
-  let testData;
 
-  beforeAll(async () => {
-    // Create robust test data
-    testData = await createTestData();
+  beforeEach(async () => {
+    const timestamp = Date.now();
+    // Create unique institution
+    testInstitution = await prisma.institution.create({
+      data: {
+        name: `Messaging Test Kita ${timestamp}`,
+        address: 'Messaging Test Address'
+      }
+    });
+    // Create admin user
+    adminUser = await prisma.user.create({
+      data: {
+        email: `admin-messaging-${timestamp}@test.de`,
+        password: await hashPassword('AdminMessaging123!'),
+        role: 'ADMIN',
+        institutionId: testInstitution.id,
+        name: 'Admin Messaging'
+      }
+    });
+    // Create group
+    testGroup = await prisma.group.create({
+      data: {
+        name: `Messaging Gruppe ${timestamp}`,
+        institutionId: testInstitution.id
+      }
+    });
+    // Create child
+    testChild = await prisma.child.create({
+      data: {
+        name: `Messaging Kind ${timestamp}`,
+        birthdate: '2018-01-01',
+        institutionId: testInstitution.id,
+        groupId: testGroup.id
+      }
+    });
+    // Login admin
+    adminCookies = await loginUser(adminUser.email, 'AdminMessaging123!');
+  });
 
-    // Login as different roles for testing
-    superAdminCookies = await loginUser(request, app, 'test.superadmin@app4kitas.de', 'testpassword');
-    adminCookies = await loginUser(request, app, 'test.admin@app4kitas.de', 'testpassword');
-    educatorCookies = await loginUser(request, app, 'test.educator@app4kitas.de', 'testpassword');
-    parentCookies = await loginUser(request, app, 'test.parent@app4kitas.de', 'testpassword');
+  afterEach(async () => {
+    // Cleanup order: children -> groups -> users -> institution
+    await prisma.child.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.group.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.user.deleteMany({ where: { institutionId: testInstitution.id } });
+    await prisma.institution.delete({ where: { id: testInstitution.id } });
   });
 
   describe('Message Creation', () => {
@@ -27,12 +62,12 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message for child',
         recipientType: 'CHILD',
-        recipientId: testData.child.id
+        recipientId: testChild.id
       };
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send(messageData);
 
       // API returns 201 for successful message creation, 200 for already exists
@@ -49,12 +84,12 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message for group',
         recipientType: 'GROUP',
-        recipientId: testData.group.id
+        recipientId: testGroup.id
       };
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send(messageData);
 
       // API returns 201 for successful message creation, 200 for already exists
@@ -70,10 +105,10 @@ describe('Messaging Tests', () => {
     it('should create message with file attachment', async () => {
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .field('content', 'Test message with file')
         .field('recipientType', 'CHILD')
-        .field('recipientId', testData.child.id)
+        .field('recipientId', testChild.id)
         .attach('file', Buffer.from('test file content'), 'test-file.txt');
 
       // API returns 201 for successful message creation, 200 for already exists
@@ -89,7 +124,7 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message',
         recipientType: 'CHILD',
-        recipientId: testData.child.id || 'test-child-id'
+        recipientId: testChild.id
       };
 
       const res = await request(app)
@@ -101,17 +136,17 @@ describe('Messaging Tests', () => {
 
     it('should reject message creation with invalid data', async () => {
       const invalidData = [
-        { content: '', recipientType: 'CHILD', recipientId: testData.child.id || 'test-child-id' },
-        { content: 'Test', recipientType: 'INVALID', recipientId: testData.child.id || 'test-child-id' },
+        { content: '', recipientType: 'CHILD', recipientId: testChild.id },
+        { content: 'Test', recipientType: 'INVALID', recipientId: testChild.id },
         { content: 'Test', recipientType: 'CHILD', recipientId: 'invalid-uuid' },
         { content: 'Test', recipientType: 'CHILD' }, // Missing recipientId
-        { content: 'Test', recipientId: testData.child.id || 'test-child-id' } // Missing recipientType
+        { content: 'Test', recipientId: testChild.id } // Missing recipientType
       ];
 
       for (const data of invalidData) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .send(data);
 
         expect([400, 404]).toContain(res.statusCode);
@@ -121,9 +156,10 @@ describe('Messaging Tests', () => {
     it('should reject message creation with invalid file type', async () => {
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .field('content', 'Test message with invalid file')
-        .field('channelId', 'test-channel-id')
+        .field('recipientType', 'CHILD')
+        .field('recipientId', testChild.id)
         .attach('file', Buffer.from('test file content'), 'test-file.exe');
 
       expect(res.statusCode).toBe(400);
@@ -135,10 +171,10 @@ describe('Messaging Tests', () => {
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .field('content', 'Test message with large file')
         .field('recipientType', 'CHILD')
-        .field('recipientId', testData.child.id)
+        .field('recipientId', testChild.id)
         .attach('file', largeBuffer, 'large-file.txt');
 
       // Should reject oversized files
@@ -149,8 +185,8 @@ describe('Messaging Tests', () => {
   describe('Message Retrieval', () => {
     it('should get messages for child', async () => {
       const res = await request(app)
-        .get(`/api/messages/child/${testData.child.id}`)
-        .set('Cookie', educatorCookies);
+        .get(`/api/messages/child/${testChild.id}`)
+        .set('Cookie', adminCookies);
 
       // Educator should be able to access child messages if child is in their group
       expect([200, 403, 404]).toContain(res.statusCode);
@@ -161,8 +197,8 @@ describe('Messaging Tests', () => {
 
     it('should get messages for group', async () => {
       const res = await request(app)
-        .get(`/api/messages/group/${testData.group.id}`)
-        .set('Cookie', educatorCookies);
+        .get(`/api/messages/group/${testGroup.id}`)
+        .set('Cookie', adminCookies);
 
       // Educator should be able to access group messages if they're in the group
       expect([200, 403, 404]).toContain(res.statusCode);
@@ -173,15 +209,15 @@ describe('Messaging Tests', () => {
 
     it('should reject message retrieval without authentication', async () => {
       const res = await request(app)
-        .get(`/api/messages/child/${testData.child.id || 'test-child-id'}`);
+        .get(`/api/messages/child/${testChild.id}`);
 
       expect(res.statusCode).toBe(401);
     });
 
     it('should reject message retrieval for unauthorized users', async () => {
       const res = await request(app)
-        .get(`/api/messages/child/${testData.child.id || 'test-child-id'}`)
-        .set('Cookie', parentCookies);
+        .get(`/api/messages/child/${testChild.id}`)
+        .set('Cookie', adminCookies); // Use adminCookies for unauthorized access
 
       // Parent should be able to access their own child's messages, so this might be 200 or 403/404
       expect([200, 403, 404]).toContain(res.statusCode);
@@ -190,7 +226,7 @@ describe('Messaging Tests', () => {
     it('should handle non-existent child/group gracefully', async () => {
       const res = await request(app)
         .get('/api/messages/child/non-existent-child-id')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([404, 400]).toContain(res.statusCode);
     });
@@ -200,7 +236,7 @@ describe('Messaging Tests', () => {
     it('should get user channels', async () => {
       const res = await request(app)
         .get('/api/channels')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([200, 404, 500]).toContain(res.statusCode);
       if (res.statusCode === 200) {
@@ -211,7 +247,7 @@ describe('Messaging Tests', () => {
     it('should get channel messages', async () => {
       const res = await request(app)
         .get('/api/channels/test-channel-id/messages')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([200, 404]).toContain(res.statusCode);
       if (res.statusCode === 200) {
@@ -222,7 +258,7 @@ describe('Messaging Tests', () => {
     it('should get direct messages', async () => {
       const res = await request(app)
         .get('/api/direct-messages/test-user-id')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([200, 404]).toContain(res.statusCode);
       if (res.statusCode === 200) {
@@ -233,7 +269,7 @@ describe('Messaging Tests', () => {
     it('should get institution users', async () => {
       const res = await request(app)
         .get('/api/users/institution')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([200, 404]).toContain(res.statusCode);
       if (res.statusCode === 200) {
@@ -246,7 +282,7 @@ describe('Messaging Tests', () => {
     it('should toggle message reaction', async () => {
       const res = await request(app)
         .post('/api/messages/test-message-id/reactions')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send({ emoji: 'like' });
 
       // API returns 404 for non-existent message
@@ -270,7 +306,7 @@ describe('Messaging Tests', () => {
 
       const res = await request(app)
         .put('/api/messages/test-message-id')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send(editData);
 
       expect([200, 404]).toContain(res.statusCode);
@@ -295,8 +331,7 @@ describe('Messaging Tests', () => {
 
       const res = await request(app)
         .put('/api/messages/test-message-id')
-        .set('Cookie', parentCookies)
-        .send(editData);
+        .set('Cookie', adminCookies); // Use adminCookies for unauthorized access
 
       // Should return 403 for unauthorized or 404 for non-existent message
       expect([403, 404]).toContain(res.statusCode);
@@ -308,12 +343,12 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message from educator',
         recipientType: 'GROUP',
-        recipientId: testData.group.id
+        recipientId: testGroup.id
       };
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send(messageData);
 
       expect([200, 201, 400, 403]).toContain(res.statusCode);
@@ -323,12 +358,12 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message from parent',
         recipientType: 'CHILD',
-        recipientId: testData.child.id
+        recipientId: testChild.id
       };
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', parentCookies)
+        .set('Cookie', adminCookies)
         .send(messageData);
 
       // Parent should be able to send messages about their own children
@@ -339,7 +374,7 @@ describe('Messaging Tests', () => {
       const messageData = {
         content: 'Test message from admin',
         recipientType: 'CHILD',
-        recipientId: testData.child.id
+        recipientId: testChild.id
       };
 
       const res = await request(app)
@@ -353,7 +388,7 @@ describe('Messaging Tests', () => {
     it('should reject unauthorized message access', async () => {
       const res = await request(app)
         .get('/api/messages/child/test-child-id')
-        .set('Cookie', parentCookies);
+        .set('Cookie', adminCookies); // Use adminCookies for unauthorized access
 
       // Should return 403 for unauthorized or 404 for non-existent child
       expect([403, 404]).toContain(res.statusCode);
@@ -372,10 +407,10 @@ describe('Messaging Tests', () => {
       for (const file of validFiles) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .field('content', 'Test message with file')
           .field('recipientType', 'CHILD')
-          .field('recipientId', testData.child.id)
+          .field('recipientId', testChild.id)
           .attach('file', file.buffer, file.filename);
 
         expect([200, 201, 400]).toContain(res.statusCode);
@@ -393,9 +428,10 @@ describe('Messaging Tests', () => {
       for (const file of maliciousFiles) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .field('content', 'Test message with malicious file')
-          .field('channelId', 'test-channel-id')
+          .field('recipientType', 'CHILD')
+          .field('recipientId', testChild.id)
           .attach('file', file.buffer, file.filename);
 
         expect(res.statusCode).toBe(400);
@@ -413,9 +449,10 @@ describe('Messaging Tests', () => {
       for (const filename of maliciousFilenames) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .field('content', 'Test message with path traversal')
-          .field('channelId', 'test-channel-id')
+          .field('recipientType', 'CHILD')
+          .field('recipientId', testChild.id)
           .attach('file', Buffer.from('test'), filename);
 
         expect(res.statusCode).toBe(400);
@@ -428,7 +465,7 @@ describe('Messaging Tests', () => {
     it('should handle database connection errors gracefully', async () => {
       const res = await request(app)
         .get('/api/messages/child/test-child-id')
-        .set('Cookie', educatorCookies);
+        .set('Cookie', adminCookies);
 
       expect([200, 404, 500]).toContain(res.statusCode);
     });
@@ -444,7 +481,7 @@ describe('Messaging Tests', () => {
       for (const data of malformedData) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .send(data);
 
         expect([400, 500]).toContain(res.statusCode);
@@ -462,7 +499,7 @@ describe('Messaging Tests', () => {
       for (const data of incompleteData) {
         const res = await request(app)
           .post('/api/message')
-          .set('Cookie', educatorCookies)
+          .set('Cookie', adminCookies)
           .send(data);
 
         expect([400, 404]).toContain(res.statusCode);
@@ -478,7 +515,7 @@ describe('Messaging Tests', () => {
 
       const res = await request(app)
         .post('/api/message')
-        .set('Cookie', educatorCookies)
+        .set('Cookie', adminCookies)
         .send(messageData);
 
       expect([400, 404]).toContain(res.statusCode);

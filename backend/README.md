@@ -1,8 +1,14 @@
 # 🚀 App4KITAs Backend
 
+**Last Updated: July 2025**
+
 ## 📊 Status: **PRODUCTION READY** ✅
 
 **427/427 Tests erfolgreich** | **Enterprise Security** | **DSGVO-konform** | **GDPR Compliant**
+
+## 🆕 GDPR Compliance Automation
+- Backend steuert die automatisierte DSGVO-Compliance: Compliance-Reports, Backup-Überprüfung, Anomalie-Erkennung, Privacy-by-Design, Echtzeit-Monitoring, Compliance-Scoring und Empfehlungen.
+- Alle Features sind vollständig integriert und werden regelmäßig überwacht.
 
 ## 🏗️ Architektur
 
@@ -79,225 +85,245 @@ UPLOADS_DIR=uploads
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX=100
+RATE_LIMIT_MAX_REQUESTS=100
 
-# CORS
-CORS_ORIGIN=http://localhost:3000
+# Security
+BCRYPT_SALT_ROUNDS=10
 ```
 
-## 🔒 Security Features
+## 👥 Rollen & Berechtigungen
 
-### ✅ Implementierte Sicherheitsmaßnahmen
-- **JWT Authentication** mit HttpOnly Cookies
-- **Role-Based Access Control** (RBAC)
-- **XSS Protection** mit Input Sanitization
-- **Malware Detection** für File Uploads
-- **Rate Limiting** gegen Brute Force
-- **CORS Protection** mit Whitelist
-- **Security Headers** (Helmet)
-- **SQL Injection Prevention** (Prisma ORM)
-- **CSRF Protection**
-- **Input Validation** und Sanitization
-- **GDPR Compliance** mit Soft Delete und Audit Logs
+### 👑 SUPER_ADMIN
+- **Plattform-weiter Zugriff** auf alle Daten und Funktionen
+- **Institutionen verwalten**: Neue KITAs anlegen, bearbeiten, löschen
+- **Benutzerverwaltung**: Einrichtungsleiter, Erzieher und Eltern verwalten
+- **System-Statistiken**: Plattform-weite Analysen und Berichte
+- **Export-Funktionen**: CSV/PDF-Export für alle Daten
+- **GDPR-Verwaltung**: Soft Delete, Audit Logs, Data Retention
 
-### 🛡️ Security Headers
-```javascript
-// Implementierte Headers
-X-Frame-Options: DENY
-X-Content-Type-Options: nosniff
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-Content-Security-Policy: default-src 'self'
-Referrer-Policy: strict-origin-when-cross-origin
+### 👨‍💼 ADMIN (Einrichtungsleitung)
+- **Institution-spezifischer Zugriff** auf eigene Kita
+- **Kinderverwaltung**: Anlegen, bearbeiten, Fotos, Export
+- **Gruppenverwaltung**: Gruppen erstellen, Erzieher zuweisen
+- **Personalverwaltung**: Erzieher verwalten und zuweisen
+- **Check-in/out**: QR-Code-Generierung und -Verwaltung
+- **Berichte**: Tages- und Monatsberichte mit Export
+- **Benachrichtigungen**: Nachrichten an Gruppen/Erzieher
+- **Institutionseinstellungen**: Öffnungszeiten, Feiertage, Adressen
+
+### 👩‍🏫 EDUCATOR (Erzieher)
+- **Gruppen-spezifischer Zugriff** auf zugewiesene Kinder
+- **Dashboard**: Tagesübersicht und Schnellzugriffe
+- **Kinder**: Verwaltung der zugewiesenen Kinder
+- **Check-in/out**: QR-Scan und manuelle Check-ins
+- **Notizen**: Kind-spezifische Notizen mit Dateianhängen
+- **Chat**: Gruppen- und Direktnachrichten
+- **Persönliche Aufgaben**: Eigene To-Do-Liste
+
+### 👨‍👩‍👧‍👦 PARENT (Eltern)
+- **Kind-spezifischer Zugriff** auf eigene Kinder (geplant)
+- **Selbstregistrierung**: Eltern registrieren sich selbstständig
+- **Kind-Zuordnung**: Einrichtungsleitung weist Eltern Kindern zu
+- **Check-in-Status**: Einsehen der Anwesenheit ihrer Kinder
+- **Kommunikation**: Nachrichten mit Erziehern
+- **Berichte**: Zugriff auf Berichte ihrer Kinder
+
+## 🔐 Authentifizierung & Sicherheit
+
+### JWT-basierte Authentifizierung
+- **HttpOnly Cookies**: Sichere Token-Speicherung
+- **Automatische Token-Erneuerung**: Hintergrund-Refresh
+- **Session Management**: Sichere Session-Verwaltung
+- **Logout-Funktionalität**: Vollständige Session-Bereinigung
+
+### Sicherheitsmaßnahmen
+- **Helmet.js**: Security Headers
+- **CORS**: Cross-Origin Resource Sharing
+- **Rate Limiting**: Brute Force Protection
+- **XSS Protection**: Input Sanitization
+- **SQL Injection Protection**: Prisma ORM
+- **File Upload Security**: Malware Detection
+
+### GDPR Compliance
+- **Soft Delete**: Alle Entitäten werden soft-deleted
+- **Audit Logs**: Vollständige Protokollierung
+- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
+- **Data Export**: Export-Funktionalität für betroffene Personen
+
+## 📊 API Endpoints
+
+### Authentifizierung
+- `POST /api/auth/register` - Benutzerregistrierung (SUPER_ADMIN)
+- `POST /api/auth/login` - Benutzeranmeldung
+- `POST /api/auth/logout` - Benutzerabmeldung
+- `GET /api/auth/profile` - Benutzerprofil abrufen
+
+### Institutionen
+- `GET /api/institutionen` - Institutionen auflisten (SUPER_ADMIN)
+- `POST /api/institutionen` - Institution erstellen (SUPER_ADMIN)
+- `PUT /api/institutionen/:id` - Institution bearbeiten (SUPER_ADMIN)
+- `DELETE /api/institutionen/:id` - Institution löschen (SUPER_ADMIN)
+
+### Kinder
+- `GET /api/children` - Kinder auflisten (ADMIN, EDUCATOR)
+- `POST /api/children` - Kind erstellen (ADMIN)
+- `PUT /api/children/:id` - Kind bearbeiten (ADMIN)
+- `DELETE /api/children/:id` - Kind löschen (ADMIN)
+- `PUT /api/children/:id/photo` - Kinderfoto hochladen (ADMIN)
+
+### Gruppen
+- `GET /api/groups` - Gruppen auflisten (ADMIN, EDUCATOR)
+- `POST /api/groups` - Gruppe erstellen (ADMIN)
+- `PUT /api/groups/:id` - Gruppe bearbeiten (ADMIN)
+- `DELETE /api/groups/:id` - Gruppe löschen (ADMIN)
+
+### Check-in/out
+- `POST /api/checkin` - Check-in durchführen (EDUCATOR)
+- `GET /api/checkin/:childId` - Check-in-Historie (alle Rollen)
+- `PUT /api/checkin/:id` - Check-in korrigieren (EDUCATOR)
+
+### Nachrichten
+- `GET /api/messages` - Nachrichten auflisten (alle Rollen)
+- `POST /api/messages` - Nachricht senden (alle Rollen)
+- `DELETE /api/messages/:id` - Nachricht löschen (Sender)
+
+### Berichte
+- `GET /api/reports/daily` - Tagesbericht (ADMIN)
+- `GET /api/reports/monthly` - Monatsbericht (ADMIN)
+- `GET /api/reports/export` - Bericht exportieren (ADMIN)
+
+### GDPR
+- `GET /api/gdpr/data-export/:userId` - Datenexport (Art. 15 DSGVO)
+- `DELETE /api/gdpr/delete-account/:userId` - Kontolöschung (Art. 17 DSGVO)
+- `PATCH /api/gdpr/restrict/:userId` - Datenbeschränkung (Art. 18 DSGVO)
+
+## 🗃️ Datenbank-Schema
+
+### Hauptentitäten
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  avatarUrl String?
+  institutionId String?
+  institution Institution? @relation("InstitutionAdmins")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Institution {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  admins    User[]   @relation("InstitutionAdmins")
+  groups    Group[]
+  children  Child[]
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+}
+
+model Child {
+  id        String   @id @default(uuid())
+  name      String
+  birthDate DateTime
+  photoUrl  String?
+  qrSecret  String   @unique
+  institutionId String
+  institution Institution @relation(fields: [institutionId], references: [id])
+  groupId   String?
+  group     Group?   @relation(fields: [groupId], references: [id])
+  parents   User[]   @relation("ChildParents")
+  checkIns  CheckInLog[]
+  notes     Note[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
 ```
 
 ## 🧪 Testing
 
 ### Test Suite (427 Tests)
 ```bash
-# Alle Tests
+# Alle Tests ausführen
 npm test
 
 # Spezifische Test-Kategorien
-npm run test:auth          # Authentication Tests
-npm run test:crud          # CRUD Operations
-npm run test:security      # Security Tests
-npm run test:integration   # Integration Tests
-npm run test:performance   # Performance Tests
-npm run test:error         # Error Handling
-npm run test:upload        # File Upload Tests
-npm run test:unit          # Unit Tests
-npm run test:gdpr          # GDPR Compliance Tests
-
-# Coverage Report
-npm run test:coverage
+npm run test:auth          # Authentifizierung (18 Tests)
+npm run test:crud          # CRUD Operationen (57 Tests)
+npm run test:security      # Sicherheit (36 Tests)
+npm run test:integration   # Integration (25 Tests)
+npm run test:performance   # Performance (15 Tests)
+npm run test:error         # Fehlerbehandlung (20 Tests)
+npm run test:upload        # Datei-Upload (12 Tests)
+npm run test:messaging     # Nachrichten (25 Tests)
+npm run test:notifications # Benachrichtigungen (16 Tests)
+npm run test:reports       # Berichte (92 Tests)
+npm run test:statistics    # Statistiken (25 Tests)
+npm run test:checkin       # Check-in (25 Tests)
+npm run test:gdpr          # GDPR Compliance (25 Tests)
 ```
 
-### Test Kategorien
-| Kategorie | Tests | Status |
-|-----------|-------|--------|
-| **Authentication** | 18 | ✅ Alle bestanden |
-| **CRUD Operations** | 57 | ✅ Alle bestanden |
-| **Security** | 36 | ✅ Alle bestanden |
-| **Integration** | 25 | ✅ Alle bestanden |
-| **Performance** | 15 | ✅ Alle bestanden |
-| **Error Handling** | 20 | ✅ Alle bestanden |
-| **File Upload** | 12 | ✅ Alle bestanden |
-| **Messaging** | 25 | ✅ Alle bestanden |
-| **Notifications** | 16 | ✅ Alle bestanden |
-| **Reports** | 92 | ✅ Alle bestanden |
-| **Statistics** | 25 | ✅ Alle bestanden |
-| **Check-in** | 25 | ✅ Alle bestanden |
-| **GDPR Compliance** | 25 | ✅ Alle bestanden |
+### Test Coverage
+- **Unit Tests**: 100% Coverage für kritische Funktionen
+- **Integration Tests**: API-Endpunkte und Datenbankoperationen
+- **Security Tests**: Authentifizierung, Autorisierung, Input Validation
+- **Performance Tests**: Response Times und Memory Usage
+- **GDPR Tests**: Compliance-Features und Data Protection
 
-## 📊 API Endpoints
+## 🔧 Entwicklung
 
-### Authentication
-- `POST /api/login` - User Login
-- `POST /api/logout` - User Logout
-- `POST /api/register` - User Registration (SUPER_ADMIN only)
-- `POST /api/refresh` - Token Refresh
-
-### Children Management
-- `GET /api/children` - Get all children
-- `POST /api/children` - Create child
-- `GET /api/children/:id` - Get specific child
-- `PUT /api/children/:id` - Update child
-- `DELETE /api/children/:id` - Delete child
-- `POST /api/children/:id/photo` - Upload child photo
-
-### Groups Management
-- `GET /api/groups` - Get all groups
-- `POST /api/groups` - Create group
-- `GET /api/groups/:id` - Get specific group
-- `PUT /api/groups/:id` - Update group
-- `DELETE /api/groups/:id` - Delete group
-
-### Check-in System
-- `POST /api/checkin` - Manual check-in
-- `POST /api/checkin/qr` - QR code check-in
-- `GET /api/checkin/child/:id` - Get child check-in history
-- `GET /api/checkin/group/:id` - Get group check-ins
-
-### Messaging
-- `GET /api/channels` - Get user channels
-- `GET /api/channels/:id/messages` - Get channel messages
-- `POST /api/message` - Send message
-- `GET /api/direct-messages/:id` - Get direct messages
-
-### Reports & Statistics
-- `GET /api/reports/attendance` - Attendance reports
-- `GET /api/reports/check-in` - Check-in reports
-- `GET /api/reports/messages` - Message reports
-- `GET /api/stats` - Statistics overview
-
-### File Uploads
-- `POST /api/profile/avatar` - Upload profile avatar
-- `POST /api/children/:id/photo` - Upload child photo
-- `POST /api/message` - Upload message attachment
-- `POST /api/notes` - Upload note attachment
-
-### GDPR Compliance
-- `GET /api/gdpr/pending-deletions` - Get pending deletions
-- `GET /api/gdpr/audit-logs` - Get GDPR audit logs
-- `GET /api/gdpr/retention-periods` - Get retention periods
-- `POST /api/gdpr/cleanup` - Trigger data cleanup
-- `POST /api/gdpr/soft-delete/user/:userId` - Soft delete user
-- `POST /api/gdpr/soft-delete/child/:childId` - Soft delete child
-- `POST /api/gdpr/soft-delete/group/:groupId` - Soft delete group
-- `POST /api/gdpr/soft-delete/institution/:institutionId` - Soft delete institution
-
-## 🔧 Development
-
-### Available Scripts
+### Development Commands
 ```bash
-# Development
-npm run dev              # Start development server
-npm run start            # Start production server
+# Development Server
+npm run dev
+
+# Production Build
+npm run build
+
+# Database Operations
+npx prisma generate
+npx prisma migrate dev
+npx prisma studio
 
 # Testing
-npm test                 # Run all tests
-npm run test:watch       # Run tests in watch mode
-npm run test:coverage    # Run tests with coverage
+npm test
+npm run test:watch
+npm run test:coverage
 
-# Database
-npx prisma studio        # Open database explorer
-npx prisma migrate dev   # Run migrations
-npx prisma generate      # Generate Prisma client
-npx prisma db seed       # Seed database
-
-# Production
-npm run build            # Build for production
+# Linting
+npm run lint
+npm run lint:fix
 ```
 
 ### Code Quality
-- **ESLint**: Code quality enforcement
-- **Prettier**: Code formatting
-- **TypeScript**: Type checking (where applicable)
-- **Jest**: Comprehensive testing framework
-
-## 🗃️ Database Schema
-
-### Core Entities
-```sql
--- Users with roles
-User (id, email, password, name, role, institutionId, deletedAt)
-
--- Institutions
-Institution (id, name, address, settings, deletedAt)
-
--- Children
-Child (id, name, birthdate, parentId, groupId, institutionId, deletedAt)
-
--- Groups
-Group (id, name, institutionId, educatorId, deletedAt)
-
--- Check-in logs
-CheckInLog (id, childId, checkInTime, checkOutTime, method, actorId)
-
--- Messages
-Message (id, content, senderId, channelId, fileUrl, fileType, deletedAt)
-
--- Notes
-Note (id, content, childId, authorId, fileUrl, deletedAt)
-
--- Activity Logs (GDPR)
-ActivityLog (id, userId, action, entity, entityId, details, institutionId, groupId, createdAt, deletedAt)
-```
-
-## 🔐 GDPR Compliance
-
-### Implementierte DSGVO-Features
-- **Soft Delete**: Alle Entitäten werden soft-deleted statt hard-deleted
-- **Audit Logs**: Vollständige Protokollierung aller Löschvorgänge
-- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
-- **Cascade Deletes**: Intelligente Verkettung von Löschvorgängen
-- **Permission System**: Rollenbasierte Berechtigungen für Löschvorgänge
-- **Data Export**: Export-Funktionalität für betroffene Personen
-
-### Soft Delete Verhalten
-- **User**: Alle zugehörigen Daten werden soft-deleted
-- **Child**: Wird soft-deleted, Check-in-Historie bleibt erhalten
-- **Group**: Kinder werden von Gruppe entfernt, Gruppe wird soft-deleted
-- **Institution**: Alle zugehörigen Daten werden soft-deleted
-
-### Audit Trail
-- Alle Löschvorgänge werden protokolliert
-- Grund für Löschung wird gespeichert
-- Zeitstempel und ausführender Benutzer werden erfasst
-- Vollständige Historie für Compliance-Prüfungen
+- **ESLint**: Code-Qualitätsstandards
+- **Prettier**: Einheitliche Formatierung
+- **Jest**: Umfassende Test-Abdeckung
+- **TypeScript**: Typsicherheit (wo anwendbar)
 
 ## 🚀 Deployment
 
-### Production Checklist
-- [ ] Environment Variables konfiguriert
-- [ ] JWT_SECRET geändert
-- [ ] Database Migrations ausgeführt
-- [ ] File Upload Directory erstellt
-- [ ] SSL Certificate installiert
-- [ ] Rate Limiting konfiguriert
-- [ ] Monitoring eingerichtet
-- [ ] Backup Strategy implementiert
+### Production Setup
+```bash
+# Environment konfigurieren
+NODE_ENV=production
+JWT_SECRET=your_production_secret
+DATABASE_URL=your_production_database
+
+# Dependencies installieren
+npm ci --only=production
+
+# Database Migrationen
+npx prisma migrate deploy
+
+# Server starten
+npm start
+```
 
 ### Docker Support
 ```dockerfile
@@ -325,25 +351,27 @@ CMD ["npm", "start"]
 - **Database Queries**: Optimiert für < 50ms Durchschnitt
 - **File Uploads**: Bis zu 10MB mit Malware-Scan
 
-## 🤝 Contributing
+## 🔐 GDPR Compliance
 
-### Development Workflow
-1. Fork des Repositories
-2. Feature Branch erstellen (`git checkout -b feature/amazing-feature`)
-3. Änderungen committen (`git commit -m 'Add amazing feature'`)
-4. Branch pushen (`git push origin feature/amazing-feature`)
-5. Pull Request erstellen
+### Implementierte DSGVO-Features
+- **Soft Delete**: Alle Entitäten werden soft-deleted statt hard-deleted
+- **Audit Logs**: Vollständige Protokollierung aller Löschvorgänge
+- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
+- **Cascade Deletes**: Intelligente Verkettung von Löschvorgängen
+- **Permission System**: Rollenbasierte Berechtigungen für Löschvorgänge
+- **Data Export**: Export-Funktionalität für betroffene Personen
 
-### Code Standards
-- **ESLint**: Automatische Code-Qualitätsprüfung
-- **Prettier**: Einheitliche Code-Formatierung
-- **Jest**: Umfassende Test-Abdeckung
-- **TypeScript**: Typsicherheit (wo anwendbar)
+### Soft Delete Verhalten
+- **User**: Alle zugehörigen Daten werden soft-deleted
+- **Child**: Wird soft-deleted, Check-in-Historie bleibt erhalten
+- **Group**: Kinder werden von Gruppe entfernt, Gruppe wird soft-deleted
+- **Institution**: Alle zugehörigen Daten werden soft-deleted
 
-## 📄 License
-
-Dieses Projekt ist proprietär und gehört zu App4KITAs.
-Alle Rechte vorbehalten.
+### Audit Trail
+- Alle Löschvorgänge werden protokolliert
+- Grund für Löschung wird gespeichert
+- Zeitstempel und ausführender Benutzer werden erfasst
+- Vollständige Historie für Compliance-Prüfungen
 
 ## 📞 Support
 
@@ -354,4 +382,4 @@ Bei Fragen oder Problemen:
 
 ---
 
-**App4KITAs Backend** - Enterprise-ready, GDPR-compliant, production-tested. 
+**App4KITAs Backend** - Enterprise-ready, GDPR-compliant, production-tested API Server. 

@@ -1,92 +1,212 @@
 {
   "colors": {
-    "primary": "#43B97F",
-    "primaryDark": "#37996B",
-    "accent": "#FFC107",
-    "background": "#F5F5F5",
-    "surface": "#FFFFFF",
-    "error": "#F44336",
-    "textPrimary": "#212121",
-    "textSecondary": "#757575",
-    "border": "#E0E0E0",
-    "disabled": "#BDBDBD",
-    "darkMode": {
-      "background": "#121212",
-      "surface": "#1E1E1E",
+    "light": {
+      "primary": "#43B97F",
+      "primaryDark": "#37996B",
+      "accent": "#FFE066",
+      "accentHover": "#FFD54F",
+      "background": "#F4F6F8",
+      "surface": "#FAFBFC",
+      "surfaceAlt": "#F0F4F8",
+      "surfaceHover": "#E8F4F8",
+      "error": "#FF5A5F",
+      "textPrimary": "#212121",
+      "textSecondary": "#757575",
+      "text": "#212121",
+      "border": "#E3EAF2",
+      "disabled": "#BDBDBD",
+      "tooltipBg": "#333",
+      "tooltipText": "#FFF",
+      "snackbarBg": "#323232",
+      "snackbarText": "#FFF",
+      "tableRowHover": "#E3FCEC",
+      "tableStriped": "#F6F8FA",
+      "success": "#4CAF50",
+      "warning": "#FF9800",
+      "info": "#2196F3",
+      "secondary": "#9C27B0"
+    },
+    "dark": {
+      "primary": "#43B97F",
+      "primaryDark": "#37996B",
+      "accent": "#FFE066",
+      "accentHover": "#FFD54F",
+      "background": "#181C24",
+      "surface": "#232B36",
+      "surfaceAlt": "#222B36",
+      "surfaceHover": "#2A3440",
+      "error": "#FF5A5F",
       "textPrimary": "#E0E0E0",
-      "textSecondary": "#BDBDBD"
+      "textSecondary": "#BDBDBD",
+      "text": "#E0E0E0",
+      "border": "#2C3440",
+      "disabled": "#BDBDBD",
+      "tooltipBg": "#23272F",
+      "tooltipText": "#FFD54F",
+      "snackbarBg": "#23272F",
+      "snackbarText": "#FFD54F",
+      "tableRowHover": "#22332B",
+      "tableStriped": "#1A202C",
+      "success": "#4CAF50",
+      "warning": "#FF9800",
+      "info": "#2196F3",
+      "secondary": "#9C27B0"
     }
   },
   "typography": {
-    "fontFamily": "Inter",
+    "fontFamily": "Montserrat, Poppins, Inter, Arial, sans-serif",
     "headline1": {
-      "fontSize": 32,
-      "fontWeight": "bold"
+      "fontFamily": "Montserrat, Arial, sans-serif",
+      "fontSize": "32px",
+      "fontWeight": 800,
+      "letterSpacing": "-0.5px"
     },
     "headline2": {
-      "fontSize": 24,
-      "fontWeight": "bold"
+      "fontFamily": "Montserrat, Arial, sans-serif",
+      "fontSize": "24px",
+      "fontWeight": 700,
+      "letterSpacing": "-0.2px"
+    },
+    "headline3": {
+      "fontFamily": "Montserrat, Arial, sans-serif",
+      "fontSize": "20px",
+      "fontWeight": 600,
+      "letterSpacing": "-0.1px"
+    },
+    "headline4": {
+      "fontFamily": "Montserrat, Arial, sans-serif",
+      "fontSize": "18px",
+      "fontWeight": 600,
+      "letterSpacing": "-0.1px"
     },
     "subtitle1": {
-      "fontSize": 18,
-      "fontWeight": "600"
+      "fontFamily": "Montserrat, Arial, sans-serif",
+      "fontSize": "18px",
+      "fontWeight": 600
     },
     "body1": {
-      "fontSize": 16,
-      "fontWeight": "normal"
+      "fontFamily": "Poppins, Inter, Arial, sans-serif",
+      "fontSize": "16px",
+      "fontWeight": 400
     },
     "body2": {
-      "fontSize": 14,
-      "fontWeight": "normal"
+      "fontFamily": "Poppins, Inter, Arial, sans-serif",
+      "fontSize": "14px",
+      "fontWeight": 400
     },
     "caption": {
-      "fontSize": 12,
-      "fontWeight": "normal"
+      "fontFamily": "Poppins, Inter, Arial, sans-serif",
+      "fontSize": "12px",
+      "fontWeight": 400
     }
   },
   "components": {
     "button": {
-      "padding": "12px 24px",
-      "borderRadius": "12px",
-      "elevation": 2
+      "padding": "14px 32px",
+      "borderRadius": "18px",
+      "elevation": 2,
+      "fontWeight": 700,
+      "fontSize": "17px",
+      "boxShadow": "0 4px 18px rgba(67,185,127,0.10), 0 1.5px 6px rgba(255,224,102,0.08)",
+      "background": "linear-gradient(90deg, #43B97F 90%, #FFE066 100%)",
+      "color": "#fff",
+      "border": "none",
+      "hoverBackground": "linear-gradient(90deg, #388E3C 90%, #FFE066 100%)",
+      "activeBackground": "linear-gradient(90deg, #43B97F 90%, #FFE066 100%)",
+      "disabledBackground": "linear-gradient(90deg, #BDBDBD 60%, #E0E0E0 100%)",
+      "disabledColor": "#fff",
+      "transition": "all 0.18s cubic-bezier(0.4,0,0.2,1)",
+      "hoverTransform": "scale(1.045)",
+      "activeTransform": "scale(0.98)",
+      "disabledOpacity": 0.6,
+      "cursor": "pointer",
+      "disabledCursor": "not-allowed"
     },
     "card": {
       "padding": "16px",
-      "borderRadius": "16px",
-      "elevation": 1
+      "borderRadius": "20px",
+      "elevation": 1,
+      "boxShadow": "0 4px 24px rgba(67,185,127,0.07), 0 1.5px 6px rgba(44,62,80,0.04)",
+      "border": "1.5px solid #E3EAF2",
+      "accentBorder": "2px solid #FFE06655",
+      "statsBorder": "1.5px solid #E3EAF2",
+      "statsBackground": "#F0F4F8"
     },
     "input": {
       "padding": "12px",
       "borderRadius": "10px",
-      "borderColor": "#E0E0E0",
-      "focusedBorderColor": "#43B97F",
-      "errorBorderColor": "#F44336"
+      "borderColor": "#E3EAF2",
+      "focusedBorderColor": "#FFE066",
+      "errorBorderColor": "#FF5A5F",
+      "background": "#FAFBFC",
+      "color": "#212121",
+      "fontSize": "16px",
+      "boxShadow": "0 1.5px 6px rgba(67,185,127,0.06)",
+      "transition": "border-color 0.18s, box-shadow 0.18s",
+      "focusBoxShadow": "0 0 0 2px #FFE06633"
     },
-    "appBar": {
-      "height": 56,
-      "backgroundColor": "#43B97F",
-      "textColor": "#FFFFFF"
+    "table": {
+      "borderRadius": "16px",
+      "background": "rgba(255,255,255,0.92)",
+      "headerBackground": "linear-gradient(90deg, #43B97F 80%, #FFD600 100%)",
+      "headerColor": "#fff",
+      "rowHover": "#E3FCEC",
+      "border": "1.5px solid #E3EAF2",
+      "boxShadow": "0 2px 8px rgba(44,62,80,0.06)",
+      "fontSize": "15px",
+      "cellPadding": "14px 18px",
+      "stripedRow": "#F6F8FA"
     },
     "avatar": {
       "size": 48,
-      "borderRadius": "50%"
+      "borderRadius": "50%",
+      "border": "2px solid #43B97F",
+      "boxShadow": "0 2px 8px rgba(44,62,80,0.10)"
     },
     "snackbar": {
       "backgroundColor": "#323232",
-      "textColor": "#FFFFFF",
+      "textColor": "#FFF",
+      "borderRadius": "12px",
+      "fontSize": "15px",
+      "boxShadow": "0 6px 24px rgba(67,185,127,0.12)",
       "duration": 3000
     },
     "dialog": {
-      "borderRadius": "16px",
-      "backgroundColor": "#FFFFFF",
-      "textColor": "#212121"
+      "borderRadius": "24px",
+      "backgroundColor": "rgba(255,255,255,0.90)",
+      "backdropFilter": "blur(10px)",
+      "textColor": "#212121",
+      "boxShadow": "0 12px 48px rgba(67,185,127,0.13)",
+      "padding": "40px",
+      "accentBorder": "2px solid #FFE06655"
     },
     "tooltip": {
       "backgroundColor": "#333",
       "textColor": "#FFF",
-      "fontSize": 12,
-      "borderRadius": "6px",
-      "padding": "6px 10px"
+      "fontSize": "12px",
+      "borderRadius": "8px",
+      "padding": "8px 14px",
+      "boxShadow": "0 2px 8px rgba(44,62,80,0.12)"
+    },
+    "appBar": {
+      "height": 56,
+      "backgroundColor": "linear-gradient(90deg, #43B97F 80%, #FFE066 100%)",
+      "textColor": "#FFFFFF",
+      "boxShadow": "0 2px 8px rgba(67,185,127,0.08)"
+    },
+    "divider": {
+      "height": "2px",
+      "background": "linear-gradient(90deg, #43B97F 0%, #FFD600 100%)",
+      "opacity": 0.18,
+      "margin": "32px 0"
+    },
+    "iconCircle": {
+      "background": "#F4F6F8",
+      "border": "2.5px solid #43B97F33",
+      "boxShadow": "0 2px 12px rgba(67,185,127,0.10)",
+      "color": "#43B97F",
+      "size": 48,
+      "fontSize": 24
     }
   },
   "animations": {

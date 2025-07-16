@@ -121,7 +121,7 @@ function sanitizeFileName(fileName) {
 function detectMalware(fileBuffer, fileName) {
   if (!fileBuffer || !fileName) return false;
   
-  const content = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 10000)); // Check first 10KB
+      const content = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, parseInt(process.env.FILE_SCAN_SIZE) || 10000)); // Check first 10KB
   const lowerContent = content.toLowerCase();
   const lowerFileName = fileName.toLowerCase();
   

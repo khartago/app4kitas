@@ -217,7 +217,7 @@ const BulkActionsRow = styled.div`
   
   @media (max-width: 768px) {
     flex-direction: column;
-  gap: 8px;
+    gap: 8px;
     margin-top: 12px;
   }
   
@@ -715,6 +715,8 @@ interface Child {
   lastCheckout?: string;
   checkinTime?: string;
   checkoutTime?: string;
+  consentGiven?: boolean;
+  consentDate?: string;
 }
 
 interface CheckinHistory {
@@ -1185,6 +1187,23 @@ const Checkin: React.FC = () => {
                       <StatusBadge $checkedIn={child.checkedIn}>
                         {child.checkedIn ? 'Eingecheckt' : 'Nicht eingecheckt'}
                       </StatusBadge>
+                      {/* Consent Status Indicator */}
+                      {!child.consentGiven && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          padding: '2px 6px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: '500',
+                          backgroundColor: '#f44336',
+                          color: 'white',
+                          zIndex: 1
+                        }}>
+                          Keine DSGVO Zustimmung
+                        </div>
+                      )}
                   </CardHeader>
 
                   <TimeSection>

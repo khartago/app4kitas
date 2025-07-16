@@ -5,12 +5,15 @@ declare module 'styled-components' {
       primary: string;
       primaryDark: string;
       accent: string;
+      accentHover: string;
       background: string;
       surface: string;
       surfaceAlt: string;
+      surfaceHover: string;
       error: string;
       textPrimary: string;
       textSecondary: string;
+      text: string;
       border: string;
       disabled: string;
       tooltipBg: string;
@@ -228,12 +231,15 @@ const colors = {
     primary: '#43B97F',
     primaryDark: '#37996B',
     accent: '#FFE066',
+    accentHover: '#FFD54F',
     background: '#F4F6F8',
     surface: '#FAFBFC',
     surfaceAlt: '#F0F4F8',
+    surfaceHover: '#E8F4F8',
     error: '#FF5A5F',
     textPrimary: '#212121',
     textSecondary: '#757575',
+    text: '#212121',
     border: '#E3EAF2',
     disabled: '#BDBDBD',
     tooltipBg: '#333',
@@ -251,12 +257,15 @@ const colors = {
     primary: '#43B97F',
     primaryDark: '#37996B',
     accent: '#FFE066',
+    accentHover: '#FFD54F',
     background: '#181C24',
     surface: '#232B36',
     surfaceAlt: '#222B36',
+    surfaceHover: '#2A3440',
     error: '#FF5A5F',
     textPrimary: '#E0E0E0',
     textSecondary: '#BDBDBD',
+    text: '#E0E0E0',
     border: '#2C3440',
     disabled: '#BDBDBD',
     tooltipBg: '#23272F',

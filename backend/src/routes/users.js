@@ -67,7 +67,7 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (institutionId !== undefined) updateData.institutionId = institutionId;
-    if (password) updateData.password = await bcrypt.hash(password, 10);
+    if (password) updateData.password = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10);
     
     const user = await prisma.user.update({
       where: { id },

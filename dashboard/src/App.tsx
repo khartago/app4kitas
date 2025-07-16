@@ -12,6 +12,10 @@ import Landing from './pages/Landing';
 import Credits from './pages/Credits';
 import Compliance from './pages/Compliance';
 import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Impressum from './pages/Impressum';
+import Help from './pages/Help';
+import Status from './pages/Status';
 import CookieConsent, { CookieConsentData } from './components/CookieConsent';
 import { UserContextProvider, useUser } from './components/UserContext';
 import { createGlobalStyle } from 'styled-components';
@@ -162,9 +166,13 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/credits" element={<Credits />} />
-            <Route path="/compliance" element={<Compliance />} />
-            <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/credits" element={<Credits />} />
+        <Route path="/compliance" element={<Compliance />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/impressum" element={<Impressum />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/status" element={<Status />} />
             <Route path="/dashboard/*" element={<AppRoutes />} />
           </Routes>
           <CookieConsent onConsentChange={handleCookieConsentChange} />

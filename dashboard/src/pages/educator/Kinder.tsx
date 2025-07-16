@@ -709,6 +709,8 @@ interface Child {
     email: string;
     phone?: string;
   }>;
+  consentGiven?: boolean;
+  consentDate?: string;
 }
 
 interface Group {
@@ -1013,6 +1015,33 @@ const Kinder: React.FC = () => {
                   <DetailRow>
                     <DetailLabel>Geboren:</DetailLabel>
                     <DetailValue>{formatDate(child.birthdate)}</DetailValue>
+                  </DetailRow>
+                  
+                  {/* Consent Status */}
+                  <DetailRow>
+                    <DetailLabel>DSGVO Zustimmung:</DetailLabel>
+                    <DetailValue>
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        fontWeight: '500',
+                        backgroundColor: child.consentGiven ? '#4caf50' : '#f44336',
+                        color: 'white'
+                      }}>
+                        {child.consentGiven ? 'Gegeben' : 'Nicht gegeben'}
+                      </span>
+                      {!child.consentGiven && (
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '10px',
+                          color: '#f44336',
+                          fontStyle: 'italic'
+                        }}>
+                          (Check-ins/Notizen blockiert)
+                        </span>
+                      )}
+                    </DetailValue>
                   </DetailRow>
                   
                   {child.parents && child.parents.length > 0 && (

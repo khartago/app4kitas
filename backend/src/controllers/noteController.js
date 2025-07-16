@@ -24,11 +24,19 @@ const addNote = async (req, res) => {
             }
           }
         }
-      }
+      },
+      include: { parents: true }
     });
 
     if (!child) {
       return res.status(404).json({ error: 'Kind nicht gefunden oder kein Zugriff' });
+    }
+
+    // Check if child has consent (manual or parent app consent)
+    const { childHasConsent } = require('./childController');
+    const hasConsent = await childHasConsent(childId);
+    if (!hasConsent) {
+      return res.status(403).json({ error: 'Notiz nicht erlaubt: Einwilligung für sensitive Datenverarbeitung erforderlich (DSGVO Art. 6).' });
     }
 
     // Check for malware in uploaded file

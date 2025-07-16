@@ -44,7 +44,20 @@ function requireRole(role) {
   };
 }
 
+function requireSuperAdmin(req, res, next) {
+  authMiddleware(req, res, function () {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Token fehlt' });
+    }
+    if (req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Nur Super Admin kann auf diese Funktion zugreifen' });
+    }
+    next();
+  });
+}
+
 module.exports = {
   authMiddleware,
   requireRole,
+  requireSuperAdmin,
 }; 

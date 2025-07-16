@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
-const { getChild, createChild, updateChild, deleteChild, updateChildPhoto, getChildQRCode, regenerateChildQRCode } = require('../controllers/childController');
+const { getChild, createChild, updateChild, deleteChild, updateChildPhoto, getChildQRCode, regenerateChildQRCode, updateChildConsent, setManualConsent } = require('../controllers/childController');
 const { authMiddleware } = require('../middlewares/auth');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const { Parser } = require('json2csv');
@@ -128,5 +128,7 @@ router.delete('/children/:id', authMiddleware, deleteChild);
 router.put('/children/:id/photo', authMiddleware, upload.single('photo'), updateChildPhoto);
 router.get('/children/:id/qrcode', authMiddleware, getChildQRCode);
 router.post('/children/:id/qrcode/regenerate', authMiddleware, regenerateChildQRCode);
+router.put('/children/:id/consent', authMiddleware, updateChildConsent); // Admin/Super Admin/Parent of child
+router.put('/children/:id/manual-consent', authMiddleware, setManualConsent); // Admin only - for paper consent
 
 module.exports = router; 

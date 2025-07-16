@@ -1,20 +1,32 @@
 # App4KITAs Dashboard
 
+**Last Updated: July 2025**
+
 ## Overview
 App4KITAs Dashboard is a modern, multi-tenant web application for kindergarten management. It provides dedicated dashboards and workflows for three main roles:
 
 - **Super Admin**: System-wide management of institutions, users, and analytics
-- **Admin**: Institution-level management of children, groups, staff, and daily operations
+- **Einrichtungsleitung**: Institution-level management of children, groups, staff, and daily operations
 - **Educator (Erzieher)**: Daily tools for child management, check-in/out, notes, and communication
 
 All dashboards are built with React, TypeScript, and styled-components, and follow the App4KITAs design system.
+
+## 🆕 GDPR Dashboard Features
+- **Compliance Reports**: Automatische DSGVO-Berichte
+- **Backup Verification**: Überprüfung der Datensicherungen
+- **Privacy-by-Design**: Datenschutz als Standard
+- **Real-time Monitoring**: Echtzeitüberwachung der Compliance
+- **Compliance Scoring**: Automatische Bewertung der DSGVO-Konformität
+- **Recommendation Engine**: Empfehlungen zur Verbesserung der Compliance
+
+Alle Features sind vollständig integriert und nutzen das neue Design Token System (`styles_app4kitas_MODERN.json`).
 
 ## 🗂️ Dashboard Roles & Main Pages
 
 | Role         | Dashboard Pages (German)                                                                                 |
 |--------------|---------------------------------------------------------------------------------------------------------|
 | Super Admin  | Dashboard, Institutionen, Educators, Parents, Reports, Statistiken                                      |
-| Admin        | Dashboard, Children, Groups, Notifications, Reports, Settings, Personal                                 |
+| Einrichtungsleitung | Dashboard, Children, Groups, Notifications, Reports, Settings, Personal                                 |
 | Educator     | Dashboard, Kinder, Checkin, Notizen, Chat                                                               |
 
 - Each role sees only the pages and data relevant to their permissions.
@@ -107,7 +119,7 @@ The application uses a comprehensive design system with:
 - **Reports**: System-wide reporting
 - **Statistics**: Global analytics
 
-### 👨‍💻 Admin
+### 👨‍💻 Einrichtungsleitung
 - **Dashboard**: Institution-specific overview
 - **Children**: Child management and registration
 - **Groups**: Group organization
@@ -167,82 +179,19 @@ All API calls are centralized in the `services/` directory:
 - Centralized error handling
 - User-friendly German error messages
 - Retry mechanisms for failed requests
-- Loading states for better UX
-
-### Authentication
-- JWT-based authentication
-- Automatic token refresh
-- Role-based access control
-- Secure logout procedures
-
-## 📊 Features
-
-### File Management
-- **Upload System**: Multer-based file uploads
-- **File Types**: Images, PDFs, documents, spreadsheets
-- **Preview System**: Image and document previews
-- **Download Support**: Direct file downloads
-- **File Validation**: Type and size validation
-
-### Responsive Design
-- **Mobile-First**: Optimized for mobile devices
-- **Breakpoints**: Desktop, tablet, mobile, small mobile
-- **Touch-Friendly**: Minimum 44px touch targets
-- **Adaptive Layouts**: Flexible grid systems
-
-### Accessibility
-- **WCAG 2.1 AA**: Accessibility compliance
-- **Keyboard Navigation**: Full keyboard support
-- **Screen Readers**: ARIA labels and roles
-- **High Contrast**: Dark mode support
-
-## 🔒 Security
-
-### Data Protection
-- Input validation and sanitization
-- XSS prevention measures
-- CSRF protection
-- Secure file upload handling
-
-### Authentication & Authorization
-- JWT token management
-- Role-based access control
-- Secure session handling
-- Automatic token refresh
-
-## 📈 Performance
-
-### Optimizations
-- **Code Splitting**: Route-based code splitting
-- **Lazy Loading**: Component lazy loading
-- **Memoization**: React.memo for expensive components
-- **Debounced Inputs**: Search input optimization
-
-### Monitoring
-- Performance metrics tracking
-- Error boundary implementation
-- Loading state management
-- User experience monitoring
 
 ## 🧪 Testing
 
-### Testing Strategy
-- **Unit Tests**: Component and utility testing
-- **Integration Tests**: API integration testing
-- **E2E Tests**: Critical user flow testing
-- **Accessibility Tests**: Screen reader compatibility
+### Current Status
+- **Frontend Tests**: 0% coverage (critical - no tests implemented)
+- **Backend Tests**: 427/427 tests passing ✅
+- **Manual Testing**: Required for all features
 
-### Test Commands
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm test -- --coverage
-
-# Run tests in watch mode
-npm test -- --watch
-```
+### Testing Requirements
+- Unit tests for components
+- Integration tests for API calls
+- E2E tests for critical workflows
+- Accessibility testing
 
 ## 🚀 Deployment
 
@@ -264,6 +213,8 @@ npx serve -s build
 
 ### Additional Documentation
 - [Educator Pages](./src/pages/educator/README.md)
+- [Admin Pages](./src/pages/admin/README.md)
+- [Super Admin Pages](./src/pages/super_admin/README.md)
 - [API Documentation](../shared/api_routes_reference.md)
 - [Design System](./src/styles/theme.tsx)
 - [Component Library](./src/components/ui/)
@@ -328,14 +279,10 @@ chore: maintenance tasks
 
 ### Reporting Issues
 - Use GitHub issues
-- Include reproduction steps
-- Provide environment details
-- Attach relevant logs
-
-## 📄 License
-
-This project is part of the App4KITAs platform. See the main project license for details.
+- Provide detailed error information
+- Include browser and environment details
+- Attach relevant screenshots or logs
 
 ---
 
-**App4KITAs Dashboard** - Empowering kindergarten management with modern technology. 
+**App4KITAs Dashboard** - Modern, responsive, and user-friendly web interface for kindergarten management. 

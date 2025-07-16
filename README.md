@@ -1,14 +1,32 @@
 # 🏫 App4KITAs - DSGVO-konforme Kita-Management-Plattform
 
+**Last Updated: July 2025**
+
 ## 📋 Projektübersicht
 
 **App4KITAs** ist eine moderne, selbstgehostete Plattform zur Verwaltung von Kindertagesstätten (KITAs) und Horten. Die Lösung bietet eine vollständige digitale Infrastruktur für Anwesenheitskontrolle, Kommunikation, Berichtswesen und Verwaltung - alles DSGVO-konform und in Europa gehostet.
 
 ### 🎯 Zielgruppe
 - **Super Admins**: Plattform-Administratoren mit Zugriff auf alle Institutionen
-- **Admins**: Einrichtungsleiter mit Verwaltungsrechten für ihre Kita
+- **Einrichtungsleitung**: Leiter von Kindertagesstätten mit Verwaltungsrechten für ihre Kita
 - **Educators**: Erzieher mit täglichen Arbeitswerkzeugen
 - **Parents**: Eltern mit Zugriff auf Informationen ihrer Kinder (geplant)
+
+## 🆕 Recent Major Changes
+- Fully automated GDPR compliance: compliance reports, backup verification, anomaly detection, privacy-by-design, real-time monitoring, compliance scoring, and recommendation engine
+- Modern design token system for all UI and PDF generation
+- Deprecated/legacy files removed for clarity
+
+## 🚀 Neue GDPR Dashboard Features
+- **Compliance Reports**: Automatische Berichte zur DSGVO-Konformität
+- **Backup Verification**: Automatische Überprüfung der Datensicherungen
+- **Anomaly Detection**: Erkennung von Compliance-Anomalien
+- **Privacy-by-Design**: Datenschutz als Standard in allen Prozessen
+- **Real-time Monitoring**: Echtzeitüberwachung der Compliance
+- **Compliance Scoring**: Automatische Bewertung der DSGVO-Konformität
+- **Recommendation Engine**: Automatische Empfehlungen zur Verbesserung der Compliance
+
+Alle Features sind vollständig integriert und nutzen das neue Design Token System (`styles_app4kitas_MODERN.json`).
 
 ## 🚀 Aktueller Status
 
@@ -45,7 +63,7 @@
 │   [PLANNED]     │    │   [PARTIAL]     │    │   [COMPLETE]    │
 │                 │    │                 │    │                 │
 │ • Eltern        │    │ • Super Admin   │    │ • REST API      │
-│ • Erzieher      │    │ • Admin         │    │ • PostgreSQL    │
+│ • Erzieher      │    │ • Einrichtungsleitung │ • PostgreSQL    │
 │ • Offline-Modus │    │ • Educator      │    │ • JWT Auth      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
@@ -68,13 +86,13 @@
 ### 👑 Super Admin
 **Zugriff**: Plattform-weit
 - **Institutionen verwalten**: Neue KITAs anlegen, bearbeiten, löschen
-- **Benutzerverwaltung**: Admins, Erzieher und Eltern verwalten
+- **Benutzerverwaltung**: Einrichtungsleiter, Erzieher und Eltern verwalten
 - **System-Statistiken**: Plattform-weite Analysen und Berichte
 - **Export-Funktionen**: CSV/PDF-Export für alle Daten
 - **Aktivitätsprotokoll**: Überwachung aller Systemaktivitäten
 - **GDPR-Verwaltung**: Soft Delete, Audit Logs, Data Retention
 
-### 👨‍💼 Admin (Einrichtungsleiter)
+### 👨‍💼 Einrichtungsleitung
 **Zugriff**: Institution-spezifisch
 - **Kinderverwaltung**: Anlegen, bearbeiten, Fotos, Export
 - **Gruppenverwaltung**: Gruppen erstellen, Erzieher zuweisen
@@ -93,6 +111,14 @@
 - **Notizen**: Kind-spezifische Notizen mit Dateianhängen
 - **Chat**: Gruppen- und Direktnachrichten
 - **Persönliche Aufgaben**: Eigene To-Do-Liste
+
+### 👨‍👩‍👧‍👦 Parents (Eltern)
+**Zugriff**: Kind-spezifisch (geplant)
+- **Selbstregistrierung**: Eltern registrieren sich selbstständig
+- **Kind-Zuordnung**: Einrichtungsleitung weist Eltern Kindern zu
+- **Check-in-Status**: Einsehen der Anwesenheit ihrer Kinder
+- **Kommunikation**: Nachrichten mit Erziehern
+- **Berichte**: Zugriff auf Berichte ihrer Kinder
 
 ## 🚀 Schnellstart
 
@@ -151,14 +177,6 @@ Das Dashboard läuft dann auf `http://localhost:3000`
 - **Rate Limiting** und CORS-Schutz
 - **XSS-Schutz** und Input-Sanitization
 - **DSGVO-konforme Datenverarbeitung**
-
-### 🔐 GDPR Compliance
-- **Soft Delete**: Alle Entitäten werden soft-deleted statt hard-deleted
-- **Audit Logs**: Vollständige Protokollierung aller Löschvorgänge
-- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
-- **Cascade Deletes**: Intelligente Verkettung von Löschvorgängen
-- **Permission System**: Rollenbasierte Berechtigungen für Löschvorgänge
-- **Data Export**: Export-Funktionalität für betroffene Personen
 
 ### 📱 Mobile App (Flutter) [PLANNED]
 - **Einheitlicher Code** für Eltern und Erzieher
@@ -291,7 +309,7 @@ npm test                   # Keine Tests vorhanden
 - [ ] Export-Funktionen testen
 - [ ] GDPR-Compliance-Features testen
 
-#### ✅ Admin (Einrichtungsleiter)
+#### ✅ Einrichtungsleitung
 - [ ] Login mit Admin Credentials
 - [ ] Kinderverwaltung (CRUD)
 - [ ] Gruppenverwaltung

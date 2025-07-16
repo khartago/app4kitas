@@ -249,4 +249,145 @@ export const fetchChildQRCode = async (childId: string): Promise<Blob> => {
   }
 };
 
+// Aktualisiert die Einwilligung für sensitive Datenverarbeitung
+export const updateChildConsent = async (childId: string, consentGiven: boolean) => {
+  try {
+    const res = await axios.put(`${API_URL}/children/${childId}/consent`, 
+      { consentGiven }, 
+      { withCredentials: true }
+    );
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Aktualisieren der Einwilligung');
+  }
+};
+
+// --- CONSENT MANAGEMENT ---
+
+// Types for consent management
+export interface ConsentStatus {
+  childId: string;
+  childName: string;
+  manualConsentGiven: boolean;
+  manualConsentDate?: string;
+  manualConsentSetBy?: string;
+  parentConsentGiven: boolean;
+  parentConsentDate?: string;
+  overallConsentGiven: boolean;
+  consentRequired: boolean;
+}
+
+export interface ManualConsentData {
+  manualConsentGiven: boolean;
+  paperConsentDate: string; // ISO date string
+}
+
+// Get consent status for a specific child
+export const getChildConsentStatus = async (childId: string): Promise<ConsentStatus> => {
+  try {
+    const res = await axios.get(`${API_URL}/children/${childId}/consent-status`, { 
+      withCredentials: true 
+    });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Laden des Einwilligungsstatus');
+  }
+};
+
+// Set manual consent (for admins only)
+export const setManualConsent = async (childId: string, consentData: ManualConsentData): Promise<any> => {
+  try {
+    const res = await axios.put(`${API_URL}/children/${childId}/manual-consent`, 
+      consentData, 
+      { withCredentials: true }
+    );
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Setzen der manuellen Einwilligung');
+  }
+};
+
+// Get all children with consent status
+export const getChildrenWithConsent = async (): Promise<ConsentStatus[]> => {
+  try {
+    const res = await axios.get(`${API_URL}/children/consent-overview`, { 
+      withCredentials: true 
+    });
+    return res.data.children;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Laden der Einwilligungsübersicht');
+  }
+};
+
+// Get consent statistics for dashboard
+export const getConsentStatistics = async (): Promise<{
+  totalChildren: number;
+  withConsent: number;
+  withoutConsent: number;
+  manualConsentCount: number;
+  parentConsentCount: number;
+}> => {
+  try {
+    const res = await axios.get(`${API_URL}/children/consent-statistics`, { 
+      withCredentials: true 
+    });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Laden der Einwilligungsstatistiken');
+  }
+};
+
+// Export consent data
+export const exportConsentData = async (format: 'csv' | 'pdf' = 'csv'): Promise<void> => {
+  try {
+    const res = await axios.get(`${API_URL}/children/consent-export`, {
+      params: { format },
+      responseType: 'blob',
+      withCredentials: true
+    });
+    
+    const blob = new Blob([res.data]);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `einwilligungen-${new Date().toISOString().split('T')[0]}.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Exportieren der Einwilligungsdaten');
+  }
+};
+
+// Bulk update consent status for multiple children
+export const bulkUpdateConsent = async (childIds: string[], manualConsentGiven: boolean, paperConsentDate?: string): Promise<any> => {
+  try {
+    const res = await axios.post(`${API_URL}/children/bulk-consent`, {
+      childIds,
+      manualConsentGiven,
+      paperConsentDate
+    }, { withCredentials: true });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Massenaktualisieren der Einwilligungen');
+  }
+};
+
+// Get consent audit log
+export const getConsentAuditLog = async (childId?: string, limit: number = 50): Promise<any[]> => {
+  try {
+    const params: any = { limit };
+    if (childId) params.childId = childId;
+    
+    const res = await axios.get(`${API_URL}/children/consent-audit`, {
+      params,
+      withCredentials: true
+    });
+    return res.data.auditLog;
+  } catch (error) {
+    return handleApiError(error, 'Fehler beim Laden des Einwilligungs-Audit-Logs');
+  }
+};
+
 // Weitere Admin-APIs können hier ergänzt werden 

@@ -8,7 +8,7 @@ import { PersonalNotebook } from '../../components/ui/PersonalNotebook';
 import Header from '../../components/Header';
 import MascotBear from '../../components/ui/MascotBear';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaBuilding, FaChartLine, FaChevronRight, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaUsers, FaBuilding, FaChartLine, FaChevronRight, FaArrowUp, FaArrowDown, FaShieldAlt } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 
 const PageWrapper = styled.div`
@@ -229,6 +229,9 @@ const Dashboard: React.FC = () => {
           </ActionButton>
           <ActionButton onClick={() => navigate('/superadmin/berichte')}>
             <FaChartLine /> Berichte & Exporte <FaChevronRight />
+          </ActionButton>
+          <ActionButton onClick={() => navigate('/superadmin/gdpr')}>
+            <FaShieldAlt /> DSGVO-Compliance <FaChevronRight />
           </ActionButton>
         </ActionsGrid>
         <ActivityLog title="Letzte Aktivitäten" limit={10} />

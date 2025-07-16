@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authMiddleware } = require('../middlewares/auth');
+const { authMiddleware, requireSuperAdmin } = require('../middlewares/auth');
 const {
   getPendingDeletions,
   getGDPRAuditLogs,
@@ -9,7 +9,8 @@ const {
   softDeleteUserEndpoint,
   softDeleteChildEndpoint,
   softDeleteGroupEndpoint,
-  softDeleteInstitutionEndpoint
+  softDeleteInstitutionEndpoint,
+  exportUserData
 } = require('../controllers/gdprDeletionController');
 
 /**
@@ -40,5 +41,8 @@ router.post('/soft-delete/group/:groupId', authMiddleware, softDeleteGroupEndpoi
 
 // POST /api/gdpr/soft-delete/institution/:institutionId - Soft delete institution
 router.post('/soft-delete/institution/:institutionId', authMiddleware, softDeleteInstitutionEndpoint);
+
+// GET /api/gdpr/export/:userId - Export user data for GDPR compliance
+router.get('/export/:userId', requireSuperAdmin, exportUserData);
 
 module.exports = router; 

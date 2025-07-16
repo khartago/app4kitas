@@ -48,7 +48,7 @@ const getGDPRAuditLogs = async (req, res) => {
       });
     }
 
-    const { limit = 100 } = req.query;
+    const { limit = parseInt(process.env.GDPR_DELETION_LIMIT) || 100 } = req.query;
     const logs = await gdprService.getGDPRAuditLogs(parseInt(limit));
     
     res.json({
@@ -69,6 +69,7 @@ const getGDPRAuditLogs = async (req, res) => {
 const triggerCleanup = async (req, res) => {
   try {
     const { role } = req.user;
+    const { retentionMonths = 12 } = req.body; // Accept optional retentionMonths parameter
     
     // Only SUPER_ADMIN can trigger cleanup
     if (role !== 'SUPER_ADMIN') {
@@ -78,12 +79,16 @@ const triggerCleanup = async (req, res) => {
       });
     }
 
-    const result = await gdprService.cleanupExpiredRecords();
+    const result = await gdprService.purgeSoftDeletedEntities(retentionMonths);
     
     res.json({
       success: true,
-      message: `Bereinigung abgeschlossen. ${result.deletedCount} Datensätze permanent gelöscht.`,
-      data: result
+      message: `Bereinigung abgeschlossen. ${result.totalPurged} Datensätze permanent gelöscht (Retention: ${retentionMonths} Monate).`,
+      data: {
+        purged: result.purged,
+        totalPurged: result.totalPurged,
+        retentionMonths: result.retentionMonths
+      }
     });
   } catch (error) {
     console.error('Error triggering cleanup:', error);
@@ -228,7 +233,8 @@ const softDeleteChildEndpoint = async (req, res) => {
     }
 
     // Check institution permissions for non-super admin
-    if (role !== 'SUPER_ADMIN' && child.group?.institutionId !== req.user.institutionId) {
+    const childInstitutionId = child.group?.institutionId || child.institutionId;
+    if (role !== 'SUPER_ADMIN' && childInstitutionId !== req.user.institutionId) {
       return res.status(403).json({
         success: false,
         message: 'Keine Berechtigung (Institution)'
@@ -374,6 +380,304 @@ const softDeleteInstitutionEndpoint = async (req, res) => {
   }
 };
 
+// GET /api/gdpr/export/:userId - Export user data for GDPR compliance
+const exportUserData = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const requestingUserId = req.user.id;
+
+    console.log('[GDPR Export] Requested userId:', userId);
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId, deletedAt: null },
+      include: {
+        children: {
+          include: {
+            checkIns: {
+              include: {
+                actor: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
+              },
+              where: {
+                deletedAt: null
+              }
+            },
+            notes: {
+              include: {
+                educator: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
+              },
+              where: {
+                deletedAt: null
+              }
+            },
+            group: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          },
+          where: {
+            deletedAt: null
+          }
+        },
+        messages: {
+          where: {
+            deletedAt: null
+          },
+          include: {
+            child: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            group: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            channel: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            reactions: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            },
+            replies: {
+              where: {
+                deletedAt: null
+              },
+              include: {
+                sender: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        notifications: {
+          where: {
+            deletedAt: null
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        },
+        activityLogs: {
+          where: {
+            deletedAt: null
+          }
+        },
+        personalTasks: {
+          where: {
+            deletedAt: null
+          }
+        },
+        notes: {
+          where: {
+            deletedAt: null
+          },
+          include: {
+            child: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
+    console.log('[GDPR Export] User found:', !!user, user && user.email);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Benutzer nicht gefunden'
+      });
+    }
+
+    // Create audit log entry
+    await prisma.activityLog.create({
+      data: {
+        userId: requestingUserId,
+        action: 'EXPORT_PERSONAL_DATA',
+        entity: 'User',
+        entityId: userId,
+        details: `Datenexport für Benutzer ${user.email} durchgeführt`,
+        institutionId: user.institutionId
+      }
+    });
+
+    // Structure the response data
+    const exportData = {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      },
+      children: user.children.map(child => ({
+        id: child.id,
+        name: child.name,
+        birthdate: child.birthdate,
+        photoUrl: child.photoUrl,
+        createdAt: child.createdAt,
+        updatedAt: child.updatedAt,
+        group: child.group,
+        checkIns: child.checkIns.map(checkIn => ({
+          id: checkIn.id,
+          type: checkIn.type,
+          timestamp: checkIn.timestamp,
+          method: checkIn.method,
+          actor: checkIn.actor
+        })),
+        notes: child.notes.map(note => ({
+          id: note.id,
+          content: note.content,
+          attachmentUrl: note.attachmentUrl,
+          attachmentName: note.attachmentName,
+          attachmentType: note.attachmentType,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+          educator: note.educator
+        }))
+      })),
+      messages: user.messages.map(message => ({
+        id: message.id,
+        content: message.content,
+        fileUrl: message.fileUrl,
+        fileType: message.fileType,
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        editedAt: message.editedAt,
+        isEdited: message.isEdited,
+        child: message.child,
+        group: message.group,
+        channel: message.channel,
+        reactions: message.reactions.map(reaction => ({
+          emoji: reaction.emoji,
+          user: reaction.user
+        })),
+        replies: message.replies.map(reply => ({
+          id: reply.id,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          sender: reply.sender
+        }))
+      })),
+      notifications: user.notifications.map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        body: notification.body,
+        priority: notification.priority,
+        read: notification.read,
+        createdAt: notification.createdAt,
+        sender: notification.sender
+      })),
+      activityLogs: user.activityLogs.map(log => ({
+        id: log.id,
+        action: log.action,
+        entity: log.entity,
+        entityId: log.entityId,
+        details: log.details,
+        createdAt: log.createdAt
+      })),
+      personalTasks: user.personalTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        completed: task.completed,
+        dueDate: task.dueDate,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      })),
+      notes: user.notes.map(note => ({
+        id: note.id,
+        content: note.content,
+        attachmentUrl: note.attachmentUrl,
+        attachmentName: note.attachmentName,
+        attachmentType: note.attachmentType,
+        createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
+        child: note.child
+      }))
+    };
+
+    // If ?inline=true, return as JSON (for tests)
+    if (req.query.inline === 'true') {
+      return res.json({
+        success: true,
+        message: 'Datenexport erfolgreich abgeschlossen',
+        data: exportData,
+        exportDate: new Date().toISOString()
+      });
+    }
+
+    // Otherwise, send as downloadable file
+    const filename = `gdpr_export_${userId}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.status(200).send(JSON.stringify({
+      success: true,
+      message: 'Datenexport erfolgreich abgeschlossen',
+      data: exportData,
+      exportDate: new Date().toISOString()
+    }, null, 2));
+
+  } catch (error) {
+    // If Prisma throws an error for invalid UUID, return 404
+    if (error.code === 'P2023' || error.message?.includes('Invalid')) {
+      return res.status(404).json({
+        success: false,
+        message: 'Benutzer nicht gefunden'
+      });
+    }
+    console.error('Error exporting user data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Fehler beim Exportieren der Benutzerdaten',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPendingDeletions,
   getGDPRAuditLogs,
@@ -382,5 +686,6 @@ module.exports = {
   softDeleteUserEndpoint,
   softDeleteChildEndpoint,
   softDeleteGroupEndpoint,
-  softDeleteInstitutionEndpoint
+  softDeleteInstitutionEndpoint,
+  exportUserData
 }; 

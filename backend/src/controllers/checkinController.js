@@ -23,9 +23,19 @@ async function checkin(req, res) {
       orderBy: { timestamp: 'asc' }
     });
 
-    // Fetch child to get institutionId
-    const child = await prisma.child.findUnique({ where: { id: childId } });
+    // Fetch child to get institutionId and check consent
+    const child = await prisma.child.findUnique({ 
+      where: { id: childId },
+      include: { parents: true }
+    });
     if (!child) return res.status(404).json({ success: false, message: 'Kind nicht gefunden' });
+    
+    // Check if child has consent (manual or parent app consent)
+    const { childHasConsent } = require('./childController');
+    const hasConsent = await childHasConsent(childId);
+    if (!hasConsent) {
+      return res.status(403).json({ success: false, message: 'Check-in nicht erlaubt: Einwilligung für sensitive Datenverarbeitung erforderlich (DSGVO Art. 6).' });
+    }
 
     if (todayLogs.length === 0) {
       // First scan: check-in

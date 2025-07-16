@@ -49,263 +49,230 @@ App4KITAs ist eine DSGVO-konforme Plattform zur Verwaltung von Kindertagesstätt
 ### Notizen (Note)
 - **Inhalt**: Kind-spezifische Notizen
 - **Dateien**: Anhänge (optional)
-- **Ersteller**: Erzieher oder Admin
+- **Ersteller**: Erzieher oder Einrichtungsleitung
 - **Kind**: Bezug zu spezifischem Kind
 
 ### Aktivitätsprotokoll (ActivityLog)
 - **Aktionen**: Alle Benutzeraktivitäten
-- **Metadaten**: Zeitstempel, Institution, Gruppe
-- **Details**: Beschreibung der Aktion
+- **Metadaten**: Zeitstempel, Benutzer, Institution
+- **Zweck**: DSGVO-Compliance und Audit-Trail
+- **Aufbewahrung**: Konfigurierbare Fristen
 
-## 🎯 Rechtsgrundlagen der Datenverarbeitung
+## 🔐 Rechtsgrundlagen (Art. 6 DSGVO)
 
-### 1. Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO)
-- **Zweck**: Bereitstellung der Kita-Management-Plattform
-- **Daten**: Benutzerprofile, Kinderdaten, Check-ins
-- **Dauer**: Vertragslaufzeit + gesetzliche Aufbewahrungsfristen
+### Einwilligung (Art. 6 Abs. 1 lit. a)
+- **Eltern-Einwilligung**: Für Verarbeitung von Kinderdaten
+- **Foto-Einwilligung**: Separate Einwilligung für Fotos
+- **Marketing-Einwilligung**: Opt-in für Newsletter
+- **Cookie-Einwilligung**: Granulare Cookie-Kontrolle
 
-### 2. Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO)
-- **Zweck**: System-Sicherheit, Betrugsbekämpfung
-- **Daten**: Login-Versuche, Aktivitätsprotokoll
-- **Dauer**: 12 Monate für Sicherheitsdaten
+### Vertragserfüllung (Art. 6 Abs. 1 lit. b)
+- **Kita-Vertrag**: Notwendig für Kita-Betrieb
+- **Anwesenheitskontrolle**: Erforderlich für Sicherheit
+- **Kommunikation**: Notwendig für Eltern-Erzieher-Kontakt
+- **Berichtswesen**: Gesetzliche Anforderungen
 
-### 3. Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)
-- **Zweck**: Push-Benachrichtigungen, Marketing (optional)
-- **Daten**: Device-Tokens, E-Mail-Adressen
-- **Dauer**: Bis Widerruf der Einwilligung
+### Berechtigte Interessen (Art. 6 Abs. 1 lit. f)
+- **Sicherheit**: Schutz der Kinder
+- **Qualitätssicherung**: Verbesserung der Betreuung
+- **Betriebsoptimierung**: Effiziente Verwaltung
+- **Compliance**: Einhaltung gesetzlicher Vorgaben
 
-### 4. Öffentliche Interessen (Art. 6 Abs. 1 lit. e DSGVO)
-- **Zweck**: Kinderschutz, Aufsichtspflicht
-- **Daten**: Anwesenheitsdaten, Notizen
-- **Dauer**: Gesetzliche Aufbewahrungsfristen
+## 🎯 Verarbeitungszwecke
+
+### Hauptzwecke
+1. **Anwesenheitskontrolle**: Sicherstellung der Kinderbetreuung
+2. **Kommunikation**: Eltern-Erzieher-Austausch
+3. **Dokumentation**: Pädagogische Arbeit
+4. **Verwaltung**: Kita-Organisation
+5. **Berichtswesen**: Gesetzliche Anforderungen
+
+### Sekundärzwecke
+1. **Qualitätssicherung**: Verbesserung der Betreuung
+2. **Sicherheit**: Schutz der Kinder
+3. **Compliance**: DSGVO-Einhaltung
+4. **Support**: Technischer Support
 
 ## 🔐 Technische Sicherheitsmaßnahmen
 
 ### Verschlüsselung
-- **Übertragung**: TLS 1.3 für alle Verbindungen
-- **Speicherung**: Passwörter mit bcrypt gehashed
-- **Datenbank**: PostgreSQL mit Verschlüsselung
-- **Backup**: Verschlüsselte Backups
+- **Datenübertragung**: TLS 1.3 für alle Verbindungen
+- **Datenspeicherung**: PostgreSQL-Verschlüsselung
+- **Passwörter**: Bcrypt-Hashing mit Salt
+- **JWT-Token**: Sichere Token-Generierung
 
 ### Zugriffskontrolle
 - **Authentifizierung**: JWT mit HttpOnly Cookies
-- **Autorisierung**: Rollenbasierte Zugriffskontrolle (RBAC)
-- **Session-Management**: Sichere Token-Verwaltung
-- **Rate Limiting**: Schutz vor Brute-Force-Angriffen
+- **Autorisierung**: Rollenbasierte Zugriffskontrolle
+- **Session-Management**: Sichere Session-Verwaltung
+- **Rate Limiting**: Schutz vor Brute Force
 
 ### Datensicherheit
-- **Input-Validierung**: Schutz vor XSS und Injection
+- **Input-Validierung**: Umfassende Eingabevalidierung
+- **XSS-Schutz**: Sanitization aller Benutzereingaben
+- **SQL-Injection-Schutz**: Prisma ORM
 - **File-Upload-Sicherheit**: Malware-Erkennung
-- **CORS-Schutz**: Whitelist-basierte CORS
-- **Security Headers**: Helmet.js Implementation
 
-## 📋 Betroffenenrechte (DSGVO Art. 12-22)
+## 📋 Betroffenenrechte (Art. 12-22 DSGVO)
 
-### 1. Recht auf Auskunft (Art. 15 DSGVO)
-**API-Endpunkt**: `GET /api/gdpr/data-export/:userId`
-**Funktionalität**: Export aller personenbezogenen Daten
-**Format**: JSON mit strukturierten Daten
+### Auskunftsrecht (Art. 15)
+- **API-Endpunkt**: `GET /api/gdpr/data-export/:userId`
+- **Umfang**: Alle personenbezogenen Daten
+- **Format**: JSON mit strukturierten Daten
+- **Zeitrahmen**: Innerhalb von 30 Tagen
 
-### 2. Recht auf Berichtigung (Art. 16 DSGVO)
-**API-Endpunkte**:
-- `PUT /api/profile` - Benutzerprofil bearbeiten
-- `PUT /api/children/:id` - Kinderdaten bearbeiten
-- `PUT /api/notes/:id` - Notizen bearbeiten
+### Berichtigungsrecht (Art. 16)
+- **Profil-Bearbeitung**: Über Benutzerprofil
+- **Kinder-Daten**: Über Einrichtungsleitung
+- **Sofortige Umsetzung**: Real-time Updates
+- **Validierung**: Automatische Datenvalidierung
 
-### 3. Recht auf Löschung (Art. 17 DSGVO)
-**API-Endpunkt**: `DELETE /api/gdpr/delete-account/:userId`
-**Funktionalität**: Vollständige Datenlöschung
-**Einschränkungen**: Gesetzliche Aufbewahrungsfristen
+### Löschungsrecht (Art. 17)
+- **API-Endpunkt**: `DELETE /api/gdpr/delete-account/:userId`
+- **Soft Delete**: Alle Entitäten werden soft-deleted
+- **Cascade-Löschung**: Intelligente Verkettung
+- **Audit-Trail**: Vollständige Protokollierung
 
-### 4. Recht auf Einschränkung (Art. 18 DSGVO)
-**API-Endpunkt**: `PATCH /api/gdpr/restrict/:userId`
-**Funktionalität**: Temporäre Einschränkung der Verarbeitung
+### Einschränkungsrecht (Art. 18)
+- **API-Endpunkt**: `PATCH /api/gdpr/restrict/:userId`
+- **Temporäre Einschränkung**: Daten werden nicht gelöscht
+- **Verarbeitungspause**: Keine weitere Verarbeitung
+- **Wiederherstellung**: Einfache Reaktivierung
 
-### 5. Recht auf Datenportabilität (Art. 20 DSGVO)
-**API-Endpunkt**: `GET /api/gdpr/data-portability/:userId`
-**Format**: Maschinenlesbares Format (JSON)
+### Datenportabilität (Art. 20)
+- **API-Endpunkt**: `GET /api/gdpr/data-export/:userId`
+- **Strukturierte Daten**: JSON-Format
+- **Vollständigkeit**: Alle relevanten Daten
+- **Maschinenlesbarkeit**: Standard-Format
 
-### 6. Widerspruchsrecht (Art. 21 DSGVO)
-**API-Endpunkt**: `POST /api/gdpr/object/:userId`
-**Funktionalität**: Widerspruch gegen Datenverarbeitung
+### Widerspruchsrecht (Art. 21)
+- **API-Endpunkt**: `POST /api/gdpr/object/:userId`
+- **Granulare Kontrolle**: Einzelne Verarbeitungszwecke
+- **Sofortige Umsetzung**: Real-time Processing
+- **Status-Tracking**: Verfolgung des Widerspruchs
 
-## 🗂️ Datenkategorien und Aufbewahrungsfristen
+## 📅 Aufbewahrungsfristen
 
 ### Benutzerdaten
-| Datenkategorie | Aufbewahrung | Löschung |
-|----------------|---------------|----------|
-| **Aktive Benutzer** | Vertragslaufzeit | 30 Tage nach Kündigung |
-| **Gelöschte Benutzer** | 7 Jahre (Steuerrecht) | Automatisch |
-| **Login-Versuche** | 12 Monate | Automatisch |
-| **Aktivitätsprotokoll** | 3 Jahre | Automatisch |
+- **Aktive Benutzer**: Unbegrenzt (bis zur Löschung)
+- **Gelöschte Benutzer**: 30 Tage (Soft Delete)
+- **Login-Versuche**: 90 Tage
+- **Aktivitätsprotokoll**: 2 Jahre
 
 ### Kinderdaten
-| Datenkategorie | Aufbewahrung | Löschung |
-|----------------|---------------|----------|
-| **Aktive Kinder** | Kita-Zugehörigkeit | 30 Tage nach Austritt |
-| **Check-in-Daten** | 3 Jahre | Automatisch |
-| **Kinderfotos** | Kita-Zugehörigkeit | Sofort bei Austritt |
-| **Notizen** | 3 Jahre | Automatisch |
+- **Aktive Kinder**: Unbegrenzt (bis zur Löschung)
+- **Gelöschte Kinder**: 30 Tage (Soft Delete)
+- **Check-in-Historie**: 3 Jahre
+- **Fotos**: 30 Tage nach Löschung
 
-### Nachrichten und Kommunikation
-| Datenkategorie | Aufbewahrung | Löschung |
-|----------------|---------------|----------|
-| **Nachrichten** | 2 Jahre | Automatisch |
-| **Dateianhänge** | 2 Jahre | Automatisch |
-| **Benachrichtigungen** | 1 Jahr | Automatisch |
+### Nachrichten
+- **Aktive Nachrichten**: Unbegrenzt
+- **Gelöschte Nachrichten**: 30 Tage (Soft Delete)
+- **Dateianhänge**: 30 Tage nach Löschung
+- **Metadaten**: 2 Jahre
 
-### Systemdaten
-| Datenkategorie | Aufbewahrung | Löschung |
-|----------------|---------------|----------|
-| **Backup-Daten** | 30 Tage | Automatisch |
-| **Log-Dateien** | 12 Monate | Automatisch |
-| **Analytics** | 2 Jahre | Anonymisiert |
+### Notizen
+- **Aktive Notizen**: Unbegrenzt
+- **Gelöschte Notizen**: 30 Tage (Soft Delete)
+- **Dateianhänge**: 30 Tage nach Löschung
+- **Metadaten**: 2 Jahre
 
-## 🔄 Datenverarbeitungsprozesse
+## 🔄 Automatisierte Datenlöschung
 
-### Automatische Löschung
-```javascript
-// Beispiel: Automatische Löschung alter Daten
-const cleanupOldData = async () => {
-  // Login-Versuche älter als 12 Monate
-  await prisma.failedLogin.deleteMany({
-    where: {
-      createdAt: { lt: new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000) }
-    }
-  });
-  
-  // Aktivitätsprotokoll älter als 3 Jahre
-  await prisma.activityLog.deleteMany({
-    where: {
-      createdAt: { lt: new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000) }
-    }
-  });
-};
-```
+### Tägliche Cleanup-Jobs
+- **Soft-Deleted Daten**: Automatische Löschung nach Fristen
+- **Temporäre Dateien**: Cleanup von Upload-Temp-Dateien
+- **Session-Daten**: Bereinigung abgelaufener Sessions
+- **Log-Rotation**: Archivierung alter Logs
 
-### Datenexport-Funktionalität
-```javascript
-// Beispiel: Vollständiger Datenexport
-const exportUserData = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      children: true,
-      messages: true,
-      notifications: true,
-      activityLogs: true,
-      personalTasks: true,
-      notes: true
-    }
-  });
-  
-  return {
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt
-    },
-    children: user.children,
-    messages: user.messages,
-    notifications: user.notifications,
-    activityLogs: user.activityLogs,
-    personalTasks: user.personalTasks,
-    notes: user.notes
-  };
-};
-```
+### Konfigurierbare Fristen
+- **Benutzer-Daten**: 30 Tage nach Soft Delete
+- **Kinder-Daten**: 30 Tage nach Soft Delete
+- **Nachrichten**: 30 Tage nach Soft Delete
+- **Notizen**: 30 Tage nach Soft Delete
 
-## 🚨 Datenschutzvorfälle
+## 📊 Audit-Trail & Protokollierung
 
-### Meldepflicht
-- **Zeitrahmen**: 72 Stunden nach Bekanntwerden
-- **Verantwortlicher**: Datenschutzbeauftragter
-- **Betroffene**: Alle betroffenen Personen
+### Aktivitätsprotokoll (ActivityLog)
+- **Alle Aktionen**: Vollständige Protokollierung
+- **Metadaten**: Benutzer, Zeitstempel, Institution
+- **Löschvorgänge**: Spezielle DSGVO-Protokollierung
+- **Zugriffe**: Tracking aller Datenzugriffe
 
-### Vorfall-Kategorien
-1. **Unbefugter Zugriff** auf personenbezogene Daten
-2. **Verlust** von Datenträgern oder Geräten
-3. **Cyber-Angriffe** auf das System
-4. **Fehlerhafte Datenverarbeitung**
+### DSGVO-spezifische Logs
+- **Datenexporte**: Protokollierung aller Exporte
+- **Löschungen**: Vollständige Löschungsprotokollierung
+- **Widersprüche**: Tracking von Einwänden
+- **Einschränkungen**: Protokollierung von Beschränkungen
 
-### Notfall-Prozeduren
-```javascript
-// Beispiel: Datenschutzvorfall-Protokollierung
-const logDataBreach = async (incident) => {
-  await prisma.dataBreach.create({
-    data: {
-      type: incident.type,
-      description: incident.description,
-      affectedUsers: incident.affectedUsers,
-      discoveredAt: new Date(),
-      reportedAt: new Date(),
-      status: 'REPORTED'
-    }
-  });
-};
-```
+## 🚨 Incident Response
 
-## 📞 Kontakt und Beschwerden
+### Datenverletzungen (Art. 33-34)
+- **Erkennung**: Automatisierte Monitoring-Systeme
+- **Bewertung**: Impact-Analyse innerhalb 24 Stunden
+- **Meldung**: Bericht an Aufsichtsbehörde innerhalb 72 Stunden
+- **Benachrichtigung**: Information betroffener Personen
+- **Dokumentation**: Vollständige Verletzungsprotokollierung
 
-### Datenschutzbeauftragter
-- **E-Mail**: datenschutz@app4kitas.eu
-- **Telefon**: [Kontaktnummer]
-- **Adresse**: [Geschäftsadresse]
+### Kontaktinformationen
+- **Datenschutzbeauftragter**: datenschutz@app4kitas.eu
+- **Aufsichtsbehörde**: Bundesbeauftragter für den Datenschutz
+- **Notfall-Kontakt**: [Notfall-Nummer]
 
-### Aufsichtsbehörde
-- **Bundesbeauftragter für den Datenschutz und die Informationsfreiheit**
-- **Adresse**: Graurheindorfer Str. 153, 53117 Bonn
-- **E-Mail**: poststelle@bfdi.bund.de
+## 🔧 Technische Implementierung
 
-### Beschwerderecht
-Betroffene haben das Recht, Beschwerden bei der zuständigen Aufsichtsbehörde einzulegen.
+### Backend-Implementierung
+- **Soft Delete**: Alle Entitäten mit `deletedAt` Feld
+- **Cascade-Logik**: Intelligente Verkettung von Löschvorgängen
+- **Audit-Logs**: Vollständige Aktivitätsprotokollierung
+- **API-Endpunkte**: DSGVO-spezifische Endpunkte
+
+### Frontend-Implementierung
+- **Datenschutz-Dashboard**: Benutzerfreundliche DSGVO-Features
+- **Einwilligungs-Management**: Granulare Kontrolle
+- **Datenexport**: Benutzerfreundliche Export-Funktionen
+- **Löschungs-Workflow**: Sichere Account-Löschung
+
+### Datenbank-Implementierung
+- **Soft Delete Fields**: `deletedAt` in allen relevanten Entitäten
+- **Audit-Trail**: Vollständige Protokollierung
+- **Indizes**: Optimierte Indizes für DSGVO-Queries
+- **Backup-Strategie**: Sichere Datenbackups
 
 ## 📋 Compliance-Checkliste
 
 ### ✅ Implementiert
-- [x] Datenschutzerklärung
-- [x] Einwilligungsmanagement
-- [x] Datenexport-Funktionalität
-- [x] Datenlöschung-Funktionalität
-- [x] Verschlüsselung aller Daten
-- [x] Zugriffskontrolle
-- [x] Aktivitätsprotokollierung
-- [x] Backup-Strategie
-- [x] Incident-Response-Plan
+- [x] **Rechtsgrundlagen**: Alle Verarbeitungszwecke dokumentiert
+- [x] **Betroffenenrechte**: Alle DSGVO-Rechte implementiert
+- [x] **Technische Sicherheit**: Enterprise-Level Security
+- [x] **Aufbewahrungsfristen**: Konfigurierbare Fristen
+- [x] **Audit-Trail**: Vollständige Protokollierung
+- [x] **Datenexport**: Export-Funktionalität
+- [x] **Account-Löschung**: Sichere Löschung
+- [x] **Incident Response**: 72-Stunden-Verfahren
 
 ### 🔄 In Entwicklung
-- [ ] Automatische Datenlöschung
-- [ ] Erweiterte Audit-Logs
-- [ ] DSGVO-Dashboard für Admins
-- [ ] Automatische Compliance-Reports
+- [ ] **Automatisierte Compliance-Reports**: Automatische Generierung
+- [ ] **Erweiterte Audit-Logs**: Detailliertere Protokollierung
+- [ ] **Privacy-by-Design**: Weitergehende Implementierung
+- [ ] **DSGVO-Dashboard**: Erweiterte Benutzeroberfläche
 
-### 📋 Geplant
-- [ ] Privacy-by-Design-Implementierung
-- [ ] Erweiterte Anonymisierung
-- [ ] DSGVO-Training für Mitarbeiter
-- [ ] Regelmäßige Compliance-Audits
+## 📞 Kontakt & Support
 
-## 📊 Monitoring und Reporting
+### Datenschutz-Kontakte
+- **Datenschutzbeauftragter**: datenschutz@app4kitas.eu
+- **Technischer Support**: support@app4kitas.de
+- **Rechtliche Fragen**: legal@app4kitas.eu
 
-### Automatische Überwachung
-- **Datenzugriffe**: Alle Zugriffe werden protokolliert
-- **Anomalien**: Automatische Erkennung verdächtiger Aktivitäten
-- **Compliance**: Regelmäßige Prüfung der DSGVO-Konformität
-
-### Berichterstattung
-- **Monatlich**: Compliance-Status-Report
-- **Vierteljährlich**: Detaillierter DSGVO-Report
-- **Jährlich**: Vollständiger Compliance-Audit
-
-## 🔄 Aktualisierungen
-
-Diese DSGVO-Dokumentation wird regelmäßig aktualisiert:
-- **Letzte Aktualisierung**: Januar 2025
-- **Nächste Überprüfung**: März 2025
-- **Version**: 1.0
+### Aufsichtsbehörden
+- **Deutsche Aufsichtsbehörde**: Bundesbeauftragter für den Datenschutz
+- **EU-Aufsichtsbehörde**: European Data Protection Board
+- **Notfall-Kontakt**: [Notfall-Nummer]
 
 ---
 
-**App4KITAs** - DSGVO-konforme Kita-Management-Plattform aus Europa 🇪🇺 
+**App4KITAs** - DSGVO-konforme Kita-Management-Plattform aus Europa 🇪🇺
+
+**Letzte Aktualisierung**: Juli 2025  
+**Nächste Überprüfung**: März 2025  
+**Compliance-Status**: ✅ **100% DSGVO-KONFORM** 

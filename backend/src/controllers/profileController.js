@@ -25,7 +25,7 @@ async function updateProfile(req, res) {
   if (name) data.name = name;
   if (email) data.email = email;
   if (avatarUrl) data.avatarUrl = avatarUrl;
-  if (password) data.password = await bcrypt.hash(password, 10);
+      if (password) data.password = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10);
   try {
     const user = await prisma.user.update({
       where: { id: userId },

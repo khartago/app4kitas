@@ -25,7 +25,7 @@ cp .env.example .env
 # Edit .env with your database credentials
 npx prisma generate
 npx prisma migrate dev --name init
-npm test  # Run all 401 tests
+npm test  # Run all 427 tests
 
 # Frontend Setup
 cd ../dashboard
@@ -43,7 +43,7 @@ app4kitas/
 │   │   ├── routes/         # API Endpoints
 │   │   ├── middlewares/    # Auth & Security
 │   │   └── utils/          # Utilities
-│   ├── tests/              # 401 Test Suite
+│   ├── tests/              # 427 Test Suite
 │   └── prisma/             # Database Schema
 ├── dashboard/               # React Frontend
 │   ├── src/
@@ -60,85 +60,71 @@ app4kitas/
 
 ## 🧪 Testing
 
-### Backend Testing (401 Tests)
+For comprehensive testing information, see `shared/TESTING_CHECKLIST.md`.
+
+### Quick Test Commands
 ```bash
-cd backend
-
-# Run all tests
-npm test
-
-# Run specific test categories
-npm run test:auth          # Authentication tests
-npm run test:security      # Security tests
-npm run test:integration   # Integration tests
-npm run test:performance   # Performance tests
-
-# Test coverage
-npm run test:coverage
-```
-
-### Frontend Testing (0% - CRITICAL PRIORITY)
-```bash
-cd dashboard
-
-# Setup testing (TODO: Implement)
-npm install --save-dev @testing-library/jest-dom @testing-library/react @testing-library/user-event jest msw cypress
-
-# Run tests (TODO: Implement)
-npm test
-```
-
-## 🔧 Development Workflow
-
-### 1. Create Feature Branch
-```bash
-git checkout -b feature/your-feature-name
-```
-
-### 2. Make Changes
-- Follow the coding standards below
-- Write tests for new functionality
-- Update documentation as needed
-
-### 3. Test Your Changes
-```bash
-# Backend
+# Backend Tests (427 tests)
 cd backend && npm test
 
-# Frontend (when implemented)
-cd dashboard && npm test
+# Frontend Tests (0% coverage - CRITICAL)
+cd dashboard && npm test  # No tests implemented yet
 ```
 
-### 4. Commit Your Changes
-```bash
-git add .
-git commit -m "feat: add new feature description"
-```
+## 👥 Roles & Permissions
 
-### 5. Push and Create Pull Request
-```bash
-git push origin feature/your-feature-name
-# Create PR on GitHub
-```
+### 👑 Super Admin
+- **Platform-wide access** to all data and functions
+- **Institution management**: Create, edit, delete KITAs
+- **User management**: Manage Einrichtungsleiter, educators, and parents
+- **System statistics**: Platform-wide analytics and reports
+- **Export functions**: CSV/PDF export for all data
+- **GDPR management**: Soft delete, audit logs, data retention
 
-## 📝 Coding Standards
+### 👨‍💼 Einrichtungsleitung (ADMIN)
+- **Institution-specific access** to own KITA
+- **Child management**: Create, edit, photos, export
+- **Group management**: Create groups, assign educators
+- **Staff management**: Manage and assign educators
+- **Check-in/out**: QR code generation and management
+- **Reports**: Daily and monthly reports with export
+- **Notifications**: Send messages to groups/educators
+- **Institution settings**: Opening hours, holidays, addresses
 
-### Backend (Node.js)
-- **ESLint**: Follow the existing ESLint configuration
-- **Error Handling**: Always handle errors gracefully
-- **Security**: Validate and sanitize all inputs
-- **Testing**: Write tests for all new functionality
-- **Documentation**: Add JSDoc comments for complex functions
+### 👩‍🏫 Educator (EDUCATOR)
+- **Group-specific access** to assigned children
+- **Dashboard**: Daily overview and quick actions
+- **Children**: Manage assigned children
+- **Check-in/out**: QR scan and manual check-ins
+- **Notes**: Child-specific notes with file attachments
+- **Chat**: Group and direct messages
+- **Personal tasks**: Own to-do list
 
-### Frontend (React)
-- **TypeScript**: Use strict TypeScript configuration
-- **Components**: Use functional components with hooks
-- **Styling**: Use styled-components with design tokens
-- **State Management**: Use React Context for global state
-- **Testing**: Write unit and integration tests
+### 👨‍👩‍👧‍👦 Parent (PARENT)
+- **Child-specific access** to own children (planned)
+- **Self-registration**: Parents register independently
+- **Child assignment**: Einrichtungsleitung assigns parents to children
+- **Check-in status**: View attendance of their children
+- **Communication**: Messages with educators
+- **Reports**: Access to reports of their children
 
-### Git Commit Messages
-Use conventional commits:
+## 🔧 Development Guidelines
+
+### Code Style
+- **Backend**: Follow ESLint configuration
+- **Frontend**: Use TypeScript with strict mode
+- **Database**: Use Prisma ORM for all database operations
+- **API**: RESTful design with proper HTTP status codes
+- **Security**: Implement role-based access control
+
+### Git Workflow
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Create** a Pull Request
+
+### Commit Convention
 ```
 type(scope): description
 
@@ -151,10 +137,10 @@ test: adding tests
 chore: maintenance tasks
 ```
 
-## 🔒 Security Guidelines
+## 🔐 Security Guidelines
 
 ### Backend Security
-- **Input Validation**: Always validate user inputs
+- **Input Validation**: Validate all user inputs
 - **XSS Protection**: Sanitize all user-generated content
 - **SQL Injection**: Use Prisma ORM (prevents SQL injection)
 - **Authentication**: Use JWT with HttpOnly cookies
@@ -208,119 +194,80 @@ chore: maintenance tasks
 - **Action**: Begin Flutter development
 
 ### Production Deployment
-- **Status**: Not implemented
-- **Priority**: Medium for live operation
-- **Action**: Set up production environment
+- **Status**: Backend ready, frontend needs testing
+- **Priority**: High for production launch
+- **Action**: Complete frontend testing and deployment setup
 
-## 🐛 Bug Reports
+## 🔧 Development Commands
 
-### Before Reporting
-1. Check existing issues
-2. Test with latest version
-3. Provide reproduction steps
-4. Include environment details
+### Backend Development
+```bash
+cd backend
 
-### Bug Report Template
-```markdown
-**Bug Description**
-Brief description of the issue
+# Development server
+npm run dev
 
-**Steps to Reproduce**
-1. Step 1
-2. Step 2
-3. Step 3
+# Run tests
+npm test
 
-**Expected Behavior**
-What should happen
+# Database operations
+npx prisma studio
+npx prisma migrate dev
+npx prisma generate
 
-**Actual Behavior**
-What actually happens
-
-**Environment**
-- OS: [e.g., Windows 10]
-- Node.js: [e.g., 18.0.0]
-- Database: [e.g., PostgreSQL 14]
-
-**Additional Context**
-Any other relevant information
+# Code quality
+npm run lint
+npm run lint:fix
 ```
 
-## 💡 Feature Requests
+### Frontend Development
+```bash
+cd dashboard
 
-### Before Requesting
-1. Check existing features
-2. Consider the impact on existing functionality
-3. Think about security implications
-4. Consider performance impact
+# Development server
+npm start
 
-### Feature Request Template
-```markdown
-**Feature Description**
-Brief description of the requested feature
+# Build for production
+npm run build
 
-**Use Case**
-Why this feature is needed
-
-**Proposed Implementation**
-How you think it should work
-
-**Impact Assessment**
-- Security impact
-- Performance impact
-- User experience impact
-
-**Additional Context**
-Any other relevant information
+# Code quality
+npm run lint
+npm run lint:fix
 ```
-
-## 🤝 Code Review Process
-
-### Review Checklist
-- [ ] Code follows project standards
-- [ ] Tests are included and passing
-- [ ] Documentation is updated
-- [ ] Security considerations addressed
-- [ ] Performance impact assessed
-- [ ] Error handling implemented
-
-### Review Guidelines
-- **Be Constructive**: Provide specific, actionable feedback
-- **Be Respectful**: Maintain a positive, collaborative tone
-- **Be Thorough**: Check for security, performance, and maintainability
-- **Be Timely**: Respond to review requests promptly
 
 ## 📞 Getting Help
 
 ### Resources
 - **[Backend README](./backend/README.md)**: Complete backend documentation
+- **[Dashboard README](./dashboard/README.md)**: Frontend documentation
 - **[API Documentation](./shared/api_routes_reference.md)**: API reference
 - **[Testing Checklist](./shared/TESTING_CHECKLIST.md)**: Testing guide
-- **[Project Status](./PROJECT_STATUS.md)**: Current project status
 
-### Communication
-- **GitHub Issues**: For bugs and feature requests
-- **GitHub Discussions**: For questions and ideas
-- **Pull Requests**: For code contributions
+### Communication Channels
+- **GitHub Issues**: For bugs and problems
+- **GitHub Discussions**: For questions and help
+- **Documentation**: For setup and usage
 
-## 🎯 Contribution Priorities
+## 🎯 Contribution Areas
 
 ### High Priority
-1. **Frontend Testing Implementation** (Critical)
-2. **Mobile App Development** (High)
-3. **Production Deployment** (Medium)
+1. **Frontend Testing**: Implement comprehensive test suite
+2. **Mobile App**: Begin Flutter development
+3. **Production Deployment**: Complete deployment setup
+4. **Performance Optimization**: Optimize frontend performance
 
 ### Medium Priority
-1. **Performance Optimization**
-2. **Accessibility Improvements**
-3. **Documentation Updates**
+1. **Documentation**: Improve and expand documentation
+2. **Accessibility**: Enhance accessibility features
+3. **Internationalization**: Add multi-language support
+4. **Advanced Features**: Implement advanced analytics
 
 ### Low Priority
-1. **UI/UX Enhancements**
-2. **Additional Features**
-3. **Third-party Integrations**
+1. **Code Refactoring**: Improve code structure
+2. **UI/UX Enhancements**: Improve user experience
+3. **Additional Integrations**: Add third-party integrations
+4. **Advanced Reporting**: Implement advanced reporting features
 
 ---
 
-**Thank you for contributing to App4KITAs!** 🚀
-
-Your contributions help make kindergarten management more efficient and secure for everyone involved. 
+**Remember**: Most issues can be resolved by following the troubleshooting steps above. If you're still having problems, please provide detailed information about your environment and the specific error you're encountering. 

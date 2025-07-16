@@ -1,27 +1,25 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { createTestData, loginUser, maybeSetCookie } = require('./setup');
 
 describe('Error Handling Tests', () => {
   let adminCookies;
   let educatorCookies;
+  let testData;
 
   beforeAll(async () => {
-    // Login for authenticated tests
-    const adminRes = await request(app)
-      .post('/api/login')
-      .send({ 
-        email: 'admin_ea0049d1-9ed3-41a2-9854-37ecb3bd75d6@app4kitas.de', 
-        password: 'admin' 
-      });
-    adminCookies = adminRes.headers['set-cookie'];
-
-    const educatorRes = await request(app)
-      .post('/api/login')
-      .send({ 
-        email: 'Haylie32@hotmail.com', 
-        password: 'educator' 
-      });
-    educatorCookies = educatorRes.headers['set-cookie'];
+    // Create test data and get proper user credentials
+    testData = await createTestData();
+    
+    // Login using the test data users
+    adminCookies = await loginUser(request, app, testData.users[1].email, 'testpassword');
+    educatorCookies = await loginUser(request, app, testData.users[2].email, 'testpassword');
+    
+    // Debug: Check if cookies were obtained
+    console.log('Error handling test cookies obtained:', {
+      admin: !!adminCookies,
+      educator: !!educatorCookies
+    });
   });
 
   describe('Authentication Errors', () => {
@@ -34,18 +32,16 @@ describe('Error Handling Tests', () => {
     });
 
     it('should handle invalid authentication token', async () => {
-      const res = await request(app)
-        .get('/api/children')
-        .set('Cookie', 'token=invalid-token');
+      const res = await maybeSetCookie(request(app)
+        .get('/api/children'), 'token=invalid-token');
 
       expect(res.statusCode).toBe(401);
       expect(res.body).toBeDefined();
     });
 
     it('should handle expired authentication token', async () => {
-      const res = await request(app)
-        .get('/api/children')
-        .set('Cookie', 'token=expired-token');
+      const res = await maybeSetCookie(request(app)
+        .get('/api/children'), 'token=expired-token');
 
       expect(res.statusCode).toBe(401);
       expect(res.body).toBeDefined();
@@ -70,9 +66,8 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const endpoint of adminEndpoints) {
-        const res = await request(app)
-          .get(endpoint)
-          .set('Cookie', educatorCookies);
+        const res = await maybeSetCookie(request(app)
+          .get(endpoint), educatorCookies);
 
         // API returns different status codes for unauthorized access
         expect([400, 401, 403]).toContain(res.statusCode);
@@ -99,9 +94,8 @@ describe('Error Handling Tests', () => {
     it('should handle cross-institution access attempts', async () => {
       // This would require creating a user from a different institution
       // For now, we'll test the general authorization pattern
-      const res = await request(app)
-        .get('/api/children')
-        .set('Cookie', adminCookies);
+      const res = await maybeSetCookie(request(app)
+        .get('/api/children'), adminCookies);
 
       expect(res.statusCode).toBe(200);
     });
@@ -116,10 +110,9 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const endpoint of endpoints) {
-        const res = await request(app)
+        const res = await maybeSetCookie(request(app)
           .post(endpoint.path)
-          .set('Cookie', adminCookies)
-          .send(endpoint.data);
+          .send(endpoint.data), adminCookies);
 
         expect(res.statusCode).toBe(400);
         expect(res.body).toBeDefined();
@@ -136,15 +129,14 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const email of invalidEmails) {
-        const res = await request(app)
+        const res = await maybeSetCookie(request(app)
           .post('/api/register')
-          .set('Cookie', adminCookies)
           .send({
             email,
             password: 'password123',
             name: 'Test User',
             role: 'EDUCATOR'
-          });
+          }), adminCookies);
 
         expect([400, 403]).toContain(res.statusCode);
       }
@@ -160,13 +152,12 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const date of invalidDates) {
-        const res = await request(app)
+        const res = await maybeSetCookie(request(app)
           .post('/api/children')
-          .set('Cookie', adminCookies)
           .send({
             name: 'Test Child',
             birthdate: date
-          });
+          }), adminCookies);
 
         // Some dates might be accepted by the API
         expect([200, 201, 400]).toContain(res.statusCode);
@@ -182,9 +173,8 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const uuid of invalidUUIDs) {
-        const res = await request(app)
-          .get(`/api/children/${uuid}`)
-          .set('Cookie', adminCookies);
+        const res = await maybeSetCookie(request(app)
+          .get(`/api/children/${uuid}`), adminCookies);
 
         expect([400, 404]).toContain(res.statusCode);
       }
@@ -202,9 +192,8 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const endpoint of endpoints) {
-        const res = await request(app)
-          .get(endpoint)
-          .set('Cookie', adminCookies);
+        const res = await maybeSetCookie(request(app)
+          .get(endpoint), adminCookies);
 
         expect(res.statusCode).toBe(404);
         expect(res.body).toBeDefined();
@@ -215,26 +204,24 @@ describe('Error Handling Tests', () => {
       const duplicateEmail = 'test@example.com';
       
       // First registration
-      await request(app)
+      await maybeSetCookie(request(app)
         .post('/api/register')
-        .set('Cookie', adminCookies)
         .send({
           email: duplicateEmail,
           password: 'password123',
           name: 'Test User 1',
           role: 'EDUCATOR'
-        });
+        }), adminCookies);
 
       // Second registration with same email
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/register')
-        .set('Cookie', adminCookies)
         .send({
           email: duplicateEmail,
           password: 'password123',
           name: 'Test User 2',
           role: 'EDUCATOR'
-        });
+        }), adminCookies);
 
       expect([400, 403]).toContain(res.statusCode);
     });
@@ -242,14 +229,13 @@ describe('Error Handling Tests', () => {
     it('should handle foreign key constraint violations', async () => {
       const nonExistentGroupId = '00000000-0000-0000-0000-000000000000';
       
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/children')
-        .set('Cookie', adminCookies)
         .send({
           name: 'Test Child',
           birthdate: '2019-01-01',
           groupId: nonExistentGroupId
-        });
+        }), adminCookies);
 
       expect([400, 500]).toContain(res.statusCode);
     });
@@ -257,19 +243,17 @@ describe('Error Handling Tests', () => {
 
   describe('File Upload Errors', () => {
     it('should handle missing file uploads', async () => {
-      const res = await request(app)
-        .post('/api/profile/avatar')
-        .set('Cookie', adminCookies);
+      const res = await maybeSetCookie(request(app)
+        .post('/api/profile/avatar'), adminCookies);
 
       expect(res.statusCode).toBe(400);
       expect(res.body).toBeDefined();
     });
 
     it('should handle invalid file types', async () => {
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/profile/avatar')
-        .set('Cookie', adminCookies)
-        .attach('avatar', Buffer.from('fake-exe-data'), 'malware.exe');
+        .attach('avatar', Buffer.from('fake-exe-data'), 'malware.exe'), adminCookies);
 
       // API might accept or reject based on actual validation
       expect([200, 400]).toContain(res.statusCode);
@@ -278,10 +262,9 @@ describe('Error Handling Tests', () => {
     it('should handle oversized files', async () => {
       const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
       
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/profile/avatar')
-        .set('Cookie', adminCookies)
-        .attach('avatar', largeBuffer, 'large-file.png');
+        .attach('avatar', largeBuffer, 'large-file.png'), adminCookies);
 
       // API might accept or reject based on actual validation
       expect([200, 400, 413]).toContain(res.statusCode);
@@ -290,10 +273,9 @@ describe('Error Handling Tests', () => {
 
   describe('Rate Limiting Errors', () => {
     it('should handle unauthorized origins', async () => {
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .get('/api/children')
-        .set('Origin', 'http://malicious-site.com')
-        .set('Cookie', adminCookies);
+        .set('Origin', 'http://malicious-site.com'), adminCookies);
 
       // Rate limiting might trigger before CORS check
       expect([403, 429]).toContain(res.statusCode);
@@ -313,10 +295,9 @@ describe('Error Handling Tests', () => {
 
   describe('CORS Errors', () => {
     it('should handle unauthorized origins', async () => {
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .get('/api/children')
-        .set('Origin', 'http://malicious-site.com')
-        .set('Cookie', adminCookies);
+        .set('Origin', 'http://malicious-site.com'), adminCookies);
 
       // Rate limiting might trigger before CORS check
       expect([403, 429]).toContain(res.statusCode);
@@ -336,31 +317,27 @@ describe('Error Handling Tests', () => {
 
   describe('Malformed Request Errors', () => {
     it('should handle malformed JSON', async () => {
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/children')
-        .set('Cookie', adminCookies)
         .set('Content-Type', 'application/json')
-        .send('{"invalid": json}');
+        .send('{"invalid": json}'), adminCookies);
 
       // Rate limiting might trigger
       expect([400, 429, 500]).toContain(res.statusCode);
     });
 
     it('should handle missing Content-Type header', async () => {
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/children')
-        .set('Cookie', adminCookies)
-        .send('{"name": "Test"}');
+        .send('{"name": "Test"}'), adminCookies);
 
       // Accept all possible valid responses
       expect([400, 429, 200, 204, 500]).toContain(res.statusCode);
     });
 
     it('should handle empty request body', async () => {
-      const res = await request(app)
-        .post('/api/children')
-        .set('Cookie', adminCookies)
-        .send('');
+      const res = await maybeSetCookie(request(app)
+        .post('/api/children'), adminCookies);
 
       // Accept all possible valid responses
       expect([400, 429, 200, 204, 500]).toContain(res.statusCode);
@@ -376,9 +353,8 @@ describe('Error Handling Tests', () => {
       ];
 
       for (const route of nonExistentRoutes) {
-        const res = await request(app)
-          .get(route)
-          .set('Cookie', adminCookies);
+        const res = await maybeSetCookie(request(app)
+          .get(route), adminCookies);
 
         // Rate limiting might trigger
         expect([404, 429]).toContain(res.statusCode);
@@ -386,9 +362,8 @@ describe('Error Handling Tests', () => {
     });
 
     it('should handle unsupported HTTP methods', async () => {
-      const res = await request(app)
-        .patch('/api/children')
-        .set('Cookie', adminCookies);
+      const res = await maybeSetCookie(request(app)
+        .patch('/api/children'), adminCookies);
 
       // Rate limiting might trigger
       expect([404, 429]).toContain(res.statusCode);
@@ -397,9 +372,8 @@ describe('Error Handling Tests', () => {
     it('should handle server errors gracefully', async () => {
       // This would require mocking database failures
       // For now, we'll test that the app doesn't crash
-      const res = await request(app)
-        .get('/api/children')
-        .set('Cookie', adminCookies);
+      const res = await maybeSetCookie(request(app)
+        .get('/api/children'), adminCookies);
 
       expect(res.statusCode).not.toBe(500);
     });
@@ -408,57 +382,52 @@ describe('Error Handling Tests', () => {
   describe('Business Logic Errors', () => {
     it('should prevent double check-in', async () => {
       // Create a child first
-      const childRes = await request(app)
+      const childRes = await maybeSetCookie(request(app)
         .post('/api/children')
-        .set('Cookie', adminCookies)
         .send({
           name: 'Test Child',
           birthdate: '2019-01-01'
-        });
+        }), adminCookies);
 
       const childId = childRes.body.id;
 
       // First check-in
-      await request(app)
+      await maybeSetCookie(request(app)
         .post('/api/checkin')
-        .set('Cookie', educatorCookies)
         .send({
           childId,
           type: 'CHECKIN'
-        });
+        }), educatorCookies);
 
       // Second check-in (should fail)
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/checkin')
-        .set('Cookie', educatorCookies)
         .send({
           childId,
           type: 'CHECKIN'
-        });
+        }), educatorCookies);
 
       expect([400, 429]).toContain(res.statusCode);
     });
 
     it('should prevent check-out without check-in', async () => {
       // Create a child
-      const childRes = await request(app)
+      const childRes = await maybeSetCookie(request(app)
         .post('/api/children')
-        .set('Cookie', adminCookies)
         .send({
           name: 'Test Child 2',
           birthdate: '2019-01-01'
-        });
+        }), adminCookies);
 
       const childId = childRes.body.id;
 
       // Try to check-out without checking in first
-      const res = await request(app)
+      const res = await maybeSetCookie(request(app)
         .post('/api/checkin')
-        .set('Cookie', educatorCookies)
         .send({
           childId,
           type: 'CHECKOUT'
-        });
+        }), educatorCookies);
 
       expect([400, 429]).toContain(res.statusCode);
     });

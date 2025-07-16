@@ -85,6 +85,11 @@ model User {
   dataObjections   DataObjection[]
   restrictionRequests DataRestriction[] @relation("RestrictionRequestedBy")
   objectionRequests  DataObjection[]   @relation("ObjectionRequestedBy")
+  gdprRequests GDPRRequest[] @relation("GDPRRequests")
+  gdprReviews  GDPRRequest[] @relation("GDPRRequestReviews")
+  // GDPR consent (for parents only)
+  consentGiven Boolean @default(false)
+  consentDate  DateTime?
   // GDPR soft delete
   deletedAt    DateTime?
 }
@@ -105,6 +110,10 @@ model Child {
   institution   Institution @relation(fields: [institutionId], references: [id])
   institutionId String
   notes     Note[]
+  // GDPR consent (manual consent for paper forms)
+  manualConsentGiven Boolean @default(false)
+  manualConsentDate  DateTime?
+  manualConsentSetBy String?  // Admin who set the consent
   // GDPR soft delete
   deletedAt DateTime?
 }
@@ -365,4 +374,23 @@ model DataBreach {
   status        String   @default("REPORTED") // REPORTED, INVESTIGATING, RESOLVED
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+enum GDPRRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model GDPRRequest {
+  id          String           @id @default(uuid())
+  userId      String
+  user        User             @relation("GDPRRequests", fields: [userId], references: [id])
+  reason      String
+  status      GDPRRequestStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  reviewedBy  String?
+  reviewer    User?            @relation("GDPRRequestReviews", fields: [reviewedBy], references: [id])
+  reviewedAt  DateTime?
 }

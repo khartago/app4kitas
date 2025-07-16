@@ -185,4 +185,4 @@ Features:
 - Tests: Jest (BE), flutter_test, Cypress (Dashboard)
 - Monitoring: Grafana + Loki
 
-_Last updated: v2.8 — Juni 2025_
+_Last updated: v2.8 — Juli 2025_

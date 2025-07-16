@@ -75,17 +75,27 @@ async function createChild(req, res) {
         return res.status(400).json({ error: 'Institution nicht gefunden' });
       }
     }
+    // Validate birthdate format
+    let birthdateObj;
+    if (birthdate) {
+      birthdateObj = new Date(birthdate);
+      if (isNaN(birthdateObj.getTime())) {
+        return res.status(400).json({ error: 'Ungültiges Geburtsdatum Format' });
+      }
+    }
+
     const child = await prisma.child.create({
       data: {
         name,
-        birthdate: new Date(birthdate),
-        group: groupId ? { connect: { id: groupId } } : undefined,
+        birthdate: birthdateObj,
+        groupId: groupId || null,
         parents: parentIds && parentIds.length ? { connect: parentIds.map(id => ({ id })) } : undefined,
         qrCodeSecret,
-        institution: { connect: { id: institutionId } }
+        institutionId,
+        manualConsentGiven: false, // Default to false, parent must give consent later
+        manualConsentDate: null
       },
     });
-    
     // Log activity
     await logActivity(
       user.id,
@@ -96,9 +106,9 @@ async function createChild(req, res) {
       institutionId,
       groupId || null
     );
-    
     res.status(201).json(child);
   } catch (err) {
+    console.error('Create child error:', err);
     res.status(400).json({ error: 'Fehler beim Anlegen des Kindes' });
   }
 }
@@ -123,6 +133,14 @@ async function updateChild(req, res) {
       return res.status(404).json({ error: 'Kind nicht gefunden' });
     }
     
+    // Check consent for parent relationship changes
+    if (parentIds) {
+      const hasConsent = await childHasConsent(id);
+      if (!hasConsent) {
+        return res.status(403).json({ error: 'Elternzuordnung nicht erlaubt: Einwilligung für sensitive Datenverarbeitung erforderlich (DSGVO Art. 6).' });
+      }
+    }
+    
     // Check group institution if changing group
     if (groupId && groupId !== existingChild.groupId) {
       const group = await prisma.group.findUnique({ where: { id: groupId } });
@@ -132,14 +150,23 @@ async function updateChild(req, res) {
       }
     }
     
+    const updateData = {
+      name: name || undefined,
+      birthdate: birthdate ? new Date(birthdate) : undefined,
+      group: groupId ? { connect: { id: groupId } } : groupId === null ? { disconnect: true } : undefined,
+    };
+    
+    // Only allow parent changes if consent is given
+    if (parentIds) {
+      const hasConsent = await childHasConsent(id);
+      if (hasConsent) {
+        updateData.parents = { set: parentIds.map(id => ({ id })) };
+      }
+    }
+    
     const child = await prisma.child.update({
       where: { id },
-      data: {
-        name: name || undefined,
-        birthdate: birthdate ? new Date(birthdate) : undefined,
-        group: groupId ? { connect: { id: groupId } } : groupId === null ? { disconnect: true } : undefined,
-        parents: parentIds ? { set: parentIds.map(id => ({ id })) } : undefined,
-      },
+      data: updateData,
       include: {
         group: true,
         parents: true
@@ -231,6 +258,20 @@ async function updateChildPhoto(req, res) {
         fs.unlink(oldPath, err => { /* ignore errors, file may not exist */ });
       }
     }
+    // Check if any parent has given consent
+    const childWithParents = await prisma.child.findUnique({
+      where: { id },
+      include: { parents: true }
+    });
+    
+    if (!childWithParents) {
+      return res.status(404).json({ error: 'Kind nicht gefunden' });
+    }
+    
+    const hasConsent = await childHasConsent(id);
+    if (!hasConsent) {
+      return res.status(403).json({ error: 'Foto-Upload nicht erlaubt: Einwilligung für sensitive Datenverarbeitung erforderlich (DSGVO Art. 6).' });
+    }
     const child = await prisma.child.update({
       where: { id },
       data: { photoUrl },
@@ -282,4 +323,153 @@ async function regenerateChildQRCode(req, res) {
   }
 }
 
-module.exports = { getChild, createChild, updateChild, deleteChild, updateChildPhoto, getChildQRCode, regenerateChildQRCode }; 
+// Helper function to check if child has consent (manual consent OR any parent has app consent)
+async function childHasConsent(childId) {
+  const child = await prisma.child.findUnique({
+    where: { id: childId },
+    include: { parents: true }
+  });
+  
+  if (!child) return false;
+  
+  // Check if manual consent is given
+  if (child.manualConsentGiven === true) {
+    return true;
+  }
+  
+  // Check if any parent has given app consent
+  return child.parents.some(parent => parent.consentGiven === true);
+}
+
+// PUT /children/:id/consent (Parent only - for their own consent)
+async function updateChildConsent(req, res) {
+  const user = req.user;
+  const { id } = req.params;
+  const { consentGiven } = req.body;
+  
+  if (typeof consentGiven !== 'boolean') {
+    return res.status(400).json({ error: 'consentGiven (Boolean) erforderlich' });
+  }
+  
+  // Only parents can update their own consent
+  if (user.role !== 'PARENT') {
+    return res.status(403).json({ error: 'Nur Eltern können ihre Einwilligung ändern' });
+  }
+  
+  try {
+    const child = await prisma.child.findFirst({ 
+      where: { 
+        id,
+        parents: {
+          some: { id: user.id }
+        }
+      },
+      include: { parents: true }
+    });
+    
+    if (!child) {
+      return res.status(404).json({ error: 'Kind nicht gefunden oder keine Berechtigung' });
+    }
+    
+    // Update the parent's consent (not the child's)
+    const updateData = { consentGiven };
+    if (consentGiven) {
+      updateData.consentDate = new Date();
+    } else {
+      updateData.consentDate = null;
+    }
+    
+    const updatedParent = await prisma.user.update({ 
+      where: { id: user.id }, 
+      data: updateData 
+    });
+    
+    // Log activity
+    await logActivity(
+      user.id,
+      'GDPR_PARENT_CONSENT_CHANGED',
+      'Child',
+      id,
+      `Einwilligung für sensitive Datenverarbeitung geändert: ${consentGiven ? 'gegeben' : 'entzogen'} von Elternteil`,
+      child.institutionId,
+      child.groupId || null
+    );
+    
+    res.json(updatedParent);
+  } catch (err) {
+    res.status(400).json({ error: 'Fehler beim Aktualisieren der Einwilligung' });
+  }
+}
+
+// PUT /children/:id/manual-consent (Admin only - for paper consent)
+async function setManualConsent(req, res) {
+  const user = req.user;
+  const { id } = req.params;
+  const { manualConsentGiven, paperConsentDate } = req.body;
+  
+  if (typeof manualConsentGiven !== 'boolean') {
+    return res.status(400).json({ error: 'manualConsentGiven (Boolean) erforderlich' });
+  }
+  
+  // Only admins can set manual consent
+  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Nur Admins können manuelle Einwilligung setzen' });
+  }
+  
+  if (manualConsentGiven && !paperConsentDate) {
+    return res.status(400).json({ error: 'paperConsentDate erforderlich wenn manualConsentGiven true ist' });
+  }
+  
+  try {
+    // Build where clause based on user role
+    const whereClause = { 
+      id,
+      deletedAt: null
+    };
+    
+    // For non-super admin users, check institution
+    if (user.role !== 'SUPER_ADMIN') {
+      whereClause.institutionId = user.institutionId;
+    }
+    
+    const child = await prisma.child.findFirst({ where: whereClause });
+    
+    if (!child) {
+      return res.status(404).json({ error: 'Kind nicht gefunden oder keine Berechtigung' });
+    }
+    
+    // Update the child's manual consent
+    const updateData = { 
+      manualConsentGiven,
+      manualConsentSetBy: user.id
+    };
+    
+    if (manualConsentGiven) {
+      updateData.manualConsentDate = new Date(paperConsentDate);
+    } else {
+      updateData.manualConsentDate = null;
+    }
+    
+    const updatedChild = await prisma.child.update({ 
+      where: { id }, 
+      data: updateData 
+    });
+    
+    // Log activity
+    await logActivity(
+      user.id,
+      'GDPR_MANUAL_CONSENT_SET',
+      'Child',
+      id,
+      `Manuelle Einwilligung für ${child.name} ${manualConsentGiven ? 'gesetzt' : 'entzogen'} basierend auf Papier-Einwilligung vom ${paperConsentDate}`,
+      child.institutionId,
+      child.groupId || null
+    );
+    
+    res.json(updatedChild);
+  } catch (err) {
+    res.status(400).json({ error: 'Fehler beim Setzen der manuellen Einwilligung' });
+  }
+}
+
+module.exports = { getChild, createChild, updateChild, deleteChild, updateChildPhoto, getChildQRCode, regenerateChildQRCode, updateChildConsent, setManualConsent, childHasConsent }; 

@@ -51,7 +51,7 @@ async function main() {
   const superAdmin = await prisma.user.create({
     data: {
       email: 'superadmin@app4kitas.de',
-      password: await bcrypt.hash('superadmin', 10),
+      password: await bcrypt.hash('superadmin', parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10),
       name: 'Super Admin',
       role: 'SUPER_ADMIN',
       avatarUrl: faker.image.avatar(),
@@ -107,7 +107,7 @@ async function main() {
     const admin = await prisma.user.create({
       data: {
         email: `admin_${inst.id}@app4kitas.de`,
-        password: await bcrypt.hash('admin', 10),
+        password: await bcrypt.hash('admin', parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10),
         name: `Admin ${inst.name}`,
         role: 'ADMIN',
         institutionId: inst.id,
@@ -162,7 +162,7 @@ async function main() {
       const educator = await prisma.user.create({
         data: {
           email: faker.internet.email(),
-          password: await bcrypt.hash('educator', 10),
+          password: await bcrypt.hash('educator', parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10),
           name: faker.person.fullName(),
           role: 'EDUCATOR',
           institutionId: group.institutionId,
@@ -192,7 +192,7 @@ async function main() {
       const parent = await prisma.user.create({
         data: {
           email: faker.internet.email(),
-          password: await bcrypt.hash('parent', 10),
+          password: await bcrypt.hash('parent', parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10),
           name: faker.person.fullName(),
           role: 'PARENT',
           institutionId: group.institutionId,

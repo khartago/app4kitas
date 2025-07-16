@@ -7,7 +7,7 @@ const Educators = lazy(() => import('../pages/super_admin/Educators'));
 const Parents = lazy(() => import('../pages/super_admin/Parents'));
 const Statistiken = lazy(() => import('../pages/super_admin/Statistiken'));
 const Reports = lazy(() => import('../pages/super_admin/Reports'));
-const GDPRDeletion = lazy(() => import('../pages/super_admin/GDPRDeletion'));
+const GDPRCompliancePage = lazy(() => import('../pages/super_admin/GDPRCompliancePage'));
 
 const SuperAdminRoutes: React.FC = () => (
   <Suspense fallback={<div>Lädt...</div>}>
@@ -19,7 +19,7 @@ const SuperAdminRoutes: React.FC = () => (
       <Route path="eltern" element={<Parents />} />
       <Route path="statistiken" element={<Statistiken />} />
       <Route path="berichte" element={<Reports />} />
-      <Route path="gdpr" element={<GDPRDeletion />} />
+      <Route path="gdpr" element={<GDPRCompliancePage />} />
       <Route path="*" element={<Dashboard />} />
     </Routes>
   </Suspense>

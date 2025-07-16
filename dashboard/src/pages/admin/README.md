@@ -1,8 +1,8 @@
-# 🏢 Admin Dashboard - App4KITAs
+# 🏢 Einrichtungsleitung Dashboard - App4KITAs
 
 ## 📋 Übersicht
 
-Das **Admin Dashboard** ist die zentrale Verwaltungsoberfläche für Institutionen in der App4KITAs Plattform. Es ermöglicht ADMIN Benutzern die vollständige Kontrolle über ihre eigene Institution, einschließlich Kinder, Gruppen, Personal und Berichte.
+Das **Einrichtungsleitung Dashboard** ist die zentrale Verwaltungsoberfläche für Institutionen in der App4KITAs Plattform. Es ermöglicht ADMIN Benutzern die vollständige Kontrolle über ihre eigene Institution, einschließlich Kinder, Gruppen, Personal und Berichte.
 
 ## 🎯 Hauptfunktionen
 
@@ -48,93 +48,101 @@ Das **Admin Dashboard** ist die zentrale Verwaltungsoberfläche für Institution
 **Features:**
 - CRUD-Operationen für Gruppen
 - Erzieher-Zuordnung mit Multi-Select
-- Duplikatsprüfung für Gruppennamen
-- Responsive Tabellen mit Suche
-- Modern UI-Komponenten
 - Institutions-spezifische Filterung
-
-### 📈 **Statistiken** (`Statistiken.tsx`)
-- **Institutions-Statistiken**: Umfassende Kennzahlen
-- **Chart-Visualisierungen**: Recharts Integration
-- **Export-Funktionen**: CSV/PDF Download
-- **Kategorisierte Darstellung**: Kinder, Gruppen, Personal, Aktivität
-
-**Features:**
-- 8+ verschiedene Statistiken
-- Interaktive Charts (Bar Charts)
-- Download-Funktionen (CSV/PDF)
-- Responsive Grid-Layout
-- Kategorisierte Darstellung
-- Real-time Daten-Updates
+- Responsive Tabellen mit Suche
+- Export-Funktionen (CSV/PDF)
+- Modern Modal für Gruppen-Eingaben
 
 ### 👨‍🏫 **Personal** (`Personal.tsx`)
-- **Erzieher-Verwaltung**: Vollständige Kontrolle über Personal
-- **Avatar-Unterstützung**: Profilbilder für Erzieher
-- **E-Mail-Validierung**: Sichere Benutzer-Verwaltung
-- **Institutions-Bindung**: Automatische Institution-Zuordnung
+- **Erzieher-Verwaltung**: Vollständige CRUD-Operationen
+- **Gruppen-Zuordnung**: Direkte Zuweisung zu Gruppen
+- **Institutions-Filterung**: Nur eigene Institution
+- **Passwort-Management**: Sichere Passwort-Verwaltung
 
 **Features:**
 - CRUD-Operationen für Erzieher
-- Avatar-Anzeige und -Verwaltung
-- E-Mail-Validierung und Duplikatsprüfung
-- Passwort-Management
-- Responsive Tabellen mit Suche
-- Modern Modal für Benutzer-Eingaben
+- Gruppen-Zuordnung mit Multi-Select
 - Institutions-spezifische Filterung
+- E-Mail-Validierung und Duplikatsprüfung
+- Passwort-Reset-Funktionalität
+- Responsive Tabellen mit Suche
+- Export-Funktionen (CSV/PDF)
+
+### 📈 **Statistiken** (`Statistiken.tsx`)
+- **Institutions-Statistiken**: Umfassende Kennzahlen
+- **Trend-Analysen**: Entwicklung über Zeit
+- **Export-Funktionen**: CSV/PDF Download
+- **Kategorisierte Darstellung**: Kinder, Aktivität, System
+
+**Features:**
+- 12+ verschiedene Statistiken
+- Trend-Indikatoren (up/down/neutral)
+- Farbkodierte Karten mit Icons
+- Download-Funktionen (CSV/PDF)
+- Responsive Grid-Layout
+- Kategorisierte Darstellung
 
 ### 🔔 **Benachrichtigungen** (`Notifications.tsx`)
-- **Push-Benachrichtigungen**: Direkte Kommunikation
-- **Empfänger-Auswahl**: Erzieher oder Gruppen
-- **Nachrichten-Historie**: Vollständige Kommunikationsprotokollierung
-- **Institutions-Filterung**: Nur eigene Institution
+- **Nachrichten-System**: Nachrichten an Erzieher oder Gruppen senden
+- **Empfänger-Auswahl**: Multi-Select für Empfänger
+- **Verlauf**: Nachrichten-Historie
+- **Validierung**: Umfassende Eingabevalidierung
 
 **Features:**
-- Push-Benachrichtigungen senden
-- Empfänger-Auswahl (Erzieher/Gruppen)
-- Nachrichten-Historie
-- Institutions-spezifische Filterung
-- Real-time Updates
-- Modern UI mit MascotBear
+- Nachrichten an Einzelpersonen oder Gruppen
+- Empfänger-Auswahl mit Multi-Select
+- Nachrichten-Verlauf mit Zeitstempel
+- Eingabevalidierung und Fehlerbehandlung
+- Responsive Design
+- Modern Modal für Nachrichten-Eingaben
 
-### 📅 **Tagesbericht** (`Tagesbericht.tsx`)
-- **Tägliche Anwesenheit**: Check-in/out Status pro Kind
-- **Gruppen-Filterung**: Spezifische Gruppenberichte
-- **Export-Funktionen**: CSV für Compliance
-- **Datum-Auswahl**: Flexible Berichtszeiträume
+### ⚙️ **Einstellungen** (`Settings.tsx`)
+- **Institutions-Einstellungen**: Name, Adresse, Öffnungszeiten
+- **Feiertage-Verwaltung**: Geschlossene Tage konfigurieren
+- **System-Einstellungen**: Plattform-Konfiguration
+- **Backup-Management**: Daten-Sicherung
 
 **Features:**
-- Tägliche Anwesenheitsberichte
-- Gruppen-spezifische Filterung
-- Export-Funktionen (CSV)
-- Datum-Auswahl
+- Institutions-Informationen bearbeiten
+- Öffnungszeiten konfigurieren
+- Feiertage und geschlossene Tage verwalten
+- System-Einstellungen anpassen
+- Backup-Funktionalität
+- Responsive Design
+
+### 📋 **Berichte** (`Reports.tsx`)
+- **Tagesbericht** (`DailyReport.tsx`): Tägliche Anwesenheit
+- **Monatsbericht** (`MonthlyReport.tsx`): Monatliche Anwesenheit
+- **Verspätungsbericht** (`LatePickupsReport.tsx`): Späte Abholungen
+- **Gruppenbericht** (`GroupPerformanceReport.tsx`): Gruppen-Performance
+- **Anwesenheitsmuster** (`AbsencePatternsReport.tsx`): Fehlzeiten-Analyse
+- **Zeitanalysen** (`TimeAnalyticsReport.tsx`): Detaillierte Zeitanalysen
+- **Benutzerdefinierte Berichte** (`CustomRangeReport.tsx`): Flexible Zeiträume
+
+**Features:**
+- 7 verschiedene Berichtstypen
+- Datum- und Gruppen-Filterung
+- Export-Funktionen (CSV/PDF)
 - Responsive Tabellen
 - Empty States mit MascotBear
 
-### 📊 **Monatsbericht** (`Monatsbericht.tsx`)
-- **Monatliche Anwesenheit**: Anwesenheitstage pro Kind
-- **Gruppen-Filterung**: Spezifische Gruppenberichte
-- **Export-Funktionen**: CSV für Compliance
-- **Monat-Auswahl**: Flexible Berichtszeiträume
+### 📝 **Persönliches Notizbuch** (`Personal.tsx`)
+- **Vollständige Aufgabenverwaltung**: Erstellen, Bearbeiten, Löschen
+- **Prioritäten-System**: Hoch, Mittel, Niedrig mit Farbkodierung
+- **Status-Management**: Aufgaben als erledigt markieren
+- **Zeitstempel**: Erstellungs- und Fertigstellungszeit
+- **Filterung**: Alle, Offen, Erledigt mit Live-Zählern
 
 **Features:**
-- Monatliche Anwesenheitsberichte
-- Gruppen-spezifische Filterung
-- Export-Funktionen (CSV)
-- Monat-Auswahl
-- Responsive Tabellen
-- Empty States mit MascotBear
-
-### ⏰ **Verspätungen** (`Verspaetungen.tsx`)
-- **Verspätete Abholungen**: Tracking von späten Abholungen
-- **Datum-Filterung**: Spezifische Tage
-- **Export-Funktionen**: CSV für Compliance
-- **Stub-Implementation**: Grundfunktionalität vorhanden
-
-**Features:**
-- Verspätete Abholungen Tracking
-- Datum-Filterung
-- Export-Funktionen (CSV)
-- Stub-Implementation für zukünftige Erweiterungen
+- **Aufgaben erstellen**: Titel, Beschreibung (optional), Priorität
+- **Inline-Bearbeitung**: Direkte Bearbeitung ohne Modal
+- **Prioritäten-Badges**: Farbkodierte Prioritätsanzeige
+- **Checkbox-Toggle**: Einfaches Umschalten des Status
+- **Erledigte Aufgaben**: Anzeige mit Fertigstellungszeit
+- **Responsive Design**: Optimiert für alle Bildschirmgrößen
+- **Dark Mode Support**: Vollständige Dark Mode Integration
+- **Real-time Updates**: Sofortige UI-Updates nach Aktionen
+- **Backend-Integration**: Vollständige API-Anbindung mit Prisma
 
 ## 🛠️ Technische Implementierung
 
@@ -284,10 +292,10 @@ Das **Admin Dashboard** ist die zentrale Verwaltungsoberfläche für Institution
 - **Export-Beschränkungen**: Nur eigene Daten exportierbar
 
 ### **Compliance**
-- **DSGVO-Konformität**: Deutsche Datenschutzstandards
-- **Audit-Logging**: Vollständige Aktivitätsprotokollierung
-- **Daten-Minimierung**: Nur notwendige Daten gespeichert
+- **GDPR-Compliance**: Vollständige DSGVO-Implementierung
+- **Audit-Trail**: Vollständige Aktivitätsprotokollierung
+- **Data Retention**: Konfigurierbare Aufbewahrungsfristen
 
 ---
 
-**App4KITAs Admin Dashboard** - Die zentrale Verwaltungsoberfläche für moderne Kindertagesstätten. 🏢✨ 
+**Einrichtungsleitung Dashboard** - Professionelle Verwaltungsoberfläche für Kindertagesstätten. 

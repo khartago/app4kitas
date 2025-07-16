@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
@@ -8,8 +7,8 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require('./utils/jwt');
 
-// Trust proxy for rate limiting when behind a proxy - only trust localhost
-app.set('trust proxy', '127.0.0.1');
+// Trust proxy for rate limiting when behind a proxy
+app.set('trust proxy', process.env.TRUST_PROXY || '127.0.0.1');
 
 // Security headers with custom configuration
 app.use(helmet({
@@ -39,11 +38,9 @@ app.use((req, res, next) => {
 
 // CORS with whitelist - apply BEFORE rate limiting
 const whitelist = [
-  'http://localhost:3000',
-  'http://localhost:4000',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:4000',
-  process.env.PROD_DOMAIN, // e.g. https://app4kitas.de
+  process.env.DEV_FRONTEND_URL || 'http://localhost:3000',
+  process.env.DEV_BACKEND_URL || 'http://localhost:4000',
+  process.env.CORS_ORIGIN || process.env.PROD_DOMAIN || 'http://localhost:3000'
 ];
 app.use('/api', cors({
   origin: function (origin, callback) {
@@ -60,9 +57,8 @@ app.use('/api', cors({
 
 const corsOptions = {
   origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    process.env.PROD_DOMAIN
+    process.env.DEV_FRONTEND_URL || 'http://localhost:3000',
+    process.env.CORS_ORIGIN || process.env.PROD_DOMAIN || 'http://localhost:3000'
   ],
   credentials: true,
 };
@@ -100,24 +96,24 @@ app.use('/api', (req, res, next) => {
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
 
 const loginLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: isTestEnvironment ? 1000 : 5, // Much higher limit in tests
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
+  max: isTestEnvironment ? 1000 : parseInt(process.env.RATE_LIMIT_MAX) || 100,
   message: { error: 'Zu viele Login-Versuche, bitte warte eine Minute.' },
   keyGenerator: (req) => req.ip,
   skip: (req) => isTestEnvironment, // Skip rate limiting in tests
 });
 
 const messagesLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: isTestEnvironment ? 1000 : 10, // Much higher limit in tests
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
+  max: isTestEnvironment ? 1000 : parseInt(process.env.RATE_LIMIT_MAX) || 100,
   message: { error: 'Zu viele Nachrichten, bitte warte eine Minute.' },
   keyGenerator: (req) => req.user?.id || req.ip,
   skip: (req) => isTestEnvironment, // Skip rate limiting in tests
 });
 
 const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: isTestEnvironment ? 10000 : 100, // Much higher limit in tests
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
+  max: isTestEnvironment ? 10000 : parseInt(process.env.RATE_LIMIT_MAX) || 100,
   message: { error: 'Zu viele Anfragen, bitte warte eine Minute.' },
   keyGenerator: (req) => req.user?.id || req.ip,
   skip: (req) => isTestEnvironment, // Skip rate limiting in tests
@@ -146,6 +142,8 @@ app.use('/api/personalTasks', require('./routes/personalTasks'));
 app.use('/api/activity', require('./routes/activity'));
 app.use('/api', require('./routes/notes'));
 app.use('/api/gdpr', require('./routes/gdprDeletion'));
+app.use('/api/gdpr', require('./routes/gdprRequests'));
+app.use('/api/parent', require('./routes/parent'));
 
 // 404 handler for non-existent /api routes
 app.use((req, res, next) => {

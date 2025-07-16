@@ -776,6 +776,48 @@ async function deleteNotification(req, res) {
   }
 }
 
+// Send consent request notification to parents
+async function sendConsentRequestNotification(childId, institutionId) {
+  try {
+    const child = await prisma.child.findFirst({
+      where: { 
+        id: childId,
+        institutionId,
+        deletedAt: null
+      },
+      include: {
+        parents: true,
+        group: true
+      }
+    });
+
+    if (!child || child.parents.length === 0) {
+      return { success: false, message: 'Kind oder Eltern nicht gefunden' };
+    }
+
+    // Send notification to all parents of the child
+    const notifications = child.parents.map(parent => ({
+      userId: parent.id,
+      title: 'DSGVO Einwilligung erforderlich',
+      body: `Für ${child.name} ist eine Einwilligung für sensitive Datenverarbeitung erforderlich. Bitte geben Sie Ihre Zustimmung in der App.`,
+      priority: 'high',
+      institutionId: child.institutionId
+    }));
+
+    await prisma.notificationLog.createMany({
+      data: notifications
+    });
+
+    return { 
+      success: true, 
+      message: `Einwilligungsanfrage an ${child.parents.length} Elternteil(e) gesendet` 
+    };
+  } catch (err) {
+    console.error('Error sending consent request notification:', err);
+    return { success: false, message: 'Fehler beim Senden der Einwilligungsanfrage' };
+  }
+}
+
 module.exports = { 
   registerToken, 
   sendNotification, 
@@ -785,5 +827,6 @@ module.exports = {
   getAdminNotifications,
   markAsRead, 
   markMultipleAsRead,
-  deleteNotification 
+  deleteNotification,
+  sendConsentRequestNotification
 }; 
